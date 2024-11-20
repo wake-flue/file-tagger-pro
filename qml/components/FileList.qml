@@ -9,124 +9,177 @@ Item {
     property alias model: gridView.model
     property var selectedItem: null
     
-    GridView {
-        id: gridView
+    Rectangle {
         anchors.fill: parent
-        clip: true
+        color: "transparent"
         
-        cellWidth: {
-            if (!model) return width
-            switch(model.viewMode) {
-                case FileListModel.ListView:
-                    return width
-                case FileListModel.LargeIconView:
-                    return 120
-                default:
-                    return 80
+        GridView {
+            id: gridView
+            anchors.fill: parent
+            anchors.rightMargin: verticalScrollBar.visible ? verticalScrollBar.width : 0
+            clip: true
+            
+            cellWidth: model && model.viewMode === FileListModel.LargeIconView ? 160 : parent.width
+            cellHeight: model && model.viewMode === FileListModel.LargeIconView ? 160 : 40
+            
+            ScrollBar.vertical: verticalScrollBar
+            ScrollBar.horizontal: horizontalScrollBar
+            
+            delegate: ItemDelegate {
+                id: delegateItem
+                width: gridView.cellWidth
+                height: gridView.cellHeight
+                
+                padding: gridView.model && gridView.model.viewMode === FileListModel.LargeIconView ? 0 : 6
+                
+                required property int index
+                required property string fileName
+                required property string fileType
+                required property string filePath
+                required property string displaySize
+                required property string displayDate
+                
+                contentItem: Loader {
+                    sourceComponent: gridView.model && 
+                                   gridView.model.viewMode === FileListModel.LargeIconView ? 
+                                   largeIconLayout : listLayout
+                }
+                
+                Component {
+                    id: listLayout
+                    RowLayout {
+                        spacing: 12
+                        width: delegateItem.width
+                        height: delegateItem.height
+                        
+                        Item { width: 8; height: 1 }
+                        
+                        Image {
+                            source: getFileIcon(delegateItem)
+                            sourceSize.width: 20
+                            sourceSize.height: 20
+                            Layout.alignment: Qt.AlignVCenter
+                        }
+                        
+                        Label {
+                            text: delegateItem.fileName
+                            elide: Text.ElideRight
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignVCenter
+                            font.pixelSize: 12
+                        }
+                        
+                        Label {
+                            text: delegateItem.displaySize
+                            Layout.alignment: Qt.AlignVCenter
+                            Layout.preferredWidth: 80
+                            font.pixelSize: 12
+                            color: "#666666"
+                        }
+                        
+                        Label {
+                            text: delegateItem.displayDate
+                            Layout.alignment: Qt.AlignVCenter
+                            Layout.preferredWidth: 150
+                            font.pixelSize: 12
+                            color: "#666666"
+                        }
+                        
+                        Item { width: 8; height: 1 }
+                    }
+                }
+                
+                Component {
+                    id: largeIconLayout
+                    ColumnLayout {
+                        spacing: 8
+                        width: delegateItem.width
+                        height: delegateItem.height
+                        
+                        Item {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 100
+                            Layout.alignment: Qt.AlignHCenter
+                            
+                            Image {
+                                source: getFileIcon(delegateItem)
+                                sourceSize.width: 80
+                                sourceSize.height: 80
+                                anchors.centerIn: parent
+                                
+                                smooth: true
+                                antialiasing: true
+                            }
+                        }
+                        
+                        Label {
+                            text: delegateItem.fileName
+                            elide: Text.ElideMiddle
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignTop
+                            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                            maximumLineCount: 2
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 40
+                            Layout.alignment: Qt.AlignHCenter
+                            Layout.margins: 4
+                            
+                            font {
+                                pixelSize: 12
+                                family: "Microsoft YaHei"
+                            }
+                        }
+                    }
+                }
+                
+                highlighted: GridView.isCurrentItem
+                
+                onClicked: {
+                    gridView.currentIndex = index
+                    root.selectedItem = {
+                        fileName: fileName,
+                        fileType: fileType,
+                        filePath: filePath,
+                        displaySize: displaySize,
+                        displayDate: displayDate
+                    }
+                }
             }
         }
         
-        cellHeight: {
-            if (!model) return 40
-            switch(model.viewMode) {
-                case FileListModel.ListView:
-                    return 40
-                case FileListModel.LargeIconView:
-                    return 100
-                default:
-                    return 60
+        ScrollBar {
+            id: verticalScrollBar
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.bottom: horizontalScrollBar.visible ? horizontalScrollBar.top : parent.bottom
+            
+            active: hovered || pressed
+            orientation: Qt.Vertical
+            size: gridView.height / gridView.contentHeight
+            position: gridView.visibleArea.yPosition
+            visible: gridView.contentHeight > gridView.height
+            
+            background: Rectangle {
+                color: "transparent"
+                border.color: "transparent"
             }
         }
         
-        delegate: ItemDelegate {
-            id: delegateItem
-            width: gridView.cellWidth
-            height: gridView.cellHeight
+        ScrollBar {
+            id: horizontalScrollBar
+            anchors.left: parent.left
+            anchors.right: verticalScrollBar.visible ? verticalScrollBar.left : parent.right
+            anchors.bottom: parent.bottom
             
-            required property int index
-            required property string fileName
-            required property string fileType
-            required property string filePath
-            required property string displaySize
-            required property string displayDate
+            active: hovered || pressed
+            orientation: Qt.Horizontal
+            size: gridView.width / gridView.contentWidth
+            position: gridView.visibleArea.xPosition
+            visible: gridView.contentWidth > gridView.width
             
-            contentItem: Loader {
-                sourceComponent: gridView.model && 
-                               gridView.model.viewMode === FileListModel.LargeIconView ? 
-                               largeIconLayout : listLayout
-            }
-            
-            Component {
-                id: listLayout
-                RowLayout {
-                    spacing: 8
-                    width: delegateItem.width
-                    height: delegateItem.height
-                    
-                    Image {
-                        source: getFileIcon(delegateItem)
-                        sourceSize.width: 24
-                        sourceSize.height: 24
-                        Layout.alignment: Qt.AlignVCenter
-                    }
-                    
-                    Label {
-                        text: delegateItem.fileName
-                        elide: Text.ElideRight
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignVCenter
-                    }
-                    
-                    Label {
-                        text: delegateItem.displaySize
-                        Layout.alignment: Qt.AlignVCenter
-                        Layout.preferredWidth: 80
-                    }
-                    
-                    Label {
-                        text: delegateItem.displayDate
-                        Layout.alignment: Qt.AlignVCenter
-                        Layout.preferredWidth: 150
-                    }
-                }
-            }
-            
-            Component {
-                id: largeIconLayout
-                ColumnLayout {
-                    spacing: 4
-                    width: delegateItem.width
-                    height: delegateItem.height
-                    
-                    Image {
-                        source: getFileIcon(delegateItem)
-                        sourceSize.width: 64
-                        sourceSize.height: 64
-                        Layout.alignment: Qt.AlignHCenter
-                    }
-                    
-                    Label {
-                        text: delegateItem.fileName
-                        elide: Text.ElideRight
-                        horizontalAlignment: Text.AlignHCenter
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignHCenter
-                        Layout.margins: 4
-                    }
-                }
-            }
-            
-            highlighted: GridView.isCurrentItem
-            
-            onClicked: {
-                gridView.currentIndex = index
-                root.selectedItem = {
-                    fileName: fileName,
-                    fileType: fileType,
-                    filePath: filePath,
-                    displaySize: displaySize,
-                    displayDate: displayDate
-                }
+            background: Rectangle {
+                color: "transparent"
+                border.color: "transparent"
             }
         }
     }
