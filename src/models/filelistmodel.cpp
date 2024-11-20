@@ -22,9 +22,11 @@ int FileListModel::rowCount(const QModelIndex &parent) const
 QVariant FileListModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid() || index.row() >= m_files.count())
-        return QVariant();
+        return defaultValue(role);
 
     const auto &file = m_files.at(index.row());
+    if (!file)
+        return defaultValue(role);
     
     switch (role) {
         case FileNameRole:
@@ -39,8 +41,17 @@ QVariant FileListModel::data(const QModelIndex &index, int role) const
             return file->displaySize();
         case DisplayDateRole:
             return file->modifiedDate().toString("yyyy-MM-dd hh:mm:ss");
+        case PreviewPathRole: {
+            QString path = file->previewPath();
+            if (!path.isEmpty()) {
+                qDebug() << "返回预览路径:" << file->fileName() << path;
+            }
+            return path;
+        }
+        case PreviewLoadingRole:
+            return file->previewLoading();
         default:
-            return QVariant();
+            return defaultValue(role);
     }
 }
 
@@ -62,8 +73,15 @@ QString FileListModel::formatFileSize(qint64 size) const
 void FileListModel::setFiles(const QVector<QSharedPointer<FileData>> &files)
 {
     beginResetModel();
-    m_files = files;  // 直接赋值
+    m_files = files;
     endResetModel();
+    
+    // 通知每个项目的预览状态可能发生变化
+    for (int i = 0; i < m_files.size(); ++i) {
+        QModelIndex index = createIndex(i, 0);
+        emit dataChanged(index, index, {PreviewPathRole, PreviewLoadingRole});
+    }
+    
     emit countChanged();
 }
 
@@ -79,8 +97,15 @@ void FileListModel::setViewMode(ViewMode mode)
 {
     if (m_viewMode == mode)
         return;
+        
     m_viewMode = mode;
     beginResetModel();
+    
+    // 如果切换到大图标视图，通知需要生成预览
+    if (mode == LargeIconView) {
+        emit needGeneratePreviews();
+    }
+    
     endResetModel();
     emit viewModeChanged();
 }
@@ -93,7 +118,10 @@ QHash<int, QByteArray> FileListModel::roleNames() const
         {FileTypeRole, "fileType"},
         {FilePathRole, "filePath"},
         {DisplaySizeRole, "displaySize"},
-        {DisplayDateRole, "displayDate"}
+        {DisplayDateRole, "displayDate"},
+        {IndexRole, "index"},
+        {PreviewPathRole, "previewPath"},
+        {PreviewLoadingRole, "previewLoading"}
     };
 }
 
@@ -216,6 +244,10 @@ QVariant FileListModel::defaultValue(int role) const
             return QString();
         case Qt::DisplayRole:
             return QString();
+        case PreviewPathRole:
+            return QString();
+        case PreviewLoadingRole:
+            return false;
         default:
             return QVariant();
     }

@@ -17,6 +17,8 @@ class FileData : public QObject
     Q_PROPERTY(QString fileId READ fileId WRITE setFileId NOTIFY fileIdChanged)
     Q_PROPERTY(QString relativePath READ relativePath WRITE setRelativePath NOTIFY relativePathChanged)
     Q_PROPERTY(QString displaySize READ displaySize NOTIFY fileSizeChanged)
+    Q_PROPERTY(QString previewPath READ previewPath WRITE setPreviewPath NOTIFY previewPathChanged)
+    Q_PROPERTY(bool previewLoading READ previewLoading WRITE setPreviewLoading NOTIFY previewLoadingChanged)
 
 public:
     explicit FileData(QObject *parent = nullptr);
@@ -49,6 +51,10 @@ public:
 
         return QString("%1 %2").arg(size, 0, 'f', 1).arg(units[unitIndex]);
     }
+    QString previewPath() const { return m_previewPath; }
+    void setPreviewPath(const QString &path);
+    bool previewLoading() const { return m_previewLoading; }
+    void setPreviewLoading(bool loading);
 
     void setFileName(const QString &fileName);
     void setFileIcon(const QString &fileIcon);
@@ -68,6 +74,8 @@ signals:
     void modifiedDateChanged();
     void fileIdChanged();
     void relativePathChanged();
+    void previewPathChanged();
+    void previewLoadingChanged();
 
 private:
     QString m_fileName;
@@ -78,6 +86,8 @@ private:
     QDateTime m_modifiedDate;
     QString m_fileId;
     QString m_relativePath;
+    QString m_previewPath;
+    bool m_previewLoading = false;
 };
 
 Q_DECLARE_METATYPE(FileData)

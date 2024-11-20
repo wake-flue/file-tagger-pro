@@ -7,6 +7,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
+# 添加 FFmpeg 路径
+set(FFMPEG_ROOT "D:/Environment/ffmpeg-7.1-full_build")
+set(FFMPEG_INCLUDE_DIR "${FFMPEG_ROOT}/include")
+set(FFMPEG_LIB_DIR "${FFMPEG_ROOT}/lib")
+
+# 添加 FFmpeg 库
+find_library(AVCODEC_LIBRARY avcodec PATHS ${FFMPEG_LIB_DIR} NO_DEFAULT_PATH)
+find_library(AVFORMAT_LIBRARY avformat PATHS ${FFMPEG_LIB_DIR} NO_DEFAULT_PATH)
+find_library(AVUTIL_LIBRARY avutil PATHS ${FFMPEG_LIB_DIR} NO_DEFAULT_PATH)
+find_library(SWSCALE_LIBRARY swscale PATHS ${FFMPEG_LIB_DIR} NO_DEFAULT_PATH)
+
 # 添加 QuickEffects 模块
 find_package(Qt6 REQUIRED COMPONENTS Concurrent Core Gui Quick QuickDialogs2 QuickControls2)
 
@@ -17,6 +28,7 @@ set(SOURCES
     src/models/filedata.cpp
     src/models/filelistmodel.cpp
     src/utils/logger.cpp
+    src/utils/previewgenerator.cpp
 )
 
 # 头文件
@@ -25,6 +37,7 @@ set(HEADERS
     src/models/filedata.h
     src/models/filelistmodel.h
     src/utils/logger.h
+    src/utils/previewgenerator.h
 )
 
 # QML文件
@@ -43,6 +56,11 @@ qt_add_executable(FileTaggingApp
 
 target_include_directories(FileTaggingApp PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${FFMPEG_INCLUDE_DIR}
+)
+
+target_link_directories(FileTaggingApp PRIVATE
+    ${FFMPEG_LIB_DIR}
 )
 
 target_link_libraries(FileTaggingApp PRIVATE
@@ -52,6 +70,10 @@ target_link_libraries(FileTaggingApp PRIVATE
     Qt6::QuickDialogs2
     Qt6::QuickControls2
     Qt6::Concurrent
+    ${AVCODEC_LIBRARY}
+    ${AVFORMAT_LIBRARY}
+    ${AVUTIL_LIBRARY}
+    ${SWSCALE_LIBRARY}
 )
 
 # 使用qt_add_resources添加所有资源
@@ -86,9 +108,17 @@ qt_add_resources(FileTaggingApp "resources"
         resources/images/play.svg
         resources/images/video.svg
         resources/images/player.svg  # 添加播放器图标
+        resources/images/loading.svg
 )
 
 # 添加 QML 导入路径
 target_compile_definitions(FileTaggingApp PRIVATE
     QML_IMPORT_PATH="${CMAKE_CURRENT_SOURCE_DIR}/qml"
+)
+
+# 确保运行时能找到 FFmpeg DLL
+add_custom_command(TARGET FileTaggingApp POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    "${FFMPEG_ROOT}/bin"
+    $<TARGET_FILE_DIR:FileTaggingApp>
 )

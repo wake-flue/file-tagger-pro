@@ -6,6 +6,8 @@
 FileData::FileData(QObject *parent)
     : QObject(parent)
     , m_fileSize(0)
+    , m_previewPath("")
+    , m_previewLoading(false)
 {
 }
 
@@ -19,6 +21,8 @@ FileData::FileData(const FileData &other)
     , m_modifiedDate(other.m_modifiedDate)
     , m_fileId(other.m_fileId)
     , m_relativePath(other.m_relativePath)
+    , m_previewPath(other.m_previewPath)
+    , m_previewLoading(other.m_previewLoading)
 {
 }
 
@@ -34,6 +38,8 @@ FileData& FileData::operator=(const FileData &other)
         m_modifiedDate = other.m_modifiedDate;
         m_fileId = other.m_fileId;
         m_relativePath = other.m_relativePath;
+        m_previewPath = other.m_previewPath;
+        m_previewLoading = other.m_previewLoading;
     }
     return *this;
 }
@@ -49,6 +55,8 @@ FileData::FileData(FileData &&other) noexcept
     m_modifiedDate = other.m_modifiedDate;
     m_fileId = std::move(other.m_fileId);
     m_relativePath = std::move(other.m_relativePath);
+    m_previewPath = std::move(other.m_previewPath);
+    m_previewLoading = other.m_previewLoading;
     
     other.setParent(nullptr);
 }
@@ -65,6 +73,8 @@ FileData& FileData::operator=(FileData &&other) noexcept
         m_modifiedDate = other.m_modifiedDate;
         m_fileId = std::move(other.m_fileId);
         m_relativePath = std::move(other.m_relativePath);
+        m_previewPath = std::move(other.m_previewPath);
+        m_previewLoading = other.m_previewLoading;
         
         other.setParent(nullptr);
     }
@@ -132,5 +142,21 @@ void FileData::setRelativePath(const QString &relativePath)
     if (m_relativePath != relativePath) {
         m_relativePath = relativePath;
         emit relativePathChanged();
+    }
+}
+
+void FileData::setPreviewPath(const QString &path)
+{
+    if (m_previewPath != path) {
+        m_previewPath = path;
+        emit previewPathChanged();
+    }
+}
+
+void FileData::setPreviewLoading(bool loading)
+{
+    if (m_previewLoading != loading) {
+        m_previewLoading = loading;
+        emit previewLoadingChanged();
     }
 }

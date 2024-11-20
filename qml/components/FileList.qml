@@ -38,6 +38,8 @@ Item {
                 required property string filePath
                 required property string displaySize
                 required property string displayDate
+                required property string previewPath
+                required property bool previewLoading
                 
                 contentItem: Loader {
                     sourceComponent: gridView.model && 
@@ -102,13 +104,68 @@ Item {
                             Layout.alignment: Qt.AlignHCenter
                             
                             Image {
-                                source: getFileIcon(delegateItem)
-                                sourceSize.width: 80
-                                sourceSize.height: 80
+                                id: previewImage
                                 anchors.centerIn: parent
+                                width: 80
+                                height: 80
+                                fillMode: Image.PreserveAspectFit
+                                asynchronous: true
+                                cache: true
                                 
-                                smooth: true
-                                antialiasing: true
+                                property string currentSource: {
+                                    if (delegateItem.previewLoading) {
+                                        return "qrc:/resources/images/loading.svg";
+                                    }
+                                    if (delegateItem.previewPath && delegateItem.previewPath !== "") {
+                                        return "file:///" + delegateItem.previewPath;
+                                    }
+                                    return getFileIcon(delegateItem);
+                                }
+                                
+                                source: currentSource
+                                
+                                // 添加计时器用于处理超时
+                                Timer {
+                                    id: loadingTimer
+                                    interval: 5000  // 5秒超时
+                                    running: previewImage.status === Image.Loading
+                                    onTriggered: {
+                                        console.warn("预览加载超时:", delegateItem.fileName);
+                                        previewImage.source = getFileIcon(delegateItem);
+                                    }
+                                }
+                                
+                                onCurrentSourceChanged: {
+                                    console.log("预览源变更 - 文件:", delegateItem.fileName, 
+                                               "路径:", currentSource,
+                                               "加载状态:", delegateItem.previewLoading);
+                                    // 重置计时器
+                                    loadingTimer.restart();
+                                }
+                                
+                                onStatusChanged: {
+                                    switch (status) {
+                                        case Image.Loading:
+                                            console.log("正在加载预览:", delegateItem.fileName);
+                                            loadingTimer.restart();  // 开始计时
+                                            break;
+                                        case Image.Ready:
+                                            console.log("预览加载完成:", delegateItem.fileName);
+                                            loadingTimer.stop();  // 停止计时
+                                            break;
+                                        case Image.Error:
+                                            console.error("预览加载失败:", delegateItem.fileName, source);
+                                            loadingTimer.stop();  // 停止计时
+                                            source = getFileIcon(delegateItem);
+                                            break;
+                                    }
+                                }
+                                
+                                BusyIndicator {
+                                    anchors.centerIn: parent
+                                    running: delegateItem.previewLoading || parent.status === Image.Loading
+                                    visible: running && !loadingTimer.running  // 超时后不显示加载指示器
+                                }
                             }
                         }
                         

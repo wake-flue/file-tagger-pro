@@ -7,11 +7,14 @@
 #include <QString>
 #include <QVector>
 #include <QDateTime>
-#include <QProcess>  // 添加这行
+#include <QProcess>
 #include <windows.h>
 #include "models/filedata.h"
 #include "utils/logger.h"
 #include "models/filelistmodel.h"
+#include <memory>
+#include "../utils/previewgenerator.h"
+#include "utils/filetypes.h"
 
 class FileSystemManager : public QObject
 {
@@ -31,9 +34,12 @@ public:
     Q_INVOKABLE void setWatchPath(const QString &path);
     Q_INVOKABLE QVector<QSharedPointer<FileData>> scanDirectory(const QString &path, const QStringList &filters = QStringList());
     Q_INVOKABLE void clearLogs();
+    Q_INVOKABLE QString getFfmpegPath() const;
+    Q_INVOKABLE void setFfmpegPath(const QString &path);
 
 public slots:
     Q_INVOKABLE void openFileWithProgram(const QString &filePath, const QString &programPath);
+    void generatePreviews();
 
 signals:
     void fileChanged(const QString &path);
@@ -53,10 +59,8 @@ private:
     Logger *m_logger;
     FileListModel *m_fileModel;
     QVector<QSharedPointer<FileData>> m_fileList;  // 添加文件列表成员变量
-
-    // 添加静态常量
-    static const QStringList DEFAULT_IMAGE_FILTERS;
-    static const QStringList DEFAULT_VIDEO_FILTERS;
+    QString m_ffmpegPath;
+    std::unique_ptr<PreviewGenerator> m_previewGenerator;
 };
 
 #endif // FILESYSTEMMANAGER_H

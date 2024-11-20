@@ -3,23 +3,17 @@
 #include <QDirIterator>
 #include <QDebug>
 #include <QDateTime>
-#include <QCoreApplication>  // 添加这个头文件
+#include <QCoreApplication>
 #include "models/filelistmodel.h"
-
-// 定义静态常量
-const QStringList FileSystemManager::DEFAULT_IMAGE_FILTERS = {
-    "*.jpg", "*.jpeg", "*.png", "*.gif", "*.bmp", "*.webp", "*.tiff", "*.svg"
-};
-
-const QStringList FileSystemManager::DEFAULT_VIDEO_FILTERS = {
-    "*.mp4", "*.avi", "*.mkv", "*.mov", "*.wmv", "*.flv", "*.webm", "*.m4v", "*.mpg", "*.mpeg"
-};
+#include "../utils/previewgenerator.h"
+#include "utils/filetypes.h"
 
 FileSystemManager::FileSystemManager(QObject *parent)
     : QObject(parent)
     , m_fileWatcher(new QFileSystemWatcher(this))
     , m_logger(new Logger(this))
     , m_fileModel(new FileListModel(this))
+    , m_previewGenerator(new PreviewGenerator(this))
 {
     qDebug() << "FileSystemManager 构造函数 - 创建的文件模型:" << m_fileModel;
     
@@ -29,6 +23,10 @@ FileSystemManager::FileSystemManager(QObject *parent)
             this, &FileSystemManager::directoryChanged);
             
     addLogMessage("文件管理器初始化完成");
+    
+    // 连接视图模式变更信号
+    connect(m_fileModel, &FileListModel::needGeneratePreviews,
+            this, &FileSystemManager::generatePreviews);
 }
 
 FileSystemManager::~FileSystemManager()
@@ -78,8 +76,14 @@ void FileSystemManager::setWatchPath(const QString &path)
             }
             addLogMessage(QString("开始监控目录: %1").arg(path));
             qDebug() << "即将扫描目录:" << path;
-            scanDirectory(path, {"*.txt", "*.jpg", "*.png"});
+            scanDirectory(path);
             qDebug() << "目录扫描完成";
+            
+            // 扫描完目录后，检查是否需要生成预览
+            if (m_fileModel && m_fileModel->viewMode() == FileListModel::LargeIconView) {
+                qDebug() << "当前为大图标视图，开始生成预览...";
+                generatePreviews();
+            }
         }
         emit currentPathChanged();
     }
@@ -123,7 +127,7 @@ QVector<QSharedPointer<FileData>> FileSystemManager::scanDirectory(const QString
     // 如果没有指定筛选器，使用默认的图片和视频筛选器
     QStringList actualFilters = filters;
     if (actualFilters.isEmpty()) {
-        actualFilters = DEFAULT_IMAGE_FILTERS + DEFAULT_VIDEO_FILTERS;
+        actualFilters = FileTypes::getAllFilters();
     }
     
     QDir dir(path);
@@ -224,7 +228,7 @@ QVector<QSharedPointer<FileData>> FileSystemManager::scanDirectory(const QString
             m_fileModel->setFiles(files);
             qDebug() << "文件模型更新完成";
         } else {
-            qDebug() << "错误：文件模型为空!";
+            qDebug() << "错误：文模型为空!";
         }
         emit fileListChanged();
         
@@ -234,6 +238,15 @@ QVector<QSharedPointer<FileData>> FileSystemManager::scanDirectory(const QString
         }
     } else {
         addLogMessage("文件列表无变化");
+    }
+    
+    if (m_fileModel && m_fileModel->viewMode() == FileListModel::LargeIconView) {
+        for (const auto &fileData : m_fileList) {
+            QString type = fileData->fileType().toLower();
+            if (FileTypes::isImageFile(type) || FileTypes::isVideoFile(type)) {
+                m_previewGenerator->generatePreview(fileData);
+            }
+        }
     }
     
     return files;
@@ -253,5 +266,33 @@ void FileSystemManager::openFileWithProgram(const QString &filePath, const QStri
         process->deleteLater();  // 清理内存
     } else {
         process->deleteLater();  // 成功启动后也要清理
+    }
+}
+
+QString FileSystemManager::getFfmpegPath() const
+{
+    return m_ffmpegPath;
+}
+
+void FileSystemManager::setFfmpegPath(const QString &path)
+{
+    if (m_ffmpegPath != path) {
+        m_ffmpegPath = path;
+        addLogMessage(QString("FFmpeg 路径已更新: %1").arg(path));
+    }
+}
+
+void FileSystemManager::generatePreviews()
+{
+    if (!m_previewGenerator || !m_fileModel) return;
+    
+    qDebug() << "开始为所有文件生成预览...";
+    
+    for (const auto &fileData : m_fileList) {
+        QString type = fileData->fileType().toLower();
+        if (FileTypes::isImageFile(type) || FileTypes::isVideoFile(type)) {
+            qDebug() << "为文件生成预览:" << fileData->fileName();
+            m_previewGenerator->generatePreview(fileData);
+        }
     }
 }

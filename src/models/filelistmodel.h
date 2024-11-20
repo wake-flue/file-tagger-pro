@@ -33,7 +33,9 @@ public:
         FilePathRole,
         DisplaySizeRole,
         DisplayDateRole,
-        IndexRole       // 添加索引角色
+        IndexRole,
+        PreviewPathRole,      // 添加预览路径角色
+        PreviewLoadingRole    // 添加预览加载状态角色
     };
 
     enum SortRole {
@@ -84,6 +86,7 @@ signals:
     void sortRoleChanged();
     void sortOrderChanged();
     void filterPatternChanged();
+    void needGeneratePreviews();  // 添加这个信号声明
 
 private:
     QVector<QSharedPointer<FileData>> m_files;  // 使用QSharedPointer替代直接存储
