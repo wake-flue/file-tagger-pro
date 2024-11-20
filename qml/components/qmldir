@@ -1,0 +1,10 @@
+module Components
+FileList 1.0 FileList.qml
+LogViewer 1.0 LogViewer.qml
+Splitter 1.0 Splitter.qml
+FilterDialog 1.0 FilterDialog.qml
+Settings 1.0 Settings.qml
+
+
+
+
