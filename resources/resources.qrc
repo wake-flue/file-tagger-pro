@@ -24,6 +24,7 @@
         <file alias="qml/components/Splitter.qml">../qml/components/Splitter.qml</file>
         <file alias="qml/components/FilterDialog.qml">../qml/components/FilterDialog.qml</file>
         <file alias="qml/components/Settings.qml">../qml/components/Settings.qml</file>
+        <file alias="qml/components/TopToolBar.qml">../qml/components/TopToolBar.qml</file>
         
         <!-- 对话框组件 -->
         <file alias="qml/dialogs/LogViewerDialog.qml">../qml/dialogs/LogViewerDialog.qml</file>

@@ -65,6 +65,8 @@ qt_add_resources(FileTaggingApp "resources"
         qml/components/FilterDialog.qml
         qml/components/Settings.qml
         qml/components/DetailPanel.qml
+        qml/components/TopToolBar.qml
+        qml/components/StatusBar.qml
         qml/components/qmldir
         qml/dialogs/FolderPickerDialog.qml
         qml/dialogs/LogViewerDialog.qml

@@ -5,6 +5,8 @@ Splitter 1.0 Splitter.qml
 FilterDialog 1.0 FilterDialog.qml
 Settings 1.0 Settings.qml
 DetailPanel 1.0 DetailPanel.qml
+TopToolBar 1.0 TopToolBar.qml
+StatusBar 1.0 StatusBar.qml
 
 
 
