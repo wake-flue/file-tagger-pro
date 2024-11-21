@@ -135,6 +135,7 @@ Window {
                     id: fileList
                     model: fileManager.fileModel
                     fileManager: fileManager
+                    style: style
                     width: parent.width * splitter.position  // 使用分割线位置
                     height: parent.height
                 }

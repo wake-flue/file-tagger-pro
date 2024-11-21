@@ -45,6 +45,7 @@ public:
     Q_INVOKABLE void clearLogs();
     Q_INVOKABLE QString getFfmpegPath() const;
     Q_INVOKABLE void setFfmpegPath(const QString &path);
+    Q_INVOKABLE void generateVideoSprites(const QString &filePath, int count);
 
 public slots:
     Q_INVOKABLE void openFileWithProgram(const QString &filePath, const QString &programPath);
@@ -59,6 +60,8 @@ signals:
     void logMessagesChanged();
     void error(const QString &errorMessage);
     void isScanningChanged();
+    void spritesGenerated(const QStringList &paths);
+    void spriteProgress(int current, int total);
 
 private:
     void addLogMessage(const QString &message);
@@ -70,9 +73,9 @@ private:
     QStringList m_messages;
     Logger *m_logger;
     FileListModel *m_fileModel;
-    QVector<QSharedPointer<FileData>> m_fileList;  // 添加文件列表成员变量
+    QVector<QSharedPointer<FileData>> m_fileList;
     QString m_ffmpegPath;
-    std::unique_ptr<PreviewGenerator> m_previewGenerator;
+    PreviewGenerator *m_previewGenerator;
     bool m_isScanning = false;
 };
 

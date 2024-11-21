@@ -39,6 +39,7 @@ set(SOURCES
     src/utils/logger.cpp
     src/utils/previewgenerator.cpp
     src/utils/defaultapps.cpp
+    src/utils/spritegenerator.cpp
 )
 
 # 头文件
@@ -49,6 +50,7 @@ set(HEADERS
     src/utils/logger.h
     src/utils/previewgenerator.h
     src/utils/defaultapps.h
+    src/utils/spritegenerator.h
 )
 
 # QML文件
@@ -61,10 +63,13 @@ set(QML_FILES
     qml/components/DetailPanel.qml
     qml/components/StatusBar.qml
     qml/components/Settings.qml
+    qml/components/qmldir
     qml/dialogs/FilterDialog.qml
     qml/dialogs/LogViewerDialog.qml
     qml/dialogs/PlayerSettingsDialog.qml
     qml/dialogs/FolderPickerDialog.qml
+    qml/dialogs/SpriteDialog.qml
+    qml/dialogs/qmldir
 )
 
 # 添加 qmldir 文件到资源列表

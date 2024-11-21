@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Effects
 import FileManager 1.0
 import "." as Components
+import "../dialogs" as Dialogs
 
 Item {
     id: root
@@ -11,6 +12,7 @@ Item {
     property alias model: gridView.model
     property var selectedItem: null
     property QtObject fileManager: null
+    required property var style
     
     Components.Settings {
         id: settings
@@ -149,7 +151,7 @@ Item {
                                 onStatusChanged: {
                                     switch (status) {
                                         case Image.Loading:
-                                            loadingTimer.restart();  // 开始计时
+                                            loadingTimer.restart();  // ���始计时
                                             break;
                                         case Image.Ready:
                                             loadingTimer.stop();  // 停止计时
@@ -481,6 +483,25 @@ Item {
                             console.log("FileManager 状态:", root.fileManager ? "已定义" : "未定义")
                         }
                     }
+
+                    MenuItem {
+                        id: spriteMenuItem
+                        text: qsTr("雪碧图")
+                        icon.source: "qrc:/resources/images/image.svg"
+                        icon.width: 14
+                        icon.height: 14
+                        
+                        visible: {
+                            if (!delegateItem.fileType) return false
+                            const type = String(delegateItem.fileType).toLowerCase()
+                            return settings.videoFilter.includes(type)
+                        }
+                        
+                        onTriggered: {
+                            spriteDialog.filePath = delegateItem.filePath
+                            spriteDialog.open()
+                        }
+                    }
                 }
             }
         }
@@ -558,5 +579,12 @@ Item {
             return "qrc:/resources/images/code.svg"
         }
         return "qrc:/resources/images/file.svg"
+    }
+    
+    Dialogs.SpriteDialog {
+        id: spriteDialog
+        style: root.style
+        fileManager: root.fileManager
+        filePath: ""
     }
 }

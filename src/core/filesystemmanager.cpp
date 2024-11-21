@@ -29,12 +29,19 @@ FileSystemManager::FileSystemManager(QObject *parent)
     // 连接视图模式变更信号
     connect(m_fileModel, &FileListModel::needGeneratePreviews,
             this, &FileSystemManager::generatePreviews);
+
+    // 连接 PreviewGenerator 的信号
+    connect(m_previewGenerator, &PreviewGenerator::spritesGenerated,
+            this, &FileSystemManager::spritesGenerated);
+    connect(m_previewGenerator, &PreviewGenerator::spriteProgress,
+            this, &FileSystemManager::spriteProgress);
 }
 
 FileSystemManager::~FileSystemManager()
 {
     delete m_fileWatcher;
     delete m_logger;
+    delete m_previewGenerator;
 }
 
 void FileSystemManager::addLogMessage(const QString &message)
@@ -148,7 +155,7 @@ QVector<QSharedPointer<FileData>> FileSystemManager::scanDirectory(const QString
     QVector<QSharedPointer<FileData>> files;
     QHash<QString, FileData> previousFiles;
     
-    // 预分配一个合理的初始容量
+    // 分配一个合理的初始容量
     files.reserve(qMin(m_fileList.size(), 10000));
     previousFiles.reserve(qMin(m_fileList.size(), 10000));
     
@@ -349,4 +356,11 @@ void FileSystemManager::openFile(const QString &filePath, const QString &fileTyp
     
     process->start();
     addLogMessage(QString("正在使用 %1 打开文件: %2").arg(program, filePath));
+}
+
+void FileSystemManager::generateVideoSprites(const QString &filePath, int count) {
+    if (!m_previewGenerator) return;
+    
+    QStringList paths = m_previewGenerator->generateVideoSprites(filePath, count);
+    emit spritesGenerated(paths);
 }

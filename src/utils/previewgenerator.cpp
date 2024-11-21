@@ -8,6 +8,7 @@
 #include <QElapsedTimer>
 #include <QTimer>
 #include "filetypes.h"
+#include "spritegenerator.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -283,4 +284,25 @@ void PreviewGenerator::ensureCacheDirectory() {
 
 QString PreviewGenerator::getCachePath() {
     return QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/previews";
+}
+
+QStringList PreviewGenerator::generateVideoSprites(const QString &path, int count)
+{
+    if (!m_spriteGenerator) {
+        m_spriteGenerator = std::make_unique<SpriteGenerator>();
+        
+        connect(m_spriteGenerator.get(), &SpriteGenerator::progressChanged,
+                this, [this](int current, int total) {
+                    emit spriteProgress(current, total);
+                });
+                
+        connect(m_spriteGenerator.get(), &SpriteGenerator::error,
+                this, [this](const QString &message) {
+            qWarning() << "雪碧图生成错误:" << message;
+        });
+    }
+    
+    QStringList paths = m_spriteGenerator->generateSprites(path, count);
+    emit spritesGenerated(paths);
+    return paths;
 } 

@@ -82,18 +82,8 @@ Rectangle {
 
                 opacity: status === Image.Ready ? 1 : 0
                 Behavior on opacity {
-                    NumberAnimation { duration: 200 }
+                    NumberAnimation { duration: 100 }
                 }
-            }
-
-            // 无选中项时的提示
-            Text {
-                anchors.centerIn: parent
-                text: "未选择文件"
-                font.family: root.style.fontFamily
-                font.pixelSize: root.style.defaultFontSize
-                color: root.style.secondaryTextColor
-                visible: !root.selectedItem
             }
         }
 
