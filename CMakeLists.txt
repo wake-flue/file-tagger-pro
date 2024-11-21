@@ -7,6 +7,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
+# 设置 Qt 策略
+set(CMAKE_POLICY_DEFAULT_CMP0071 NEW)
+set(QT_QML_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/qml)
+
+# 添加 Qt 策略设置
+if(POLICY QTP0001)
+    cmake_policy(SET QTP0001 NEW)
+endif()
+
 # 添加 FFmpeg 路径
 set(FFMPEG_ROOT "D:/Environment/ffmpeg")
 set(FFMPEG_INCLUDE_DIR "${FFMPEG_ROOT}/include")
@@ -47,13 +56,27 @@ set(QML_FILES
     qml/main.qml
     qml/components/FileList.qml
     qml/components/LogViewer.qml
+    qml/components/TopToolBar.qml
+    qml/components/Splitter.qml
+    qml/components/DetailPanel.qml
+    qml/components/StatusBar.qml
+    qml/components/Settings.qml
+    qml/dialogs/FilterDialog.qml
+    qml/dialogs/LogViewerDialog.qml
+    qml/dialogs/PlayerSettingsDialog.qml
     qml/dialogs/FolderPickerDialog.qml
-    qml/components/FilterDialog.qml
+)
+
+# 添加 qmldir 文件到资源列表
+set(RESOURCE_FILES
+    qml/components/qmldir
+    qml/dialogs/qmldir
 )
 
 qt_add_executable(FileTaggingApp
     ${SOURCES}
     ${HEADERS}
+    ${RESOURCE_FILES}  # 添加资源文件
 )
 
 target_include_directories(FileTaggingApp PRIVATE
@@ -82,19 +105,8 @@ target_link_libraries(FileTaggingApp PRIVATE
 qt_add_resources(FileTaggingApp "qml"
     PREFIX "/"
     FILES
-        qml/components/qmldir
-        qml/main.qml
-        qml/components/FileList.qml
-        qml/components/LogViewer.qml
-        qml/components/Splitter.qml
-        qml/components/FilterDialog.qml
-        qml/components/Settings.qml
-        qml/components/DetailPanel.qml
-        qml/components/TopToolBar.qml
-        qml/components/StatusBar.qml
-        qml/dialogs/FolderPickerDialog.qml
-        qml/dialogs/LogViewerDialog.qml
-        qml/dialogs/PlayerSettingsDialog.qml
+        ${RESOURCE_FILES}
+        ${QML_FILES}
         resources/images/file.svg
         resources/images/folder.svg
         resources/images/refresh.svg
@@ -114,6 +126,7 @@ qt_add_resources(FileTaggingApp "qml"
         resources/images/audio.svg
         resources/images/archive.svg
         resources/images/code.svg
+        resources/images/checkmark.svg
 )
 
 # 添加 QML 导入路径
@@ -126,4 +139,13 @@ add_custom_command(TARGET FileTaggingApp POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     "${FFMPEG_ROOT}/bin"
     $<TARGET_FILE_DIR:FileTaggingApp>
+)
+
+# 确保 QML 文件被正确复制到构建目录
+qt_add_qml_module(FileTaggingApp
+    URI FileTaggingApp
+    VERSION 1.0
+    QML_FILES ${QML_FILES}
+    RESOURCES ${RESOURCE_FILES}
+    IMPORT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/qml
 )

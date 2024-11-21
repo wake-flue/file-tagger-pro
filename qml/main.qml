@@ -185,11 +185,10 @@ Window {
     }
 
     // 在窗口底部添加 FilterDialog
-    Components.FilterDialog {
+    Dialogs.FilterDialog {
         id: filterDialog
         width: 400
         height: 200
-        anchors.centerIn: parent
         settings: settings
         style: style  // 传递 style 对象
         

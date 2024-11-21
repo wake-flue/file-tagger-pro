@@ -29,11 +29,11 @@ Settings {
 
     // 设置文件格式
     property var imageFilter: ["jpg", "jpeg", "png", "gif", "bmp", "webp", "tiff", "svg", "ico"]  // 图片文件格式
-    property var videoFilter: ["mp4", "avi", "mkv", "mov", "wmv", "flv", "webm", "m4v", "mpg", "mpeg", "3gp"]  // 视频文件格式
-    property var documentFilter: ["txt", "doc", "docx", "pdf", "rtf", "md", "odt"]  // 文档文件格式
-    property var audioFilter: ["mp3", "wav", "flac", "m4a", "aac", "ogg", "wma", "mid"]  // 音频文件格式
+    property var videoFilter: ["mp4", "avi", "mkv", "mov", "wmv", "flv", "webm", "m4v", "mpg", "mpeg"]  // 视频文件格式
+    property var audioFilter: ["mp3", "wav", "flac", "m4a", "aac", "ogg", "wma"]  // 音频文件格式
+    property var documentFilter: ["txt", "doc", "docx", "pdf", "xls", "xlsx", "ppt", "pptx", "md"]  // 文档文件格式
     property var archiveFilter: ["zip", "rar", "7z", "tar", "gz", "bz2"]  // 压缩文件格式
-    property var devFilter: ["cpp", "h", "hpp", "java", "py", "js", "html", "css", "json", "xml"]  // 开发文件格式
+    property var devFilter: ["cpp", "h", "hpp", "c", "py", "js", "html", "css", "java", "json", "xml", "yml", "qml"]  // 开发文件格式
     
     // 添加同步方法
     function sync() {

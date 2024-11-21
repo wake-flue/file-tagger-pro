@@ -1,0 +1,5 @@
+module Dialogs
+FilterDialog 1.0 FilterDialog.qml
+LogViewerDialog 1.0 LogViewerDialog.qml
+PlayerSettingsDialog 1.0 PlayerSettingsDialog.qml
+FolderPickerDialog 1.0 FolderPickerDialog.qml 
