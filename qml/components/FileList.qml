@@ -230,6 +230,22 @@ Item {
                     }
                 }
                 
+                // 添加双击处理
+                TapHandler {
+                    acceptedButtons: Qt.LeftButton
+                    onDoubleTapped: {
+                        // 复用相同的类型判断逻辑
+                        if (!delegateItem.fileType) return;
+                        const type = String(delegateItem.fileType).toLowerCase();
+                        if (settings.imageFilter.includes(type) || settings.videoFilter.includes(type)) {
+                            if (root.fileManager) {
+                                console.log("双击打开文件:", delegateItem.filePath, "类型:", delegateItem.fileType);
+                                root.fileManager.openFile(delegateItem.filePath, delegateItem.fileType);
+                            }
+                        }
+                    }
+                }
+                
                 Menu {
                     id: contextMenu
                     
