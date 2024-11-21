@@ -3,7 +3,7 @@ import QtQuick.Window
 import QtQuick.Controls.Basic  // 添加 Basic 样式
 import QtQuick.Layouts
 import FileManager 1.0
-import "components" as Components  // 修改导入路径
+import "./components" as Components  // 修改导入方式
 import "dialogs" as Dialogs
 
 Window {
@@ -97,6 +97,7 @@ Window {
                 Components.FileList {
                     id: fileList
                     model: fileManager.fileModel
+                    fileManager: fileManager
                     width: parent.width * splitter.position  // 使用分割线位置
                     height: parent.height
                 }

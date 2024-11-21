@@ -3,6 +3,7 @@ import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import QtQuick.Dialogs
 import Qt.labs.platform as Platform
+import FileManager 1.0
 
 Dialog {
     id: root
@@ -11,9 +12,14 @@ Dialog {
     
     property QtObject settings
     property QtObject style
+    property var defaultApps: DefaultApps {}
     
     width: 500
     height: 300
+    
+    Component.onCompleted: {
+        defaultApps.searchDefaultApps()
+    }
     
     // 文件选择对话框
     FileDialog {
@@ -62,10 +68,32 @@ Dialog {
                 Layout.fillWidth: true
                 spacing: 8
                 
+                ComboBox {
+                    id: imageViewerCombo
+                    Layout.fillWidth: true
+                    model: defaultApps.imageViewers
+                    editable: true
+                    editText: settings ? settings.imagePlayer : ""
+                    
+                    onEditTextChanged: {
+                        imagePathInput.text = editText
+                    }
+                    
+                    delegate: ItemDelegate {
+                        width: parent.width
+                        contentItem: Text {
+                            text: modelData
+                            elide: Text.ElideMiddle
+                            font.family: style ? style.fontFamily : "Microsoft YaHei"
+                            font.pixelSize: style ? style.defaultFontSize - 1 : 11
+                        }
+                    }
+                }
+                
                 TextField {
                     id: imagePathInput
                     Layout.fillWidth: true
-                    text: settings ? settings.imagePlayer : ""
+                    visible: false
                     placeholderText: qsTr("请选择图片查看器程序")
                     selectByMouse: true
                     font.family: style ? style.fontFamily : "Microsoft YaHei"
@@ -113,10 +141,32 @@ Dialog {
                 Layout.fillWidth: true
                 spacing: 8
                 
+                ComboBox {
+                    id: videoPlayerCombo
+                    Layout.fillWidth: true
+                    model: defaultApps.videoPlayers
+                    editable: true
+                    editText: settings ? settings.videoPlayer : ""
+                    
+                    onEditTextChanged: {
+                        videoPathInput.text = editText
+                    }
+                    
+                    delegate: ItemDelegate {
+                        width: parent.width
+                        contentItem: Text {
+                            text: modelData
+                            elide: Text.ElideMiddle
+                            font.family: style ? style.fontFamily : "Microsoft YaHei"
+                            font.pixelSize: style ? style.defaultFontSize - 1 : 11
+                        }
+                    }
+                }
+                
                 TextField {
                     id: videoPathInput
                     Layout.fillWidth: true
-                    text: settings ? settings.videoPlayer : ""
+                    visible: false
                     placeholderText: qsTr("请选择视频播放器程序")
                     selectByMouse: true
                     font.family: style ? style.fontFamily : "Microsoft YaHei"
@@ -155,9 +205,26 @@ Dialog {
             Button {
                 text: qsTr("确定")
                 onClicked: {
-                    settings.imagePlayer = imagePathInput.text
-                    settings.videoPlayer = videoPathInput.text
-                    root.accept()
+                    console.log("保存设置 - 图片查看器:", imagePathInput.text);
+                    console.log("保存设置 - 视频播放器:", videoPathInput.text);
+                    
+                    // 使用传入的 settings 对象保存设置
+                    if (settings) {
+                        settings.imagePlayer = imagePathInput.text;
+                        settings.videoPlayer = videoPathInput.text;
+                        
+                        // 更新 ComboBox 的选项
+                        // 注意：由于 model 来自 defaultApps，��们不能直接修改它
+                        // 而是通过 defaultApps 来更新
+                        if (defaultApps) {
+                            defaultApps.addImageViewer(imagePathInput.text);
+                            defaultApps.addVideoPlayer(videoPathInput.text);
+                        }
+                    } else {
+                        console.error("settings 对象未定义!");
+                    }
+                    
+                    root.accept();
                 }
             }
             

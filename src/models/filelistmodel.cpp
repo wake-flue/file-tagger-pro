@@ -43,9 +43,9 @@ QVariant FileListModel::data(const QModelIndex &index, int role) const
             return file->modifiedDate().toString("yyyy-MM-dd hh:mm:ss");
         case PreviewPathRole: {
             QString path = file->previewPath();
-            if (!path.isEmpty()) {
-                qDebug() << "返回预览路径:" << file->fileName() << path;
-            }
+            // if (!path.isEmpty()) {
+            //     qDebug() << "返回预览路径:" << file->fileName() << path;
+            // }
             return path;
         }
         case PreviewLoadingRole:

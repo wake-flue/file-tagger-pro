@@ -8,7 +8,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 # 添加 FFmpeg 路径
-set(FFMPEG_ROOT "D:/Environment/ffmpeg-7.1-full_build")
+set(FFMPEG_ROOT "D:/Environment/ffmpeg")
 set(FFMPEG_INCLUDE_DIR "${FFMPEG_ROOT}/include")
 set(FFMPEG_LIB_DIR "${FFMPEG_ROOT}/lib")
 
@@ -29,6 +29,7 @@ set(SOURCES
     src/models/filelistmodel.cpp
     src/utils/logger.cpp
     src/utils/previewgenerator.cpp
+    src/utils/defaultapps.cpp
 )
 
 # 头文件
@@ -38,6 +39,7 @@ set(HEADERS
     src/models/filelistmodel.h
     src/utils/logger.h
     src/utils/previewgenerator.h
+    src/utils/defaultapps.h
 )
 
 # QML文件
@@ -77,9 +79,10 @@ target_link_libraries(FileTaggingApp PRIVATE
 )
 
 # 使用qt_add_resources添加所有资源
-qt_add_resources(FileTaggingApp "resources"
+qt_add_resources(FileTaggingApp "qml"
     PREFIX "/"
     FILES
+        qml/components/qmldir
         qml/main.qml
         qml/components/FileList.qml
         qml/components/LogViewer.qml
@@ -89,26 +92,25 @@ qt_add_resources(FileTaggingApp "resources"
         qml/components/DetailPanel.qml
         qml/components/TopToolBar.qml
         qml/components/StatusBar.qml
-        qml/components/qmldir
         qml/dialogs/FolderPickerDialog.qml
         qml/dialogs/LogViewerDialog.qml
-        qml/dialogs/PlayerSettingsDialog.qml  # 添加新的对话框
+        qml/dialogs/PlayerSettingsDialog.qml
         resources/images/file.svg
         resources/images/folder.svg
         resources/images/refresh.svg
         resources/images/log.svg
         resources/images/clear.svg
         resources/images/large-icons.svg
-        resources/images/medium-icons.svg
-        resources/images/small-icons.svg
-        resources/images/image.svg
         resources/images/list.svg
+        resources/images/image.svg
         resources/images/text.svg
         resources/images/filter.svg
         resources/images/play.svg
         resources/images/video.svg
-        resources/images/player.svg  # 添加播放器图标
+        resources/images/player.svg
         resources/images/loading.svg
+        resources/images/open.svg
+        resources/images/debug.svg
 )
 
 # 添加 QML 导入路径

@@ -19,8 +19,6 @@ public:
     // 视图模式枚举
     enum ViewMode {
         ListView,       // 列表视图
-        SmallIconView, // 小图标视图
-        MediumIconView,// 中图标视图
         LargeIconView  // 大图标视图
     };
     Q_ENUM(ViewMode)  // 使枚举可在QML中使用

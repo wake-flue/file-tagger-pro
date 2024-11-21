@@ -7,6 +7,8 @@
 #include "models/filelistmodel.h"
 #include "../utils/previewgenerator.h"
 #include "utils/filetypes.h"
+#include <QSettings>
+#include <QStandardPaths>
 
 FileSystemManager::FileSystemManager(QObject *parent)
     : QObject(parent)
@@ -291,8 +293,60 @@ void FileSystemManager::generatePreviews()
     for (const auto &fileData : m_fileList) {
         QString type = fileData->fileType().toLower();
         if (FileTypes::isImageFile(type) || FileTypes::isVideoFile(type)) {
-            qDebug() << "为文件生成预览:" << fileData->fileName();
+            // qDebug() << "为文件生成预览:" << fileData->fileName();
             m_previewGenerator->generatePreview(fileData);
         }
     }
+}
+
+void FileSystemManager::openFile(const QString &filePath, const QString &fileType)
+{
+    // 确保设置目录存在
+    QDir settingsDir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
+    if (!settingsDir.exists()) {
+        settingsDir.mkpath(".");
+    }
+    
+    // 使用相同的配置文件路径
+    QString iniPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) 
+                     + "/FileTaggingPro.ini";
+    QSettings settings(iniPath, QSettings::IniFormat);
+    settings.beginGroup("Players");  // 使用相同的类别
+                      
+    qDebug() << "Settings 文件路径:" << settings.fileName();
+    qDebug() << "Settings 目录:" << settingsDir.absolutePath();
+    qDebug() << "所有键:" << settings.allKeys();
+    
+    QString program;
+    
+    // 根据文件类型选择合适的播放器
+    if (FileTypes::isImageFile(fileType)) {
+        program = settings.value("imagePlayer").toString();
+        qDebug() << "读取到的图片播放器路径:" << program;
+    } else if (FileTypes::isVideoFile(fileType)) {
+        program = settings.value("videoPlayer").toString();
+        qDebug() << "读取到的视频播放器路径:" << program;
+    }
+    
+    settings.endGroup();  // 结束分组
+    
+    if (program.isEmpty()) {
+        addLogMessage(QString("未配置%1文件的播放器 (类型: %2)").arg(fileType, filePath));
+        return;
+    }
+    
+    QProcess *process = new QProcess(this);
+    process->setProgram(program);
+    process->setArguments(QStringList() << filePath);
+    
+    connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            process, &QProcess::deleteLater);
+            
+    connect(process, &QProcess::errorOccurred, this, [this, process](QProcess::ProcessError error) {
+        addLogMessage(QString("打开文件失败: %1").arg(process->errorString()));
+        process->deleteLater();
+    });
+    
+    process->start();
+    addLogMessage(QString("正在使用 %1 打开文件: %2").arg(program, filePath));
 }

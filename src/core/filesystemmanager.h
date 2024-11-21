@@ -8,6 +8,7 @@
 #include <QVector>
 #include <QDateTime>
 #include <QProcess>
+#include <QSettings>
 #include <windows.h>
 #include "models/filedata.h"
 #include "utils/logger.h"
@@ -40,6 +41,7 @@ public:
 public slots:
     Q_INVOKABLE void openFileWithProgram(const QString &filePath, const QString &programPath);
     void generatePreviews();
+    void openFile(const QString &filePath, const QString &fileType);
 
 signals:
     void fileChanged(const QString &path);

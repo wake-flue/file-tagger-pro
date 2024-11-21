@@ -13,15 +13,20 @@ Rectangle {
     required property var settings
 
     ColumnLayout {
-        anchors.fill: parent
-        anchors.margins: 12
-        spacing: 16
+        anchors {
+            fill: parent
+            margins: 12
+        }
+        spacing: 12
 
         // 预览区域
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: width * 0.75  // 保持4:3的宽高比
-            color: "white"
+            Layout.preferredHeight: Math.min(parent.height * 0.4, 200)  // 限制最大高度
+            Layout.minimumHeight: 100  // 设置最小高度
+            color: "#f8f9fa"
+            border.color: root.style.borderColor
+            border.width: 1
             radius: 4
             clip: true
 
@@ -36,7 +41,7 @@ Rectangle {
                         return "qrc:/resources/images/file.svg"
                     }
                     
-                    const fileType = root.selectedItem.fileType.toLowerCase()
+                    const fileType = (root.selectedItem.fileType || "").toLowerCase()
                     if (fileType.match(/^(jpg|jpeg|png|gif|bmp)$/)) {
                         return "file:///" + root.selectedItem.filePath
                     }
@@ -72,7 +77,7 @@ Rectangle {
         // 文件信息区域
         ColumnLayout {
             Layout.fillWidth: true
-            Layout.fillHeight: true
+            Layout.fillHeight: false
             spacing: 12
 
             // 标题栏
@@ -111,19 +116,19 @@ Rectangle {
                 model: [
                     {
                         label: "文件名", 
-                        value: root.selectedItem ? root.selectedItem.fileName || "-" : "-"
+                        value: root.selectedItem ? (root.selectedItem.fileName || "-") : "-"
                     },
                     {
                         label: "类型", 
-                        value: root.selectedItem ? root.selectedItem.fileType || "-" : "-"
+                        value: root.selectedItem ? (root.selectedItem.fileType || "-") : "-"
                     },
                     {
                         label: "大小", 
-                        value: root.selectedItem ? root.selectedItem.displaySize || "-" : "-"
+                        value: root.selectedItem ? (root.selectedItem.displaySize || "-") : "-"
                     },
                     {
                         label: "修改时间", 
-                        value: root.selectedItem ? root.selectedItem.displayDate || "-" : "-"
+                        value: root.selectedItem ? (root.selectedItem.displayDate || "-") : "-"
                     }
                 ]
                 
@@ -181,7 +186,7 @@ Rectangle {
                             fill: parent
                             margins: 8
                         }
-                        text: root.selectedItem ? root.selectedItem.filePath : "-"
+                        text: root.selectedItem ? (root.selectedItem.filePath || "-") : "-"
                         font.family: root.style.fontFamily
                         font.pixelSize: root.style.defaultFontSize
                         color: root.style.textColor
