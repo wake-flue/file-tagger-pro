@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Effects
 import FileManager 1.0
+import "." as Components
 
 Item {
     id: root
@@ -10,6 +11,10 @@ Item {
     property alias model: gridView.model
     property var selectedItem: null
     property QtObject fileManager: null
+    
+    Components.Settings {
+        id: settings
+    }
     
     Rectangle {
         anchors.fill: parent
@@ -108,8 +113,8 @@ Item {
                             Image {
                                 id: previewImage
                                 anchors.centerIn: parent
-                                width: 80
-                                height: 80
+                                width: 100
+                                height: 100
                                 fillMode: Image.PreserveAspectFit
                                 asynchronous: true
                                 cache: true
@@ -340,8 +345,8 @@ Item {
                         enabled: {
                             if (!delegateItem.fileType) return false
                             const type = String(delegateItem.fileType).toLowerCase()
-                            return type.match(/^(jpg|jpeg|png|gif|bmp)$/) || 
-                                   type.match(/^(mp4|avi|mkv|mov)$/)
+                            return settings.imageFilter.includes(type) || 
+                                   settings.videoFilter.includes(type)
                         }
                         
                         onTriggered: {
@@ -523,12 +528,18 @@ Item {
         }
         
         const type = String(item.fileType).toLowerCase()
-        if (type.match(/^(jpg|jpeg|png|gif|bmp)$/)) {
+        if (settings.imageFilter.includes(type)) {
             return "qrc:/resources/images/image.svg"
-        } else if (type.match(/^(mp4|avi|mkv|mov)$/)) {
+        } else if (settings.videoFilter.includes(type)) {
             return "qrc:/resources/images/video.svg"
-        } else if (type.match(/^(txt|doc|docx|pdf)$/)) {
+        } else if (settings.documentFilter.includes(type)) {
             return "qrc:/resources/images/text.svg"
+        } else if (settings.audioFilter.includes(type)) {
+            return "qrc:/resources/images/audio.svg"
+        } else if (settings.archiveFilter.includes(type)) {
+            return "qrc:/resources/images/archive.svg"
+        } else if (settings.devFilter.includes(type)) {
+            return "qrc:/resources/images/code.svg"
         }
         return "qrc:/resources/images/file.svg"
     }

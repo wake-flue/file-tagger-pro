@@ -26,15 +26,17 @@ Settings {
     property string videoPlayer: ""  // 视频播放器路径
     property string fileFilter: ""   // 文件筛选器设置
     property string ffmpegPath: "D:/Environment/ffmpeg-7.1-full_build"  // FFmpeg 路径
+
+    // 设置文件格式
+    property var imageFilter: ["jpg", "jpeg", "png", "gif", "bmp", "webp", "tiff", "svg", "ico"]  // 图片文件格式
+    property var videoFilter: ["mp4", "avi", "mkv", "mov", "wmv", "flv", "webm", "m4v", "mpg", "mpeg", "3gp"]  // 视频文件格式
+    property var documentFilter: ["txt", "doc", "docx", "pdf", "rtf", "md", "odt"]  // 文档文件格式
+    property var audioFilter: ["mp3", "wav", "flac", "m4a", "aac", "ogg", "wma", "mid"]  // 音频文件格式
+    property var archiveFilter: ["zip", "rar", "7z", "tar", "gz", "bz2"]  // 压缩文件格式
+    property var devFilter: ["cpp", "h", "hpp", "java", "py", "js", "html", "css", "json", "xml"]  // 开发文件格式
     
     // 添加同步方法
     function sync() {
-        // Qt.labs.settings 会自动同步，不需要手动调用
-        console.log("Settings synced - imagePlayer:", imagePlayer);
-        console.log("Settings synced - videoPlayer:", videoPlayer);
-        console.log("Settings synced - fileFilter:", fileFilter);
-        console.log("Settings synced - ffmpegPath:", ffmpegPath);
-        
         // 输出完整的设置信息
         console.log("Settings 完整信息:", JSON.stringify({
             category: category,

@@ -39,26 +39,63 @@ Window {
     FileSystemManager {
         id: fileManager
         
-        // 删除 onFileListChanged 处理器，因为现在由 C++ 模型直接处理
+        // 添加防抖动定时器
+        property var rescanTimer: Timer {
+            interval: 1000  // 1秒防抖动
+            repeat: false
+            onTriggered: {
+                let currentFilter = settings.value("fileFilter", "")
+                let filters = currentFilter ? currentFilter.split(';') : []
+                if (fileManager.currentPath) {
+                    console.log("执行目录扫描:", fileManager.currentPath)
+                    fileManager.scanDirectory(fileManager.currentPath, filters)
+                }
+            }
+        }
+        
+        // 添加错误处理
+        onError: function(errorMessage) {
+            console.error("文件系统错误:", errorMessage)
+            // 可以添加错误通知或其他处理
+        }
         
         onFileChanged: function(path) {
             console.log("检测到文件变更:", path)
-            fileManager.scanDirectory(fileManager.currentPath, ["*.txt", "*.jpg", "*.png"])
+            rescanTimer.restart()
         }
         
         onDirectoryChanged: function(path) {
             console.log("检测到目录变更:", path)
-            fileManager.scanDirectory(fileManager.currentPath, ["*.txt", "*.jpg", "*.png"])
+            rescanTimer.restart()
+        }
+        
+        // 监控扫描状态变化
+        onIsScanningChanged: {
+            if (isScanning) {
+                console.log("开始扫描目录...")
+            } else {
+                console.log("目录扫描完成")
+            }
         }
     }
 
     Dialogs.FolderPickerDialog {
         id: folderDialog
         onFolderSelected: function(path) {
-            fileManager.setWatchPath(path)
-            let currentFilter = settings.value("fileFilter", "")
-            let filters = currentFilter ? currentFilter.split(';') : []
-            fileManager.scanDirectory(path, filters)
+            if (!path) {
+                console.warn("未选择有效路径")
+                return
+            }
+            
+            try {
+                fileManager.setWatchPath(path)
+                let currentFilter = settings.value("fileFilter", "")
+                let filters = currentFilter ? currentFilter.split(';') : []
+                fileManager.scanDirectory(path, filters)
+            } catch (error) {
+                console.error("设置监视路径失败:", error)
+                // 可以添加错误提示对话框
+            }
         }
     }
 

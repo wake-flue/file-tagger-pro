@@ -22,8 +22,15 @@ Rectangle {
         // 预览区域
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: Math.min(parent.height * 0.4, 200)  // 限制最大高度
-            Layout.minimumHeight: 100  // 设置最小高度
+            Layout.preferredHeight: {
+                if (!previewImage.source || previewImage.status !== Image.Ready) {
+                    return width * 0.75  // 默认高宽比
+                }
+                // 根据图片实际比例计算合适的高度
+                const ratio = previewImage.sourceSize.height / previewImage.sourceSize.width
+                return Math.min(width * ratio, parent.height * 0.9)
+            }
+            Layout.minimumHeight: 100
             color: "#f8f9fa"
             border.color: root.style.borderColor
             border.width: 1
@@ -34,7 +41,8 @@ Rectangle {
             Image {
                 id: previewImage
                 anchors.centerIn: parent
-                height: parent.height
+                width: Math.min(parent.width, parent.height / (sourceSize.height / sourceSize.width))
+                height: Math.min(parent.height, parent.width * (sourceSize.height / sourceSize.width))
                 fillMode: Image.PreserveAspectFit
                 source: {
                     if (!root.selectedItem) {
@@ -42,9 +50,24 @@ Rectangle {
                     }
                     
                     const fileType = (root.selectedItem.fileType || "").toLowerCase()
-                    if (fileType.match(/^(jpg|jpeg|png|gif|bmp)$/)) {
+                    
+                    // 根据 settings 中定义的文件类型返回对应图标
+                    if (root.settings.imageFilter.includes(fileType)) {
+                        // 如果是图片文件，优先显示实际图片
                         return "file:///" + root.selectedItem.filePath
+                    } else if (root.settings.videoFilter.includes(fileType)) {
+                        return "qrc:/resources/images/video.svg"
+                    } else if (root.settings.audioFilter.includes(fileType)) {
+                        return "qrc:/resources/images/audio.svg"
+                    } else if (root.settings.documentFilter.includes(fileType)) {
+                        return "qrc:/resources/images/text.svg"
+                    } else if (root.settings.archiveFilter.includes(fileType)) {
+                        return "qrc:/resources/images/archive.svg"
+                    } else if (root.settings.devFilter.includes(fileType)) {
+                        return "qrc:/resources/images/code.svg"
                     }
+                    
+                    // 默认图标
                     return root.selectedItem.fileIcon || "qrc:/resources/images/file.svg"
                 }
                 asynchronous: true
