@@ -16,15 +16,15 @@ int FileListModel::rowCount(const QModelIndex &parent) const
 {
     if (parent.isValid())
         return 0;
-    return m_files.count();
+    return m_filteredFiles.count();
 }
 
 QVariant FileListModel::data(const QModelIndex &index, int role) const
 {
-    if (!index.isValid() || index.row() >= m_files.count())
+    if (!index.isValid() || index.row() >= m_filteredFiles.count())
         return defaultValue(role);
 
-    const auto &file = m_files.at(index.row());
+    const auto &file = m_filteredFiles.at(index.row());
     if (!file)
         return defaultValue(role);
     
@@ -73,22 +73,16 @@ QString FileListModel::formatFileSize(qint64 size) const
 void FileListModel::setFiles(const QVector<QSharedPointer<FileData>> &files)
 {
     beginResetModel();
-    m_files = files;
+    m_allFiles = files;
+    applyFilters();
     endResetModel();
-    
-    // 通知每个项目的预览状态可能发生变化
-    for (int i = 0; i < m_files.size(); ++i) {
-        QModelIndex index = createIndex(i, 0);
-        emit dataChanged(index, index, {PreviewPathRole, PreviewLoadingRole});
-    }
-    
     emit countChanged();
 }
 
 void FileListModel::clear()
 {
     beginResetModel();
-    m_files.clear();
+    m_filteredFiles.clear();
     endResetModel();
     emit countChanged();
 }
@@ -126,11 +120,11 @@ QHash<int, QByteArray> FileListModel::roleNames() const
 }
 
 FileData* FileListModel::getFileData(int index) const {
-    if (index < 0 || index >= m_files.size()) {
+    if (index < 0 || index >= m_filteredFiles.size()) {
         return nullptr;
     }
     
-    return m_files[index].data();
+    return m_filteredFiles[index].data();
 }
 
 void FileListModel::setSortRole(SortRole role)
@@ -154,7 +148,7 @@ void FileListModel::setSortOrder(Qt::SortOrder order)
 void FileListModel::sort()
 {
     beginResetModel();
-    std::sort(m_files.begin(), m_files.end(), 
+    std::sort(m_filteredFiles.begin(), m_filteredFiles.end(), 
         [this](const QSharedPointer<FileData> &a, const QSharedPointer<FileData> &b) {
             bool result = false;
             switch (m_sortRole) {
@@ -185,12 +179,12 @@ void FileListModel::setFilterPattern(const QString &pattern)
         beginResetModel();
         // 过滤逻辑在这里实现
         QVector<QSharedPointer<FileData>> filteredFiles;
-        for (const auto &file : m_files) {
+        for (const auto &file : m_filteredFiles) {
             if (matchesFilter(file->fileName())) {
                 filteredFiles.append(file);
             }
         }
-        m_files = filteredFiles;
+        m_filteredFiles = filteredFiles;
         endResetModel();
         
         emit filterPatternChanged();
@@ -219,7 +213,7 @@ bool FileListModel::matchesFilter(const QString &fileName) const
 void FileListModel::updateFiles(const QVector<QSharedPointer<FileData>>& newFiles)
 {
     beginResetModel();
-    m_files = newFiles;
+    m_filteredFiles = newFiles;
     endResetModel();
     emit countChanged();
 }
@@ -251,4 +245,34 @@ QVariant FileListModel::defaultValue(int role) const
         default:
             return QVariant();
     }
+}
+
+void FileListModel::setSearchPattern(const QString &pattern)
+{
+    if (m_searchPattern != pattern) {
+        m_searchPattern = pattern;
+        applyFilters();
+        emit searchPatternChanged();
+    }
+}
+
+void FileListModel::applyFilters()
+{
+    m_filteredFiles.clear();
+    
+    for (const auto &file : m_allFiles) {
+        bool matchesSearchPattern = m_searchPattern.isEmpty() ||
+            file->fileName().contains(m_searchPattern, Qt::CaseInsensitive);
+        bool matchesFilterPattern = m_filterPattern.isEmpty() || 
+            this->matchesFilter(file->fileName());  // 使用 this-> 明确指定是成员函数
+        
+        if (matchesSearchPattern && matchesFilterPattern) {
+            m_filteredFiles.append(file);
+        }
+    }
+    
+    // 更新视图
+    beginResetModel();
+    m_files = m_filteredFiles;
+    endResetModel();
 }

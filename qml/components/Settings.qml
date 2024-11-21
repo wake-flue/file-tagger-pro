@@ -25,7 +25,7 @@ Settings {
     property string imagePlayer: ""  // 图片查看器路径
     property string videoPlayer: ""  // 视频播放器路径
     property string fileFilter: ""   // 文件筛选器设置
-    property string ffmpegPath: "D:/Environment/ffmpeg-7.1-full_build"  // FFmpeg 路径
+    property string ffmpegPath: "D:/Environment/ffmpeg"  // FFmpeg 路径
 
     // 设置文件格式
     property var imageFilter: ["jpg", "jpeg", "png", "gif", "bmp", "webp", "tiff", "svg", "ico"]  // 图片文件格式

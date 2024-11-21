@@ -127,6 +127,7 @@ qt_add_resources(FileTaggingApp "qml"
         resources/images/archive.svg
         resources/images/code.svg
         resources/images/checkmark.svg
+        resources/images/search.svg
 )
 
 # 添加 QML 导入路径

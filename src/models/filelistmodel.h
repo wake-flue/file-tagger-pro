@@ -14,6 +14,7 @@ class FileListModel : public QAbstractListModel
     Q_PROPERTY(SortRole sortRole READ sortRole WRITE setSortRole NOTIFY sortRoleChanged)
     Q_PROPERTY(Qt::SortOrder sortOrder READ sortOrder WRITE setSortOrder NOTIFY sortOrderChanged)
     Q_PROPERTY(QString filterPattern READ filterPattern WRITE setFilterPattern NOTIFY filterPatternChanged)
+    Q_PROPERTY(QString searchPattern READ searchPattern WRITE setSearchPattern NOTIFY searchPatternChanged)
 
 public:
     // 视图模式枚举
@@ -67,12 +68,16 @@ public:
     QString filterPattern() const { return m_filterPattern; }
     void setFilterPattern(const QString &pattern);
 
+    QString searchPattern() const { return m_searchPattern; }
+    void setSearchPattern(const QString &pattern);
+
     // 添加新的函数声明
     void updateFiles(const QVector<QSharedPointer<FileData>>& newFiles);
 
 protected:
     QString formatFileSize(qint64 size) const;  // 添加这行
     QVariant defaultValue(int role) const;      // 添加这行
+    void applyFilters();                        // 添加这行
 
 public slots:
     void setFiles(const QVector<QSharedPointer<FileData>> &files);
@@ -84,6 +89,7 @@ signals:
     void sortRoleChanged();
     void sortOrderChanged();
     void filterPatternChanged();
+    void searchPatternChanged();
     void needGeneratePreviews();  // 添加这个信号声明
 
 private:
@@ -94,6 +100,9 @@ private:
     void sort();
     QString m_filterPattern;
     bool matchesFilter(const QString &fileName) const;
+    QString m_searchPattern;
+    QVector<QSharedPointer<FileData>> m_allFiles;  // 存储所有文件
+    QVector<QSharedPointer<FileData>> m_filteredFiles;  // 存储筛选后的文件
 };
 
 #endif // FILELISTMODEL_H

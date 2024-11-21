@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <g fill="none" stroke="#666666" stroke-width="1.5">
+        <!-- 搜索镜片圆圈 -->
+        <circle cx="7" cy="7" r="5"/>
+        <!-- 搜索把手 -->
+        <path d="M11 11L14 14" stroke-linecap="round"/>
+    </g>
+</svg> 

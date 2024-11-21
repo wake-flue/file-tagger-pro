@@ -134,7 +134,8 @@ Rectangle {
         // 中间路径显示
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 28  // 减小高度
+            Layout.preferredHeight: 28
+            Layout.rightMargin: 8  // 添加右边距
             color: "#f5f5f5"
             radius: 3
             border.color: root.style.borderColor
@@ -152,6 +153,79 @@ Rectangle {
                 font.pixelSize: root.style.defaultFontSize - 1
                 color: root.style.textColor
                 verticalAlignment: Text.AlignVCenter
+            }
+        }
+
+        // 添加搜索框
+        Rectangle {
+            Layout.preferredWidth: 200
+            Layout.preferredHeight: 28
+            Layout.rightMargin: 8
+            color: "#f5f5f5"
+            radius: 3
+            border.color: searchInput.activeFocus ? root.style.accentColor : root.style.borderColor
+            border.width: 1
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: 8
+                anchors.rightMargin: 8
+                spacing: 4
+
+                Image {
+                    source: "qrc:/resources/images/search.svg"
+                    sourceSize.width: 14
+                    sourceSize.height: 14
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                TextField {
+                    id: searchInput
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignVCenter
+                    placeholderText: "搜索文件..."
+                    font.family: root.style.fontFamily
+                    font.pixelSize: root.style.defaultFontSize - 1
+                    color: root.style.textColor
+                    selectByMouse: true
+                    background: null
+
+                    // 添加防抖动定时器
+                    Timer {
+                        id: searchDebounceTimer
+                        interval: 300
+                        onTriggered: {
+                            if (root.fileManager && root.fileManager.fileModel) {
+                                root.fileManager.fileModel.searchPattern = searchInput.text
+                            }
+                        }
+                    }
+
+                    onTextChanged: {
+                        searchDebounceTimer.restart()
+                    }
+
+                    // 清除按钮
+                    Image {
+                        visible: parent.text !== ""
+                        source: "qrc:/resources/images/clear.svg"
+                        sourceSize.width: 12
+                        sourceSize.height: 12
+                        anchors {
+                            right: parent.right
+                            verticalCenter: parent.verticalCenter
+                            rightMargin: 4
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                searchInput.clear()
+                                searchInput.forceActiveFocus()
+                            }
+                        }
+                    }
+                }
             }
         }
 
