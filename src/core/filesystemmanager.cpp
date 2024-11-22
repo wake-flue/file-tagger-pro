@@ -338,7 +338,7 @@ void FileSystemManager::openFile(const QString &filePath, const QString &fileTyp
     settings.endGroup();  // 结束分组
     
     if (program.isEmpty()) {
-        addLogMessage(QString("未配置%1文件的播放器 (类型: %2)").arg(fileType, filePath));
+        addLogMessage(QString("���配置%1文件的播放器 (类型: %2)").arg(fileType, filePath));
         return;
     }
     
@@ -363,4 +363,73 @@ void FileSystemManager::generateVideoSprites(const QString &filePath, int count)
     
     QStringList paths = m_previewGenerator->generateVideoSprites(filePath, count);
     emit spritesGenerated(paths);
+}
+
+void FileSystemManager::openVideoAtTime(const QString &filePath, double timestamp)
+{
+    QSettings settings(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) 
+                      + "/FileTaggingPro.ini", QSettings::IniFormat);
+    settings.beginGroup("Players");
+    QString program = settings.value("videoPlayer").toString();
+    settings.endGroup();
+    
+    if (program.isEmpty()) {
+        addLogMessage("未配置视频播放器");
+        return;
+    }
+    
+    QProcess *process = new QProcess(this);
+    QStringList arguments;
+    
+    // 确保文件路径是绝对路径并且正确格式化
+    QString normalizedPath = QDir::toNativeSeparators(QFileInfo(filePath).absoluteFilePath());
+    
+    // 根据不同播放器添加时间戳参数
+    if (program.contains("vlc", Qt::CaseInsensitive)) {
+        // VLC 播放器
+        arguments << "--start-time" << QString::number(timestamp) << normalizedPath;
+    } else if (program.contains("mpc-hc", Qt::CaseInsensitive)) {
+        // MPC-HC 播放器
+        arguments << "/start" << QString::number(qRound(timestamp * 1000)) << normalizedPath;
+    } else if (program.contains("PotPlayer", Qt::CaseInsensitive)) {
+        // PotPlayer 播放器
+        // 修改 PotPlayer 的参数格式
+        arguments << normalizedPath << "/seek=" + QString::number(qRound(timestamp));
+    } else {
+        // 默认情况，直接打开视频
+        arguments << normalizedPath;
+        addLogMessage("当前播放器可能不支持时间定位");
+    }
+    
+    process->setProgram(program);
+    process->setArguments(arguments);
+    
+    qDebug() << "启动播放器:" << program;
+    qDebug() << "参数:" << arguments;
+    
+    connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            process, &QProcess::deleteLater);
+            
+    connect(process, &QProcess::errorOccurred, this, [this, process](QProcess::ProcessError error) {
+        addLogMessage("播放器启动失败: " + process->errorString());
+        process->deleteLater();
+    });
+    
+    if (!process->startDetached()) {
+        addLogMessage("无法启动播放器: " + process->errorString());
+        qDebug() << "启动失败原因:" << process->errorString();
+        process->deleteLater();
+    } else {
+        addLogMessage(QString("正在使用 %1 打开视频，时间戳: %2 秒")
+                     .arg(QFileInfo(program).fileName())
+                     .arg(timestamp));
+    }
+}
+
+double FileSystemManager::getSpriteTimestamp(const QString &spritePath) const
+{
+    if (!m_previewGenerator) return 0.0;
+    
+    // 通过 PreviewGenerator 获取时间戳
+    return m_previewGenerator->getSpriteTimestamp(spritePath);
 }

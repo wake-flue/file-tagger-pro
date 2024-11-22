@@ -51,6 +51,8 @@ public slots:
     Q_INVOKABLE void openFileWithProgram(const QString &filePath, const QString &programPath);
     void generatePreviews();
     void openFile(const QString &filePath, const QString &fileType);
+    void openVideoAtTime(const QString &filePath, double timestamp);
+    double getSpriteTimestamp(const QString &spritePath) const;
 
 signals:
     void fileChanged(const QString &path);

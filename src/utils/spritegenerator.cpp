@@ -55,20 +55,21 @@ QStringList SpriteGenerator::generateSprites(const QString &videoPath, int count
         return spritePaths;
     }
     
-    // 获取视频流的时间基准
     AVStream *stream = formatContext->streams[videoStream];
     AVRational timeBase = stream->time_base;
     
-    // 计算视频总时长（以流的时间基准为单位）
-    int64_t duration = stream->duration;
-    if (duration == AV_NOPTS_VALUE) {
-        duration = av_rescale_q(formatContext->duration, AV_TIME_BASE_Q, timeBase);
+    int64_t duration;
+    if (stream->duration != AV_NOPTS_VALUE) {
+        duration = stream->duration;
+    } else if (formatContext->duration != AV_NOPTS_VALUE) {
+        duration = av_rescale_q(formatContext->duration, AV_TIME_BASE_Q, stream->time_base);
+    } else {
+        emit error("无法获取视频时长");
+        avformat_close_input(&formatContext);
+        return spritePaths;
     }
     
-    // 计算时间间隔
     int64_t interval = duration / (count + 1);
-    
-    // 生成每一帧的雪碧图
     QString hash = QCryptographicHash::hash(videoPath.toUtf8(), QCryptographicHash::Md5).toHex();
     
     for (int i = 0; i < count; i++) {
@@ -78,6 +79,8 @@ QStringList SpriteGenerator::generateSprites(const QString &videoPath, int count
         QString generatedPath = generateSingleSprite(formatContext, videoStream, timestamp, spritePath);
         if (!generatedPath.isEmpty()) {
             spritePaths.append(generatedPath);
+            double timeInSeconds = timestamp * av_q2d(stream->time_base);
+            m_spriteTimestamps[generatedPath] = timeInSeconds;
         }
         
         emit progressChanged(i + 1, count);
@@ -119,14 +122,33 @@ QString SpriteGenerator::generateSingleSprite(AVFormatContext *formatContext,
         return QString();
     }
     
-    // 定位到指定时间戳
-    if (av_seek_frame(formatContext, videoStream, timestamp, AVSEEK_FLAG_BACKWARD) < 0) {
+    int seekFlags = AVSEEK_FLAG_BACKWARD;
+    int maxRetries = 3;
+    bool seekSuccess = false;
+    
+    for (int retry = 0; retry < maxRetries && !seekSuccess; retry++) {
+        int currentFlags = seekFlags;
+        int64_t currentTimestamp = timestamp;
+        
+        if (retry == 1) {
+            currentFlags |= AVSEEK_FLAG_ANY;
+        } else if (retry == 2) {
+            currentTimestamp = av_rescale_q(av_rescale_q(timestamp, stream->time_base, AV_TIME_BASE_Q),
+                                          AV_TIME_BASE_Q, stream->time_base);
+        }
+        
+        if (av_seek_frame(formatContext, videoStream, currentTimestamp, currentFlags) >= 0) {
+            seekSuccess = true;
+            break;
+        }
+    }
+    
+    if (!seekSuccess) {
         emit error("无法定位到指定时间戳");
         avcodec_free_context(&codecContext);
         return QString();
     }
     
-    // 清空解码器缓冲区
     avcodec_flush_buffers(codecContext);
     
     AVFrame *frame = av_frame_alloc();
@@ -145,8 +167,15 @@ QString SpriteGenerator::generateSingleSprite(AVFormatContext *formatContext,
                         AV_PIX_FMT_RGB24, codecContext->width, codecContext->height, 1);
     
     bool frameExtracted = false;
-    int maxFramesToRead = 100;  // 设置最大读取帧数
+    int maxFramesToRead = 200;
     int framesRead = 0;
+    
+    int64_t timestampTolerance = av_rescale_q(2, AV_TIME_BASE_Q, stream->time_base);
+    int64_t minTimestamp = timestamp - timestampTolerance;
+    int64_t maxTimestamp = timestamp + timestampTolerance;
+    
+    AVFrame *bestFrame = av_frame_alloc();
+    int64_t bestDiff = INT64_MAX;
     
     while (av_read_frame(formatContext, packet) >= 0 && !frameExtracted && framesRead < maxFramesToRead) {
         if (packet->stream_index == videoStream) {
@@ -156,7 +185,7 @@ QString SpriteGenerator::generateSingleSprite(AVFormatContext *formatContext,
                 continue;
             }
             
-            while (sendResult >= 0 && !frameExtracted) {
+            while (sendResult >= 0) {
                 int receiveResult = avcodec_receive_frame(codecContext, frame);
                 if (receiveResult == AVERROR(EAGAIN) || receiveResult == AVERROR_EOF) {
                     break;
@@ -164,25 +193,42 @@ QString SpriteGenerator::generateSingleSprite(AVFormatContext *formatContext,
                     break;
                 }
                 
-                // 检查是否达到目标时间戳
-                if (frame->pts >= timestamp) {
-                    sws_scale(swsContext, frame->data, frame->linesize, 0,
-                             codecContext->height, rgbFrame->data, rgbFrame->linesize);
+                int64_t diff = llabs(frame->pts - timestamp);
+                if (diff < bestDiff) {
+                    av_frame_unref(bestFrame);
+                    av_frame_ref(bestFrame, frame);
+                    bestDiff = diff;
                     
-                    QImage image(rgbFrame->data[0], codecContext->width, codecContext->height,
-                                rgbFrame->linesize[0], QImage::Format_RGB888);
-                    
-                    if (image.save(outputPath, "JPG", 100)) {
+                    if (diff < timestampTolerance / 10) {
                         frameExtracted = true;
+                        break;
                     }
                 }
             }
         }
         av_packet_unref(packet);
         framesRead++;
+        
+        if (frameExtracted) break;
     }
     
-    // 清理资源
+    bool saveSuccess = false;
+    if (bestDiff != INT64_MAX) {
+        int scaleResult = sws_scale(swsContext, bestFrame->data, bestFrame->linesize, 0,
+                                  codecContext->height, rgbFrame->data, rgbFrame->linesize);
+        
+        if (scaleResult > 0) {
+            QImage image(rgbFrame->data[0], 
+                        codecContext->width, 
+                        codecContext->height,
+                        rgbFrame->linesize[0], 
+                        QImage::Format_RGB888);
+            
+            saveSuccess = image.save(outputPath, "JPG", 100);
+        }
+    }
+    
+    av_frame_free(&bestFrame);
     av_frame_free(&frame);
     av_frame_free(&rgbFrame);
     av_packet_free(&packet);
@@ -190,5 +236,10 @@ QString SpriteGenerator::generateSingleSprite(AVFormatContext *formatContext,
     sws_freeContext(swsContext);
     avcodec_free_context(&codecContext);
     
-    return frameExtracted ? outputPath : QString();
+    return saveSuccess ? outputPath : QString();
+}
+
+double SpriteGenerator::getSpriteTimestamp(const QString &spritePath) const
+{
+    return m_spriteTimestamps.value(spritePath, 0.0);
 }

@@ -15,6 +15,7 @@ public:
     void generatePreview(QSharedPointer<FileData> fileData);
     static QString getCachePath();
     Q_INVOKABLE QStringList generateVideoSprites(const QString &path, int count);
+    double getSpriteTimestamp(const QString &spritePath) const;
 
 signals:
     void spritesGenerated(const QStringList &paths);

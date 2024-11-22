@@ -268,6 +268,19 @@ Window {
                     width: gridView.cellWidth
                     property alias imageLoader: imageLoader
                     
+                    // 添加鼠标区域处理双击事件
+                    MouseArea {
+                        anchors.fill: parent
+                        onDoubleClicked: {
+                            if (root.fileManager) {
+                                const timestamp = root.fileManager.getSpriteTimestamp(modelData)
+                                if (timestamp >= 0) {
+                                    root.fileManager.openVideoAtTime(root.filePath, timestamp)
+                                }
+                            }
+                        }
+                    }
+                    
                     Image {
                         id: imageLoader
                         visible: false

@@ -66,7 +66,6 @@ void PreviewGenerator::generatePreview(QSharedPointer<FileData> fileData) {
     
     QTimer::singleShot(5000, this, [this, fileData]() {
         if (fileData && fileData->previewLoading()) {
-            qWarning() << "预览生成任务超时:" << fileData->fileName();
             fileData->setPreviewLoading(false);
             fileData->setPreviewPath(QString());
         }
@@ -305,4 +304,10 @@ QStringList PreviewGenerator::generateVideoSprites(const QString &path, int coun
     QStringList paths = m_spriteGenerator->generateSprites(path, count);
     emit spritesGenerated(paths);
     return paths;
+}
+
+double PreviewGenerator::getSpriteTimestamp(const QString &spritePath) const
+{
+    if (!m_spriteGenerator) return 0.0;
+    return m_spriteGenerator->getSpriteTimestamp(spritePath);
 } 
