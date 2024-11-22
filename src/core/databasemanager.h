@@ -21,6 +21,8 @@ public:
     
     // 获取数据库连接
     QSqlDatabase database() const { return m_db; }
+    
+    bool execute(const QString& query, const QVariantList& params = QVariantList());
 
 private:
     explicit DatabaseManager(QObject *parent = nullptr);

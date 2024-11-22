@@ -36,6 +36,7 @@ public slots:
     QStringList getRecentFiles(int limit = 10);  // 获取最近标记的文件
     
     Q_INVOKABLE bool isTagNameExists(const QString &name) const;
+    Q_INVOKABLE bool deleteTag(int tagId);
 
 signals:
     void tagAdded(Tag* tag);
@@ -44,6 +45,7 @@ signals:
     void fileTagsChanged(const QString &filePath);
     void tagError(const QString &message);
     void tagsChanged();
+    void tagDeleted(int tagId);
 
 private:
     explicit TagManager(QObject *parent = nullptr);

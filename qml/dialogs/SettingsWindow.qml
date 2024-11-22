@@ -129,7 +129,11 @@ Window {
                 
                 // 标签设置
                 Item {
-                    // TODO: 添加标签设置内容
+                    Settings.TagSettings {
+                        anchors.fill: parent
+                        settings: root.settings
+                        style: root.style
+                    }
                 }
                 
                 // 数据库设置

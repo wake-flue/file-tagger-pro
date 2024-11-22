@@ -50,6 +50,9 @@ Dialog {
     
     // 信号声明
     signal tagSaved(int id, string name, color color, string description)
+    signal tagAdded()
+    signal tagUpdated()
+    signal tagError(string message)
     
     // 背景设置
     background: Rectangle {
@@ -277,20 +280,32 @@ Dialog {
         // 检查标签名是否为空
         if (!nameField.text.trim()) {
             showError(qsTr("标签名称不能为空"))
+            tagError(qsTr("标签名称不能为空"))
             return
         }
         
         // 检查标签名是否已存在
         if (!editMode && TagManager.isTagNameExists(nameField.text.trim())) {
             showError(qsTr("标签名称已存在"))
+            tagError(qsTr("标签名称已存在"))
             return
         }
         
         // 保存标签
         if (editMode) {
-            TagManager.updateTag(root.tagId, nameField.text.trim(), root.tagColor, descriptionField.text.trim())
+            if (TagManager.updateTag(root.tagId, nameField.text.trim(), root.tagColor, descriptionField.text.trim())) {
+                tagUpdated()
+            } else {
+                tagError(qsTr("更新标签失败"))
+                return
+            }
         } else {
-            TagManager.addTag(nameField.text.trim(), root.tagColor, descriptionField.text.trim())
+            if (TagManager.addTag(nameField.text.trim(), root.tagColor, descriptionField.text.trim())) {
+                tagAdded()
+            } else {
+                tagError(qsTr("添加标签失败"))
+                return
+            }
         }
         
         root.accept()

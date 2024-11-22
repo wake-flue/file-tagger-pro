@@ -1,0 +1,8 @@
+<RCC>
+    <!-- 其他资源... -->
+    <qresource prefix="/resources/images">
+        <file>add.svg</file>
+        <file>edit.svg</file>
+        <file>delete.svg</file>
+    </qresource>
+</RCC> 

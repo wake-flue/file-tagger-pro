@@ -147,7 +147,7 @@ bool DatabaseManager::applyMigration(int version)
     
     switch (version) {
         case 1:
-            // 初始���本,不需要迁移
+            // 初始本,不需要迁移
             return true;
             
         // 后续版本的迁移在这里添加
@@ -155,6 +155,30 @@ bool DatabaseManager::applyMigration(int version)
             qWarning() << "未知的数据库版本:" << version;
             return false;
     }
+}
+
+bool DatabaseManager::execute(const QString& query, const QVariantList& params)
+{
+    QSqlQuery sqlQuery(m_db);
+    
+    if (!sqlQuery.prepare(query)) {
+        qWarning() << "Failed to prepare query:" << query;
+        qWarning() << "Error:" << sqlQuery.lastError().text();
+        return false;
+    }
+    
+    // 绑定参数
+    for (const QVariant& param : params) {
+        sqlQuery.addBindValue(param);
+    }
+    
+    if (!sqlQuery.exec()) {
+        qWarning() << "Failed to execute query:" << query;
+        qWarning() << "Error:" << sqlQuery.lastError().text();
+        return false;
+    }
+    
+    return true;
 }
 
 DatabaseManager::~DatabaseManager()

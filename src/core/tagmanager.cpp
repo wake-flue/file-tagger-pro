@@ -56,30 +56,45 @@ void TagManager::loadTagsCache()
 
 bool TagManager::addTag(const QString &name, const QColor &color, const QString &description)
 {
-    try {
-        QSqlDatabase db = DatabaseManager::instance().database();
-        QSqlQuery query(db);
-        
-        db.transaction();
-        
-        query.prepare("INSERT INTO tags (name, color, description) VALUES (?, ?, ?)");
-        query.addBindValue(name);
-        query.addBindValue(color.name(QColor::HexRgb));
-        query.addBindValue(description);
-        
-        if (!query.exec()) {
-            db.rollback();
-            emit tagError(query.lastError().text());
-            return false;
-        }
-        
-        db.commit();
-        emit tagsChanged();
-        return true;
-    } catch (const std::exception &e) {
-        emit tagError(QString("添加标签时发生错误: %1").arg(e.what()));
+    QSqlDatabase db = DatabaseManager::instance().database();
+    QSqlQuery query(db);
+    
+    // 准备SQL语句
+    query.prepare("INSERT INTO tags (name, color, description, created_at, updated_at) "
+                 "VALUES (:name, :color, :description, :created_at, :updated_at)");
+    
+    // 绑定参数
+    query.bindValue(":name", name);
+    query.bindValue(":color", color.name(QColor::HexRgb));
+    query.bindValue(":description", description);
+    QDateTime now = QDateTime::currentDateTime();
+    query.bindValue(":created_at", now);
+    query.bindValue(":updated_at", now);
+    
+    // 执行SQL
+    if (!query.exec()) {
+        qWarning() << "添加标签失败:" << query.lastError().text();
         return false;
     }
+    
+    // 获取新插入的标签ID
+    int newTagId = query.lastInsertId().toInt();
+    
+    // 创建新的Tag对象并添加到缓存
+    auto tag = QSharedPointer<Tag>::create();
+    tag->setId(newTagId);
+    tag->setName(name);
+    tag->setColor(color);
+    tag->setDescription(description);
+    tag->setCreatedAt(now);
+    tag->setUpdatedAt(now);
+    
+    m_tagsCache.insert(newTagId, tag);
+    
+    // 发出信号通知标签列表已更新
+    emit tagsChanged();
+    
+    return true;
 }
 
 bool TagManager::removeTag(int tagId)
@@ -307,4 +322,34 @@ bool TagManager::isTagNameExists(const QString &name) const {
         return query.value(0).toInt() > 0;
     }
     return false;
+}
+
+bool TagManager::deleteTag(int tagId)
+{
+    if (tagId <= 0) {
+        qWarning() << "Invalid tag ID:" << tagId;
+        return false;
+    }
+    
+    DatabaseManager& db = DatabaseManager::instance();
+    
+    // 首先删除标签与文件的关联
+    if (!db.execute("DELETE FROM file_tags WHERE tag_id = ?", {tagId})) {
+        qWarning() << "Failed to delete tag associations";
+        return false;
+    }
+    
+    // 然后删除标签本身
+    if (!db.execute("DELETE FROM tags WHERE id = ?", {tagId})) {
+        qWarning() << "Failed to delete tag";
+        return false;
+    }
+    
+    // 从缓存中移除
+    if (m_tagsCache.contains(tagId)) {
+        m_tagsCache.remove(tagId);
+    }
+    
+    emit tagDeleted(tagId);
+    return true;
 } 

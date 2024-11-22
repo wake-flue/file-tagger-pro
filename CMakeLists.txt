@@ -87,6 +87,7 @@ set(QML_FILES
         qml/settings/FileTypeSettings.qml
         qml/settings/DatabaseSettings.qml
         qml/settings/LogSettings.qml
+        qml/settings/TagSettings.qml
 )
 
 # 添加 qmldir 文件到资源列表
@@ -116,6 +117,8 @@ set(RESOURCE_FILES
         resources/images/checkmark.svg
         resources/images/search.svg
         resources/images/add.svg
+        resources/images/edit.svg
+        resources/images/delete.svg
         resources/images/remove.svg
         resources/images/tag.svg
         resources/images/tag-edit.svg
