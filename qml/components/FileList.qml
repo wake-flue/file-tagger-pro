@@ -151,7 +151,7 @@ Item {
                                 onStatusChanged: {
                                     switch (status) {
                                         case Image.Loading:
-                                            loadingTimer.restart();  // ���始计时
+                                            loadingTimer.restart();  // 始计时
                                             break;
                                         case Image.Ready:
                                             loadingTimer.stop();  // 停止计时
@@ -376,6 +376,44 @@ Item {
                             } else {
                                 console.error("fileManager 未定义!")
                             }
+                        }
+                    }
+
+                    MenuItem {
+                        id: tagEditMenuItem
+                        text: qsTr("编辑标签")
+                        icon.source: "qrc:/resources/images/tag-edit.svg"
+                        icon.width: 14
+                        icon.height: 14
+                        
+                        background: Rectangle {
+                            implicitWidth: 180
+                            implicitHeight: 28
+                            color: "transparent"
+                        }
+                        
+                        contentItem: RowLayout {
+                            spacing: 6
+                            Image {
+                                source: tagEditMenuItem.icon.source
+                                sourceSize.width: tagEditMenuItem.icon.width
+                                sourceSize.height: tagEditMenuItem.icon.height
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+                            Text {
+                                text: tagEditMenuItem.text
+                                color: "#000000"
+                                font.family: "Microsoft YaHei"
+                                font.pixelSize: 12
+                                Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignVCenter
+                                Layout.leftMargin: 2
+                            }
+                        }
+                        
+                        onTriggered: {
+                            fileTagDialog.filePath = delegateItem.filePath
+                            fileTagDialog.open()
                         }
                     }
                     

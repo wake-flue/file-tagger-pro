@@ -88,6 +88,7 @@ set(QML_FILES
         qml/dialogs/SpriteDialog.qml
         qml/dialogs/TagEditDialog.qml
         qml/dialogs/DatabaseViewerDialog.qml
+        qml/dialogs/FileTagDialog.qml
 )
 
 # 添加 qmldir 文件到资源列表

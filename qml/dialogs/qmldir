@@ -5,4 +5,5 @@ LogViewerDialog 1.0 LogViewerDialog.qml
 PlayerSettingsDialog 1.0 PlayerSettingsDialog.qml
 FolderPickerDialog 1.0 FolderPickerDialog.qml
 SpriteDialog 1.0 SpriteDialog.qml
-TagEditDialog 1.0 TagEditDialog.qml 
+TagEditDialog 1.0 TagEditDialog.qml
+FileTagDialog 1.0 FileTagDialog.qml 

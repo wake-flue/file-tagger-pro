@@ -115,7 +115,7 @@ Window {
             dbViewerDialog: dbViewerDialog
         }
         
-        // 添加新的 TagToolBar
+        // TagToolBar
         Components.TagToolBar {
             Layout.fillWidth: true
             style: style
@@ -225,5 +225,10 @@ Window {
 
     Dialogs.DatabaseViewerDialog {
         id: dbViewerDialog
+    }
+
+    Dialogs.FileTagDialog {
+        id: fileTagDialog
+        style: style
     }
 } // 这里是 Window 的结束括号
