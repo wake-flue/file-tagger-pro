@@ -2,19 +2,32 @@ cmake_minimum_required(VERSION 3.16)
 
 project(FileTaggingApp VERSION 1.0 LANGUAGES CXX)
 
+# 首先找到 Qt6 Core 模块
+find_package(Qt6 REQUIRED COMPONENTS Core)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 # 设置 Qt 策略
+qt_standard_project_setup()
 set(CMAKE_POLICY_DEFAULT_CMP0071 NEW)
+
+# 设置 QML 输出目录
 set(QT_QML_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/qml)
 
-# 添加 Qt 策略设置
-if(POLICY QTP0001)
+# 明确设置 QTP0001 策略
+if (POLICY QTP0001)
     cmake_policy(SET QTP0001 NEW)
-endif()
+endif ()
+
+# 添加其他 Qt 模块
+find_package(Qt6 REQUIRED COMPONENTS Concurrent Gui Quick QuickDialogs2 QuickControls2 Qml)
+
+# 设置 QML 模块的资源前缀
+set(QML_RESOURCE_PREFIX "/")
+set(QML_IMPORT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/qml")
 
 # 添加 FFmpeg 路径
 set(FFMPEG_ROOT "D:/Environment/ffmpeg")
@@ -27,91 +40,50 @@ find_library(AVFORMAT_LIBRARY avformat PATHS ${FFMPEG_LIB_DIR} NO_DEFAULT_PATH)
 find_library(AVUTIL_LIBRARY avutil PATHS ${FFMPEG_LIB_DIR} NO_DEFAULT_PATH)
 find_library(SWSCALE_LIBRARY swscale PATHS ${FFMPEG_LIB_DIR} NO_DEFAULT_PATH)
 
-# 添加 QuickEffects 模块
-find_package(Qt6 REQUIRED COMPONENTS Concurrent Core Gui Quick QuickDialogs2 QuickControls2)
-
 # 源文件
 set(SOURCES
-    src/main.cpp
-    src/core/filesystemmanager.cpp
-    src/models/filedata.cpp
-    src/models/filelistmodel.cpp
-    src/utils/logger.cpp
-    src/utils/previewgenerator.cpp
-    src/utils/defaultapps.cpp
-    src/utils/spritegenerator.cpp
+        src/main.cpp
+        src/core/filesystemmanager.cpp
+        src/models/filedata.cpp
+        src/models/filelistmodel.cpp
+        src/utils/logger.cpp
+        src/utils/previewgenerator.cpp
+        src/utils/defaultapps.cpp
+        src/utils/spritegenerator.cpp
 )
 
 # 头文件
 set(HEADERS
-    src/core/filesystemmanager.h
-    src/models/filedata.h
-    src/models/filelistmodel.h
-    src/utils/logger.h
-    src/utils/previewgenerator.h
-    src/utils/defaultapps.h
-    src/utils/spritegenerator.h
+        src/core/filesystemmanager.h
+        src/models/filedata.h
+        src/models/filelistmodel.h
+        src/utils/logger.h
+        src/utils/previewgenerator.h
+        src/utils/defaultapps.h
+        src/utils/spritegenerator.h
 )
 
-# QML文件
+# QML文件和资源文件分开定义
 set(QML_FILES
-    qml/main.qml
-    qml/components/FileList.qml
-    qml/components/LogViewer.qml
-    qml/components/TopToolBar.qml
-    qml/components/Splitter.qml
-    qml/components/DetailPanel.qml
-    qml/components/StatusBar.qml
-    qml/components/Settings.qml
-    qml/components/qmldir
-    qml/dialogs/FilterDialog.qml
-    qml/dialogs/LogViewerDialog.qml
-    qml/dialogs/PlayerSettingsDialog.qml
-    qml/dialogs/FolderPickerDialog.qml
-    qml/dialogs/SpriteDialog.qml
-    qml/dialogs/qmldir
+        qml/main.qml
+        qml/components/FileList.qml
+        qml/components/LogViewer.qml
+        qml/components/TopToolBar.qml
+        qml/components/Splitter.qml
+        qml/components/DetailPanel.qml
+        qml/components/StatusBar.qml
+        qml/components/Settings.qml
+        qml/dialogs/FilterDialog.qml
+        qml/dialogs/LogViewerDialog.qml
+        qml/dialogs/PlayerSettingsDialog.qml
+        qml/dialogs/FolderPickerDialog.qml
+        qml/dialogs/SpriteDialog.qml
 )
 
 # 添加 qmldir 文件到资源列表
 set(RESOURCE_FILES
-    qml/components/qmldir
-    qml/dialogs/qmldir
-)
-
-qt_add_executable(FileTaggingApp
-    ${SOURCES}
-    ${HEADERS}
-    ${RESOURCE_FILES}  # 添加资源文件
-)
-
-target_include_directories(FileTaggingApp PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${FFMPEG_INCLUDE_DIR}
-)
-
-target_link_directories(FileTaggingApp PRIVATE
-    ${FFMPEG_LIB_DIR}
-)
-
-target_link_libraries(FileTaggingApp PRIVATE
-    Qt6::Core
-    Qt6::Gui
-    Qt6::Quick
-    Qt6::QuickDialogs2
-    Qt6::QuickControls2
-    Qt6::Concurrent
-    ${AVCODEC_LIBRARY}
-    ${AVFORMAT_LIBRARY}
-    ${AVUTIL_LIBRARY}
-    ${SWSCALE_LIBRARY}
-)
-
-# 使用qt_add_resources添加所有资源
-qt_add_resources(FileTaggingApp "qml"
-    PREFIX "/"
-    FILES
-        ${RESOURCE_FILES}
-        ${QML_FILES}
+        qml/components/qmldir
+        qml/dialogs/qmldir
         resources/images/file.svg
         resources/images/folder.svg
         resources/images/refresh.svg
@@ -135,23 +107,61 @@ qt_add_resources(FileTaggingApp "qml"
         resources/images/search.svg
 )
 
+qt_add_executable(FileTaggingApp
+        ${SOURCES}
+        ${HEADERS}
+        ${RESOURCE_FILES}  # 添加资源文件
+)
+
+target_include_directories(FileTaggingApp PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${FFMPEG_INCLUDE_DIR}
+)
+
+target_link_directories(FileTaggingApp PRIVATE
+        ${FFMPEG_LIB_DIR}
+)
+
+target_link_libraries(FileTaggingApp PRIVATE
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Quick
+        Qt6::QuickDialogs2
+        Qt6::QuickControls2
+        Qt6::Concurrent
+        ${AVCODEC_LIBRARY}
+        ${AVFORMAT_LIBRARY}
+        ${AVUTIL_LIBRARY}
+        ${SWSCALE_LIBRARY}
+)
+
+# 使用qt_add_resources添加所有资源
+qt_add_resources(FileTaggingApp "qml"
+        PREFIX "/"
+        FILES
+        ${RESOURCE_FILES}
+        ${QML_FILES}
+)
+
 # 添加 QML 导入路径
 target_compile_definitions(FileTaggingApp PRIVATE
-    QML_IMPORT_PATH="${CMAKE_CURRENT_SOURCE_DIR}/qml"
+        QML_IMPORT_PATH="${CMAKE_CURRENT_SOURCE_DIR}/qml"
 )
 
 # 确保运行时能找到 FFmpeg DLL
 add_custom_command(TARGET FileTaggingApp POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    "${FFMPEG_ROOT}/bin"
-    $<TARGET_FILE_DIR:FileTaggingApp>
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${FFMPEG_ROOT}/bin"
+        $<TARGET_FILE_DIR:FileTaggingApp>
 )
 
-# 确保 QML 文件被正确复制到构建目录
+# 使用qt_add_qml_module添加QML模块
 qt_add_qml_module(FileTaggingApp
-    URI FileTaggingApp
-    VERSION 1.0
-    QML_FILES ${QML_FILES}
-    RESOURCES ${RESOURCE_FILES}
-    IMPORT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/qml
+        URI FileTaggingApp
+        VERSION 1.0
+        QML_FILES ${QML_FILES}
+        RESOURCES ${RESOURCE_FILES}
+        RESOURCE_PREFIX ${QML_RESOURCE_PREFIX}
+        IMPORT_PATH ${QML_IMPORT_PATH}
+        NO_RESOURCE_TARGET_PATH
 )
