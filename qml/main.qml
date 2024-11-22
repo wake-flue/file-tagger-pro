@@ -110,9 +110,9 @@ Window {
             settings: settings
             fileManager: fileManager
             filterDialog: filterDialog
-            playerSettingsDialog: playerSettingsDialog
             folderDialog: folderDialog
             dbViewerDialog: dbViewerDialog
+            settingsWindow: settingsWindow
         }
         
         // TagToolBar
@@ -216,13 +216,6 @@ Window {
         id: settings
     }
 
-    // 在 Window 的底部添加对话框组件
-    Dialogs.PlayerSettingsDialog {
-        id: playerSettingsDialog
-        settings: settings
-        style: style
-    }
-
     Dialogs.DatabaseViewerDialog {
         id: dbViewerDialog
     }
@@ -230,5 +223,12 @@ Window {
     Dialogs.FileTagDialog {
         id: fileTagDialog
         style: style
+    }
+
+    // 添加设置窗口
+    Dialogs.SettingsWindow {
+        id: settingsWindow
+        style: style
+        settings: settings
     }
 } // 这里是 Window 的结束括号

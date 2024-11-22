@@ -48,7 +48,6 @@ set(SOURCES
         src/models/filelistmodel.cpp
         src/utils/logger.cpp
         src/utils/previewgenerator.cpp
-        src/utils/defaultapps.cpp
         src/utils/spritegenerator.cpp
         src/core/tagmanager.cpp
         src/core/databasemanager.cpp
@@ -62,7 +61,6 @@ set(HEADERS
         src/models/filelistmodel.h
         src/utils/logger.h
         src/utils/previewgenerator.h
-        src/utils/defaultapps.h
         src/utils/spritegenerator.h
         src/core/tagmanager.h
         src/core/databasemanager.h
@@ -83,18 +81,21 @@ set(QML_FILES
         qml/components/TagToolBar.qml
         qml/dialogs/FilterDialog.qml
         qml/dialogs/LogViewerDialog.qml
-        qml/dialogs/PlayerSettingsDialog.qml
         qml/dialogs/FolderPickerDialog.qml
         qml/dialogs/SpriteDialog.qml
         qml/dialogs/TagEditDialog.qml
         qml/dialogs/DatabaseViewerDialog.qml
         qml/dialogs/FileTagDialog.qml
+        qml/dialogs/SettingsWindow.qml
+        qml/settings/SettingsStyle.qml
+        qml/settings/PlayerSettings.qml
 )
 
 # 添加 qmldir 文件到资源列表
 set(RESOURCE_FILES
         qml/components/qmldir
         qml/dialogs/qmldir
+        qml/settings/qmldir
         resources/images/file.svg
         resources/images/folder.svg
         resources/images/refresh.svg
@@ -122,6 +123,7 @@ set(RESOURCE_FILES
         resources/images/tag-edit.svg
         resources/images/database.svg
         resources/images/backup.svg
+        resources/images/setting.svg
 )
 
 qt_add_executable(FileTaggingApp

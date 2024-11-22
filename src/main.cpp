@@ -4,7 +4,6 @@
 #include "core/filesystemmanager.h"
 #include "models/filedata.h"
 #include "models/filelistmodel.h"
-#include "utils/defaultapps.h"
 #include <QQmlEngine>
 #include <QtQuickControls2/QQuickStyle>
 #include <QDir>
@@ -39,7 +38,6 @@ int main(int argc, char *argv[])
     qmlRegisterUncreatableType<FileListModel>("FileManager", 1, 0, "ViewMode",
         "ViewMode is an enum type");
     qmlRegisterType<FileData>("FileManager", 1, 0, "FileData");
-    qmlRegisterType<DefaultApps>("FileManager", 1, 0, "DefaultApps");
     qmlRegisterSingletonType<TagManager>("FileManager", 1, 0, "TagManager",
         [](QQmlEngine *engine, QJSEngine *scriptEngine) -> QObject* {
             Q_UNUSED(engine)

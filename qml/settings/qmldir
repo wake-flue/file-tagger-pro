@@ -1,0 +1,3 @@
+module Settings
+PlayerSettings 1.0 PlayerSettings.qml
+SettingsStyle 1.0 SettingsStyle.qml 

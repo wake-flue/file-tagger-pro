@@ -16,9 +16,9 @@ Rectangle {
     required property QtObject settings
     required property QtObject fileManager
     required property QtObject filterDialog
-    required property QtObject playerSettingsDialog
     required property QtObject folderDialog
     required property QtObject dbViewerDialog
+    required property QtObject settingsWindow
 
     RowLayout {
         anchors {
@@ -235,82 +235,52 @@ Rectangle {
             spacing: 4
             Layout.alignment: Qt.AlignVCenter
 
-            // 筛选按钮
+            // 添加设置按钮
             Button {
-                id: filterButton
-                icon.source: "qrc:/resources/images/filter.svg"
+                id: settingsButton
+                icon.source: "qrc:/resources/images/setting.svg"
                 icon.width: 14
                 icon.height: 14
                 padding: 0
                 
                 background: Rectangle {
-                    implicitWidth: 32  // 减小宽度，只显示图标
+                    implicitWidth: 32
                     implicitHeight: 28
-                    color: filterButton.down ? Qt.darker(root.style.backgroundColor, 1.1) : 
-                           filterButton.hovered ? root.style.hoverColor : root.style.backgroundColor
-                    border.color: filterButton.down ? root.style.accentColor : 
-                                filterButton.hovered ? root.style.accentColor : root.style.borderColor
+                    color: settingsButton.down ? Qt.darker(root.style.backgroundColor, 1.1) : 
+                           settingsButton.hovered ? root.style.hoverColor : root.style.backgroundColor
+                    border.color: settingsButton.down ? root.style.accentColor : 
+                                settingsButton.hovered ? root.style.accentColor : root.style.borderColor
                     border.width: 1
                     radius: 3
                 }
                 
-                contentItem: Image {
-                    source: filterButton.icon.source
-                    sourceSize.width: 14
-                    sourceSize.height: 14
-                    width: filterButton.icon.width
-                    height: filterButton.icon.height
-                    anchors.centerIn: parent
+                contentItem: Item {
+                    implicitWidth: settingsButton.background.implicitWidth
+                    implicitHeight: settingsButton.background.implicitHeight
+                    
+                    Image {
+                        source: settingsButton.icon.source
+                        sourceSize.width: settingsButton.icon.width
+                        sourceSize.height: settingsButton.icon.height
+                        width: settingsButton.icon.width
+                        height: settingsButton.icon.height
+                        anchors.centerIn: parent
+                        
+                        Behavior on opacity {
+                            NumberAnimation { duration: 100 }
+                        }
+                    }
                 }
                 
                 ToolTip {
-                    visible: filterButton.hovered
-                    text: "筛选"
+                    visible: settingsButton.hovered
+                    text: "设置"
                     delay: 500
                     font.family: root.style.fontFamily
                     font.pixelSize: root.style.defaultFontSize - 1
                 }
                 
-                onClicked: root.filterDialog.open()
-            }
-
-            // 播放器设置按钮
-            Button {
-                id: playerSettingsButton
-                icon.source: "qrc:/resources/images/player.svg"
-                icon.width: 14
-                icon.height: 14
-                padding: 0
-                
-                background: Rectangle {
-                    implicitWidth: 32  // 减小宽度，只显示图标
-                    implicitHeight: 28
-                    color: playerSettingsButton.down ? Qt.darker(root.style.backgroundColor, 1.1) : 
-                           playerSettingsButton.hovered ? root.style.hoverColor : root.style.backgroundColor
-                    border.color: playerSettingsButton.down ? root.style.accentColor : 
-                                playerSettingsButton.hovered ? root.style.accentColor : root.style.borderColor
-                    border.width: 1
-                    radius: 3
-                }
-                
-                contentItem: Image {
-                    source: playerSettingsButton.icon.source
-                    sourceSize.width: 14
-                    sourceSize.height: 14
-                    width: playerSettingsButton.icon.width
-                    height: playerSettingsButton.icon.height
-                    anchors.centerIn: parent
-                }
-                
-                ToolTip {
-                    visible: playerSettingsButton.hovered
-                    text: "播放器"
-                    delay: 500
-                    font.family: root.style.fontFamily
-                    font.pixelSize: root.style.defaultFontSize - 1
-                }
-                
-                onClicked: root.playerSettingsDialog.open()
+                onClicked: root.settingsWindow.show()
             }
 
             // 列表视图按钮
