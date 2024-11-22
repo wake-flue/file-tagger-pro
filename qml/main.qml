@@ -101,10 +101,9 @@ Window {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 8
         spacing: 8
-
-        // 顶部功能栏
+        
+        // TopToolBar
         Components.TopToolBar {
             Layout.fillWidth: true
             style: style
@@ -113,8 +112,18 @@ Window {
             filterDialog: filterDialog
             playerSettingsDialog: playerSettingsDialog
             folderDialog: folderDialog
+            dbViewerDialog: dbViewerDialog
         }
-
+        
+        // 添加新的 TagToolBar
+        Components.TagToolBar {
+            Layout.fillWidth: true
+            style: style
+            settings: settings
+            fileManager: fileManager
+            dbViewerDialog: dbViewerDialog
+        }
+        
         // 主内容区域
         Rectangle {
             Layout.fillWidth: true
@@ -212,5 +221,9 @@ Window {
         id: playerSettingsDialog
         settings: settings
         style: style
+    }
+
+    Dialogs.DatabaseViewerDialog {
+        id: dbViewerDialog
     }
 } // 这里是 Window 的结束括号

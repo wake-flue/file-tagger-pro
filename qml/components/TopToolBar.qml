@@ -18,6 +18,7 @@ Rectangle {
     required property QtObject filterDialog
     required property QtObject playerSettingsDialog
     required property QtObject folderDialog
+    required property QtObject dbViewerDialog
 
     RowLayout {
         anchors {

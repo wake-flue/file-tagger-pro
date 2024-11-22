@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import FileManager 1.0
+import "../dialogs" as Dialogs
 
 Rectangle {
     id: root

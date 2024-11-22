@@ -23,7 +23,7 @@ if (POLICY QTP0001)
 endif ()
 
 # 添加其他 Qt 模块
-find_package(Qt6 REQUIRED COMPONENTS Concurrent Gui Quick QuickDialogs2 QuickControls2 Qml)
+find_package(Qt6 REQUIRED COMPONENTS Concurrent Gui Quick QuickDialogs2 QuickControls2 Qml Sql)
 
 # 设置 QML 模块的资源前缀
 set(QML_RESOURCE_PREFIX "/")
@@ -50,6 +50,9 @@ set(SOURCES
         src/utils/previewgenerator.cpp
         src/utils/defaultapps.cpp
         src/utils/spritegenerator.cpp
+        src/core/tagmanager.cpp
+        src/core/databasemanager.cpp
+        src/models/tag.cpp
 )
 
 # 头文件
@@ -61,6 +64,9 @@ set(HEADERS
         src/utils/previewgenerator.h
         src/utils/defaultapps.h
         src/utils/spritegenerator.h
+        src/core/tagmanager.h
+        src/core/databasemanager.h
+        src/models/tag.h
 )
 
 # QML文件和资源文件分开定义
@@ -73,11 +79,15 @@ set(QML_FILES
         qml/components/DetailPanel.qml
         qml/components/StatusBar.qml
         qml/components/Settings.qml
+        qml/components/TagList.qml
+        qml/components/TagToolBar.qml
         qml/dialogs/FilterDialog.qml
         qml/dialogs/LogViewerDialog.qml
         qml/dialogs/PlayerSettingsDialog.qml
         qml/dialogs/FolderPickerDialog.qml
         qml/dialogs/SpriteDialog.qml
+        qml/dialogs/TagEditDialog.qml
+        qml/dialogs/DatabaseViewerDialog.qml
 )
 
 # 添加 qmldir 文件到资源列表
@@ -105,12 +115,17 @@ set(RESOURCE_FILES
         resources/images/code.svg
         resources/images/checkmark.svg
         resources/images/search.svg
+        resources/images/add.svg
+        resources/images/remove.svg
+        resources/images/tag.svg
+        resources/images/tag-edit.svg
+        resources/images/database.svg
+        resources/images/backup.svg
 )
 
 qt_add_executable(FileTaggingApp
         ${SOURCES}
         ${HEADERS}
-        ${RESOURCE_FILES}  # 添加资源文件
 )
 
 target_include_directories(FileTaggingApp PRIVATE
@@ -129,6 +144,7 @@ target_link_libraries(FileTaggingApp PRIVATE
         Qt6::QuickDialogs2
         Qt6::QuickControls2
         Qt6::Concurrent
+        Qt6::Sql
         ${AVCODEC_LIBRARY}
         ${AVFORMAT_LIBRARY}
         ${AVUTIL_LIBRARY}
@@ -136,11 +152,18 @@ target_link_libraries(FileTaggingApp PRIVATE
 )
 
 # 使用qt_add_resources添加所有资源
+qt_add_resources(FileTaggingApp "resources"
+    PREFIX "/"
+    BASE "${CMAKE_CURRENT_SOURCE_DIR}"
+    FILES
+    ${RESOURCE_FILES}
+)
+
 qt_add_resources(FileTaggingApp "qml"
-        PREFIX "/"
-        FILES
-        ${RESOURCE_FILES}
-        ${QML_FILES}
+    PREFIX "/"
+    BASE "${CMAKE_CURRENT_SOURCE_DIR}"
+    FILES
+    ${QML_FILES}
 )
 
 # 添加 QML 导入路径
