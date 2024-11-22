@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QString>
 #include <QDateTime>
+#include <QImage>
 
 class FileData : public QObject
 {
@@ -65,6 +66,8 @@ public:
     void setFileId(const QString &fileId);
     void setRelativePath(const QString &relativePath);
 
+    void clearPreview();
+
 signals:
     void fileNameChanged();
     void fileIconChanged();
@@ -88,6 +91,8 @@ private:
     QString m_relativePath;
     QString m_previewPath;
     bool m_previewLoading = false;
+    QImage m_preview;
+    bool m_previewGenerated = false;
 };
 
 Q_DECLARE_METATYPE(FileData)

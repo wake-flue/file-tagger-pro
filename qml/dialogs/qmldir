@@ -1,6 +1,5 @@
 module Dialogs
 DatabaseViewerDialog 1.0 DatabaseViewerDialog.qml
-FilterDialog 1.0 FilterDialog.qml
 LogViewerDialog 1.0 LogViewerDialog.qml
 FolderPickerDialog 1.0 FolderPickerDialog.qml
 SpriteDialog 1.0 SpriteDialog.qml

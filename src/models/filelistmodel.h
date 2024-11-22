@@ -82,6 +82,7 @@ protected:
 public slots:
     void setFiles(const QVector<QSharedPointer<FileData>> &files);
     void clear();
+    void clearPreviews();  // 添加清除预览的方法声明
 
 signals:
     void countChanged();
@@ -103,6 +104,7 @@ private:
     QString m_searchPattern;
     QVector<QSharedPointer<FileData>> m_allFiles;  // 存储所有文件
     QVector<QSharedPointer<FileData>> m_filteredFiles;  // 存储筛选后的文件
+    void initialize();  // 添加这行
 };
 
 #endif // FILELISTMODEL_H

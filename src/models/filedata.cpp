@@ -160,3 +160,9 @@ void FileData::setPreviewLoading(bool loading)
         emit previewLoadingChanged();
     }
 }
+
+void FileData::clearPreview()
+{
+    m_preview = QImage();  // 清除预览图像
+    m_previewGenerated = false;  // 重置预览状态
+}

@@ -79,7 +79,6 @@ set(QML_FILES
         qml/components/Settings.qml
         qml/components/TagList.qml
         qml/components/TagToolBar.qml
-        qml/dialogs/FilterDialog.qml
         qml/dialogs/LogViewerDialog.qml
         qml/dialogs/FolderPickerDialog.qml
         qml/dialogs/SpriteDialog.qml
@@ -89,6 +88,7 @@ set(QML_FILES
         qml/dialogs/SettingsWindow.qml
         qml/settings/SettingsStyle.qml
         qml/settings/PlayerSettings.qml
+        qml/settings/FileTypeSettings.qml
 )
 
 # 添加 qmldir 文件到资源列表

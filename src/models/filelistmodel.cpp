@@ -6,10 +6,17 @@
 #include <QDebug>
 #include <algorithm>
 #include <QRegularExpression>
+#include <QImageReader>
 
 FileListModel::FileListModel(QObject *parent)
     : QAbstractListModel(parent)
 {
+    initialize();
+}
+
+void FileListModel::initialize()
+{
+    QImageReader::setAllocationLimit(64);
 }
 
 int FileListModel::rowCount(const QModelIndex &parent) const
@@ -275,4 +282,19 @@ void FileListModel::applyFilters()
     beginResetModel();
     m_files = m_filteredFiles;
     endResetModel();
+}
+
+void FileListModel::clearPreviews()
+{
+    // 清除所有文件的预览缓存
+    for (auto &file : m_files) {
+        if (file) {
+            file->clearPreview();
+        }
+    }
+    
+    // 触发视图更新
+    if (!m_files.isEmpty()) {
+        emit dataChanged(index(0), index(m_files.size() - 1));
+    }
 }

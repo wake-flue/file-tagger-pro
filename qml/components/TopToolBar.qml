@@ -15,7 +15,6 @@ Rectangle {
     required property QtObject style
     required property QtObject settings
     required property QtObject fileManager
-    required property QtObject filterDialog
     required property QtObject folderDialog
     required property QtObject dbViewerDialog
     required property QtObject settingsWindow
@@ -124,7 +123,13 @@ Rectangle {
                 
                 onClicked: {
                     if (root.fileManager.currentPath) {
-                        let currentFilter = root.settings.value("fileFilter", "")
+                        // 清除现有的预览缓存
+                        if (root.fileManager.fileModel) {
+                            root.fileManager.fileModel.clearPreviews()  // 需要在 FileListModel 中添加此方法
+                        }
+                        
+                        // 使用当前的过滤器设置重新扫描
+                        let currentFilter = root.settings.fileFilter
                         let filters = currentFilter ? currentFilter.split(';') : []
                         root.fileManager.scanDirectory(root.fileManager.currentPath, filters)
                     }

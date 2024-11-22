@@ -14,8 +14,12 @@ Window {
     
     required property QtObject style
     required property QtObject settings
+    required property var fileManager
     
     color: style.backgroundColor
+    
+    // 添加当前页面索引属性
+    property alias currentIndex: settingsList.currentIndex
     
     RowLayout {
         anchors.fill: parent
@@ -114,7 +118,12 @@ Window {
                 
                 // 文件类型设置
                 Item {
-                    // TODO: 添加文件类型设置内容
+                    Settings.FileTypeSettings {
+                        anchors.fill: parent
+                        settings: root.settings
+                        style: root.style
+                        fileManager: root.fileManager
+                    }
                 }
                 
                 // 标签设置

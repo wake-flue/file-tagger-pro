@@ -109,7 +109,6 @@ Window {
             style: style
             settings: settings
             fileManager: fileManager
-            filterDialog: filterDialog
             folderDialog: folderDialog
             dbViewerDialog: dbViewerDialog
             settingsWindow: settingsWindow
@@ -194,26 +193,9 @@ Window {
         logMessages: fileManager.logMessages
     }
 
-    // 在窗口底部添加 FilterDialog
-    Dialogs.FilterDialog {
-        id: filterDialog
-        width: 400
-        height: 200
-        settings: settings
-        style: style  // 传递 style 对象
-        
-        onAccepted: {
-            fileManager.fileModel.filterPattern = currentFilter
-        }
-        
-        Component.onCompleted: {
-            fileManager.fileModel.filterPattern = currentFilter
-        }
-    }
-
-    // 添加 Settings 实例
-    Components.Settings {
-        id: settings
+    // 直接使用 settings 中的值
+    Component.onCompleted: {
+        fileManager.fileModel.filterPattern = settings.fileFilter
     }
 
     Dialogs.DatabaseViewerDialog {
@@ -230,5 +212,11 @@ Window {
         id: settingsWindow
         style: style
         settings: settings
+        fileManager: fileManager
+    }
+
+    // 添加 Settings 实例
+    Components.Settings {
+        id: settings
     }
 } // 这里是 Window 的结束括号
