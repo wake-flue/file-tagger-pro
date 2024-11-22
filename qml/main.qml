@@ -187,11 +187,6 @@ Window {
 
     } // 这里是 ColumnLayout 的结束括号
 
-    Dialogs.LogViewerDialog {
-        id: logDialog
-        logMessages: fileManager.logMessages
-    }
-
     // 直接使用 settings 中的值
     Component.onCompleted: {
         fileManager.fileModel.filterPattern = settings.fileFilter

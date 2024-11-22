@@ -71,15 +71,12 @@ set(HEADERS
 set(QML_FILES
         qml/main.qml
         qml/components/FileList.qml
-        qml/components/LogViewer.qml
         qml/components/TopToolBar.qml
         qml/components/Splitter.qml
         qml/components/DetailPanel.qml
         qml/components/StatusBar.qml
         qml/components/Settings.qml
-        qml/components/TagList.qml
         qml/components/TagToolBar.qml
-        qml/dialogs/LogViewerDialog.qml
         qml/dialogs/FolderPickerDialog.qml
         qml/dialogs/SpriteDialog.qml
         qml/dialogs/TagEditDialog.qml
@@ -89,6 +86,7 @@ set(QML_FILES
         qml/settings/PlayerSettings.qml
         qml/settings/FileTypeSettings.qml
         qml/settings/DatabaseSettings.qml
+        qml/settings/LogSettings.qml
 )
 
 # 添加 qmldir 文件到资源列表

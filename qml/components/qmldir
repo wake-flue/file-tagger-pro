@@ -1,12 +1,10 @@
 module Components
 FileList 1.0 FileList.qml
-LogViewer 1.0 LogViewer.qml
 TopToolBar 1.0 TopToolBar.qml
 Splitter 1.0 Splitter.qml
 DetailPanel 1.0 DetailPanel.qml
 StatusBar 1.0 StatusBar.qml
 Settings 1.0 Settings.qml
-TagList 1.0 TagList.qml
 TagToolBar 1.0 TagToolBar.qml
 
 

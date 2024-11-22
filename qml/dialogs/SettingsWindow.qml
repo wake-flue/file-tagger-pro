@@ -43,6 +43,7 @@ Window {
                     ListElement { name: "文件类型" }
                     ListElement { name: "标签" }
                     ListElement { name: "数据库" }
+                    ListElement { name: "日志" }
                 }
                 
                 delegate: ItemDelegate {
@@ -137,6 +138,16 @@ Window {
                         anchors.fill: parent
                         settings: root.settings
                         style: root.style
+                    }
+                }
+                
+                // 日志设置
+                Item {
+                    Settings.LogSettings {
+                        anchors.fill: parent
+                        settings: root.settings
+                        style: root.style
+                        fileManager: root.fileManager
                     }
                 }
             }
