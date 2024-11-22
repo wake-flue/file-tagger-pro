@@ -36,6 +36,7 @@ private:
     bool createTagsTable();
     bool createFileTagsTable();
     bool createSettingsTable();
+    bool createFileIdentifiersTable();
     
     // 数据库升级相关
     bool applyMigration(int version);

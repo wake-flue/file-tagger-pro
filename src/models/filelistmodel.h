@@ -2,8 +2,8 @@
 #define FILELISTMODEL_H
 
 #include <QAbstractListModel>
-#include <QColor>  // 添加 QColor 头文件
-#include <QSharedPointer>  // 添加 QSharedPointer 头文件
+#include <QColor>
+#include <QSharedPointer>
 #include "filedata.h"
 
 class FileListModel : public QAbstractListModel
@@ -19,12 +19,11 @@ class FileListModel : public QAbstractListModel
 public:
     // 视图模式枚举
     enum ViewMode {
-        ListView,       // 列表视图
-        LargeIconView  // 大图标视图
+        ListView,
+        LargeIconView
     };
-    Q_ENUM(ViewMode)  // 使枚举可在QML中使用
+    Q_ENUM(ViewMode)
 
-    // 添加数据角色枚举
     enum Roles {
         FileNameRole = Qt::UserRole + 1,
         FileSizeRole,
@@ -33,8 +32,9 @@ public:
         DisplaySizeRole,
         DisplayDateRole,
         IndexRole,
-        PreviewPathRole,      // 添加预览路径角色
-        PreviewLoadingRole    // 添加预览加载状态角色
+        PreviewPathRole,
+        PreviewLoadingRole,
+        FileIdRole
     };
 
     enum SortRole {
@@ -52,37 +52,36 @@ public:
     QHash<int, QByteArray> roleNames() const override;
 
     int count() const { return m_files.count(); }
-
     ViewMode viewMode() const { return m_viewMode; }
-    void setViewMode(ViewMode mode);
-
-    // 添加获取完整FileData的方法
-    Q_INVOKABLE FileData* getFileData(int index) const;
-
     SortRole sortRole() const { return m_sortRole; }
-    void setSortRole(SortRole role);
-    
     Qt::SortOrder sortOrder() const { return m_sortOrder; }
-    void setSortOrder(Qt::SortOrder order);
-
     QString filterPattern() const { return m_filterPattern; }
-    void setFilterPattern(const QString &pattern);
-
     QString searchPattern() const { return m_searchPattern; }
-    void setSearchPattern(const QString &pattern);
 
-    // 添加新的函数声明
+    Q_INVOKABLE FileData* getFileData(int index) const;
+    QString getFileId(const QString &filePath) const;
     void updateFiles(const QVector<QSharedPointer<FileData>>& newFiles);
 
 protected:
-    QString formatFileSize(qint64 size) const;  // 添加这行
-    QVariant defaultValue(int role) const;      // 添加这行
-    void applyFilters();                        // 添加这行
+    QString formatFileSize(qint64 size) const;
+    QVariant defaultValue(int role) const;
+    void applyFilters();
 
 public slots:
+    void setViewMode(ViewMode mode);
+    void setSortRole(SortRole role);
+    void setSortOrder(Qt::SortOrder order);
+    void setFilterPattern(const QString &pattern);
+    void setSearchPattern(const QString &pattern);
     void setFiles(const QVector<QSharedPointer<FileData>> &files);
     void clear();
-    void clearPreviews();  // 添加清除预览的方法声明
+    void clearPreviews();
+    void setFilterByFileIds(const QStringList &fileIds, bool showAllIfEmpty = false);
+    void clearFilter() {
+        setFilterPattern("");
+        setSearchPattern("");
+        setFilterByFileIds(QStringList(), true);
+    }
 
 signals:
     void countChanged();
@@ -91,20 +90,22 @@ signals:
     void sortOrderChanged();
     void filterPatternChanged();
     void searchPatternChanged();
-    void needGeneratePreviews();  // 添加这个信号声明
+    void needGeneratePreviews();
 
 private:
-    QVector<QSharedPointer<FileData>> m_files;  // 使用QSharedPointer替代直接存储
-    ViewMode m_viewMode = ListView;  // 默认使用列表视图
+    QVector<QSharedPointer<FileData>> m_files;
+    QVector<QSharedPointer<FileData>> m_allFiles;
+    QVector<QSharedPointer<FileData>> m_filteredFiles;
+    ViewMode m_viewMode = ListView;
     SortRole m_sortRole = SortByName;
     Qt::SortOrder m_sortOrder = Qt::AscendingOrder;
-    void sort();
     QString m_filterPattern;
-    bool matchesFilter(const QString &fileName) const;
     QString m_searchPattern;
-    QVector<QSharedPointer<FileData>> m_allFiles;  // 存储所有文件
-    QVector<QSharedPointer<FileData>> m_filteredFiles;  // 存储筛选后的文件
-    void initialize();  // 添加这行
+    QHash<QString, QString> m_fileIdCache;
+    
+    void initialize();
+    void sort();
+    bool matchesFilter(const QString &fileName) const;
 };
 
 #endif // FILELISTMODEL_H

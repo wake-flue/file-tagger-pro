@@ -120,6 +120,7 @@ Window {
             settings: settings
             fileManager: fileManager
             settingsWindow: settingsWindow
+            fileList: fileList
         }
         
         // 主内容区域

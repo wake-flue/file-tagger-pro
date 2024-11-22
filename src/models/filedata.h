@@ -63,7 +63,12 @@ public:
     void setFileType(const QString &fileType);
     void setFilePath(const QString &filePath);
     void setModifiedDate(const QDateTime &modifiedDate);
-    void setFileId(const QString &fileId);
+    void setFileId(const QString &id) {
+        if (m_fileId != id) {
+            m_fileId = id;
+            emit fileIdChanged();
+        }
+    }
     void setRelativePath(const QString &relativePath);
 
     void clearPreview();

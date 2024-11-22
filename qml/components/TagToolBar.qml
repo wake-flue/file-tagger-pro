@@ -20,6 +20,9 @@ Rectangle {
     // 内部属性
     property var selectedTagIds: []
 
+    // 添加 fileList 属性声明
+    required property var fileList
+
     RowLayout {
         anchors {
             fill: parent
@@ -229,9 +232,40 @@ Rectangle {
 
     // 更新文件过滤器
     function updateFileFilter() {
-        if (root.fileManager && root.fileManager.fileModel) {
-            root.fileManager.fileModel.selectedTagIds = root.selectedTagIds
+        if (root.selectedTagIds.length === 0) {
+            root.fileList.clearFilter()
+            return
         }
+        
+        let filteredFiles = new Set()
+        let isFirst = true
+        
+        for (let tagId of root.selectedTagIds) {
+            let fileIds = TagManager.getFilesByTagId(tagId)
+            if (!fileIds) {
+                console.error("错误：无法获取标签关联的文件ID", tagId)
+                continue
+            }
+            
+            if (isFirst) {
+                fileIds.forEach(fileId => filteredFiles.add(fileId))
+                isFirst = false
+            } else {
+                let intersection = new Set()
+                fileIds.forEach(fileId => {
+                    if (filteredFiles.has(fileId)) {
+                        intersection.add(fileId)
+                    }
+                })
+                filteredFiles = intersection
+            }
+        }
+        
+        if (filteredFiles.size === 0) {
+            console.log("没有找到匹配的文件")
+        }
+        
+        root.fileList.setFilterByFileIds(Array.from(filteredFiles))
     }
 
     // 监听标签变化

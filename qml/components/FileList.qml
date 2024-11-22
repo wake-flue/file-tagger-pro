@@ -49,6 +49,7 @@ Item {
                 required property string displayDate
                 required property string previewPath
                 required property bool previewLoading
+                required property string fileId
                 
                 contentItem: Loader {
                     sourceComponent: gridView.model && 
@@ -412,6 +413,11 @@ Item {
                         }
                         
                         onTriggered: {
+                            if (!delegateItem || !delegateItem.fileId) {
+                                console.error("错误：无法获取文件ID")
+                                return
+                            }
+                            fileTagDialog.fileId = delegateItem.fileId
                             fileTagDialog.filePath = delegateItem.filePath
                             fileTagDialog.open()
                         }
@@ -515,6 +521,7 @@ Item {
                                 fileName: delegateItem.fileName,
                                 fileType: delegateItem.fileType,
                                 filePath: delegateItem.filePath,
+                                fileId: delegateItem.fileId,
                                 displaySize: delegateItem.displaySize,
                                 displayDate: delegateItem.displayDate
                             }, null, 2))
@@ -624,5 +631,18 @@ Item {
         style: root.style
         fileManager: root.fileManager
         filePath: ""
+    }
+    
+    // 添加过滤方法
+    function setFilterByFileIds(fileIds) {
+        if (model) {
+            model.setFilterByFileIds(fileIds, false)
+        }
+    }
+
+    function clearFilter() {
+        if (model) {
+            model.clearFilter()
+        }
     }
 }

@@ -129,14 +129,6 @@ void FileData::setModifiedDate(const QDateTime &modifiedDate)
     }
 }
 
-void FileData::setFileId(const QString &fileId)
-{
-    if (m_fileId != fileId) {
-        m_fileId = fileId;
-        emit fileIdChanged();
-    }
-}
-
 void FileData::setRelativePath(const QString &relativePath)
 {
     if (m_relativePath != relativePath) {

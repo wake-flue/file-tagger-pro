@@ -53,6 +53,7 @@ public slots:
     void openFile(const QString &filePath, const QString &fileType);
     void openVideoAtTime(const QString &filePath, double timestamp);
     double getSpriteTimestamp(const QString &spritePath) const;
+    void onFileRenamed(const QString &oldPath, const QString &newPath);
 
 signals:
     void fileChanged(const QString &path);
@@ -64,6 +65,7 @@ signals:
     void isScanningChanged();
     void spritesGenerated(const QStringList &paths);
     void spriteProgress(int current, int total);
+    void fileRenamed(const QString &oldPath, const QString &newPath);
 
 private:
     void addLogMessage(const QString &message);

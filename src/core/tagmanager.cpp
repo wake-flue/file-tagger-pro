@@ -4,6 +4,11 @@
 #include <QSqlError>
 #include <QDebug>
 #include <QDateTime>
+#include <QCryptographicHash>
+#include <QFile>
+#include <QFileInfo>
+#include <QDir>
+#include <windows.h>
 
 TagManager::TagManager(QObject *parent)
     : QObject(parent)
@@ -149,13 +154,14 @@ bool TagManager::updateTag(int tagId, const QString &name, const QColor &color, 
 }
 
 // 文件标签操作
-bool TagManager::addTagToFile(const QString &filePath, int tagId)
+bool TagManager::addFileTag(const QString &fileId, int tagId)
 {
     QSqlDatabase db = DatabaseManager::instance().database();
     QSqlQuery query(db);
     
-    query.prepare("INSERT OR IGNORE INTO file_tags (file_path, tag_id) VALUES (:path, :tag_id)");
-    query.bindValue(":path", filePath);
+    query.prepare("INSERT OR IGNORE INTO file_tags (file_id, tag_id) "
+                 "VALUES (:file_id, :tag_id)");
+    query.bindValue(":file_id", fileId);
     query.bindValue(":tag_id", tagId);
     
     if (!query.exec()) {
@@ -163,17 +169,18 @@ bool TagManager::addTagToFile(const QString &filePath, int tagId)
         return false;
     }
     
-    emit fileTagsChanged(filePath);
+    emit fileTagsChanged(fileId);
     return true;
 }
 
-bool TagManager::removeTagFromFile(const QString &filePath, int tagId)
+bool TagManager::removeFileTag(const QString &fileId, int tagId)
 {
     QSqlDatabase db = DatabaseManager::instance().database();
     QSqlQuery query(db);
     
-    query.prepare("DELETE FROM file_tags WHERE file_path = :path AND tag_id = :tag_id");
-    query.bindValue(":path", filePath);
+    query.prepare("DELETE FROM file_tags "
+                 "WHERE file_id = :file_id AND tag_id = :tag_id");
+    query.bindValue(":file_id", fileId);
     query.bindValue(":tag_id", tagId);
     
     if (!query.exec()) {
@@ -181,49 +188,75 @@ bool TagManager::removeTagFromFile(const QString &filePath, int tagId)
         return false;
     }
     
-    emit fileTagsChanged(filePath);
+    emit fileTagsChanged(fileId);
     return true;
 }
 
-QVector<Tag*> TagManager::getFileTags(const QString &filePath)
+QList<Tag*> TagManager::getFileTags(const QString &fileId)
 {
-    loadTagsCache();
-    
-    QVector<Tag*> tags;
+    QList<Tag*> tags;
     QSqlDatabase db = DatabaseManager::instance().database();
     QSqlQuery query(db);
     
-    query.prepare("SELECT tag_id FROM file_tags WHERE file_path = :path");
-    query.bindValue(":path", filePath);
+    query.prepare("SELECT t.* FROM tags t "
+                 "INNER JOIN file_tags ft ON ft.tag_id = t.id "
+                 "WHERE ft.file_id = :file_id");
+    query.bindValue(":file_id", fileId);
     
-    if (query.exec()) {
-        while (query.next()) {
-            int tagId = query.value(0).toInt();
-            if (m_tagsCache.contains(tagId)) {
-                tags.append(m_tagsCache[tagId].data());
-            }
-        }
+    if (!query.exec()) {
+        qWarning() << "获取文件标签失败:" << query.lastError().text();
+        return tags;
+    }
+    
+    while (query.next()) {
+        auto tag = new Tag(this);
+        tag->setId(query.value("id").toInt());
+        tag->setName(query.value("name").toString());
+        tag->setColor(query.value("color").toString());
+        tag->setDescription(query.value("description").toString());
+        tags.append(tag);
     }
     
     return tags;
 }
 
-QVector<QString> TagManager::getFilesByTag(int tagId)
+QStringList TagManager::getFilesByTag(int tagId)
 {
-    QVector<QString> files;
+    QStringList fileIds;
     QSqlDatabase db = DatabaseManager::instance().database();
     QSqlQuery query(db);
     
-    query.prepare("SELECT file_path FROM file_tags WHERE tag_id = :tag_id");
+    query.prepare("SELECT DISTINCT file_id FROM file_tags "
+                 "WHERE tag_id = :tag_id");
     query.bindValue(":tag_id", tagId);
     
-    if (query.exec()) {
-        while (query.next()) {
-            files.append(query.value(0).toString());
-        }
+    if (!query.exec()) {
+        qWarning() << "获取标签文件失败:" << query.lastError().text();
+        return fileIds;
     }
     
-    return files;
+    while (query.next()) {
+        fileIds.append(query.value("file_id").toString());
+    }
+    
+    return fileIds;
+}
+
+bool TagManager::clearFileTags(const QString &fileId)
+{
+    QSqlDatabase db = DatabaseManager::instance().database();
+    QSqlQuery query(db);
+    
+    query.prepare("DELETE FROM file_tags WHERE file_id = :file_id");
+    query.bindValue(":file_id", fileId);
+    
+    if (!query.exec()) {
+        qWarning() << "清除文件标签失败:" << query.lastError().text();
+        return false;
+    }
+    
+    emit fileTagsChanged(fileId);
+    return true;
 }
 
 QVector<Tag*> TagManager::getAllTags()
@@ -260,7 +293,7 @@ QList<QPair<QString, int>> TagManager::getTagStats()
     QSqlQuery query(db);
     
     query.prepare(
-        "SELECT t.name, COUNT(ft.file_path) as count "
+        "SELECT t.name, COUNT(ft.file_id) as count "
         "FROM tags t "
         "LEFT JOIN file_tags ft ON t.id = ft.tag_id "
         "GROUP BY t.id, t.name "
@@ -286,7 +319,7 @@ QStringList TagManager::getRecentFiles(int limit)
     QSqlQuery query(db);
     
     query.prepare(
-        "SELECT DISTINCT file_path "
+        "SELECT DISTINCT file_id "
         "FROM file_tags "
         "ORDER BY created_at DESC "
         "LIMIT :limit"
@@ -345,11 +378,55 @@ bool TagManager::deleteTag(int tagId)
         return false;
     }
     
-    // 从缓存中移除
+    // 从缓存移除
     if (m_tagsCache.contains(tagId)) {
         m_tagsCache.remove(tagId);
     }
     
     emit tagDeleted(tagId);
     return true;
-} 
+}
+
+bool TagManager::addTagToFileById(const QString &fileId, int tagId)
+{
+    return addFileTag(fileId, tagId);
+}
+
+bool TagManager::removeTagFromFileById(const QString &fileId, int tagId)
+{
+    return removeFileTag(fileId, tagId);
+}
+
+QVector<Tag*> TagManager::getFileTagsById(const QString &fileId)
+{
+    QVector<Tag*> tags;
+    QSqlDatabase db = DatabaseManager::instance().database();
+    QSqlQuery query(db);
+    
+    query.prepare(
+        "SELECT t.* FROM tags t "
+        "INNER JOIN file_tags ft ON t.id = ft.tag_id "
+        "WHERE ft.file_id = :fileId"
+    );
+    query.bindValue(":fileId", fileId);
+    
+    if (query.exec()) {
+        while (query.next()) {
+            Tag* tag = new Tag(this);
+            tag->setId(query.value("id").toInt());
+            tag->setName(query.value("name").toString());
+            tag->setColor(query.value("color").toString());
+            tag->setDescription(query.value("description").toString());
+            tags.append(tag);
+        }
+    }
+    
+    return tags;
+}
+
+QVector<QString> TagManager::getFilesByTagId(int tagId)
+{
+    // 直接复用现有的getFilesByTag函数
+    return getFilesByTag(tagId);
+}
+  

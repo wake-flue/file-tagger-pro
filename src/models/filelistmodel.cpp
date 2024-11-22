@@ -57,6 +57,8 @@ QVariant FileListModel::data(const QModelIndex &index, int role) const
         }
         case PreviewLoadingRole:
             return file->previewLoading();
+        case FileIdRole:
+            return file->fileId();
         default:
             return defaultValue(role);
     }
@@ -81,6 +83,13 @@ void FileListModel::setFiles(const QVector<QSharedPointer<FileData>> &files)
 {
     beginResetModel();
     m_allFiles = files;
+    
+    // 更新文件ID缓存
+    m_fileIdCache.clear();
+    for (const auto &file : files) {
+        m_fileIdCache.insert(file->filePath(), file->fileId());
+    }
+    
     applyFilters();
     endResetModel();
     emit countChanged();
@@ -122,7 +131,8 @@ QHash<int, QByteArray> FileListModel::roleNames() const
         {DisplayDateRole, "displayDate"},
         {IndexRole, "index"},
         {PreviewPathRole, "previewPath"},
-        {PreviewLoadingRole, "previewLoading"}
+        {PreviewLoadingRole, "previewLoading"},
+        {FileIdRole, "fileId"}
     };
 }
 
@@ -271,7 +281,7 @@ void FileListModel::applyFilters()
         bool matchesSearchPattern = m_searchPattern.isEmpty() ||
             file->fileName().contains(m_searchPattern, Qt::CaseInsensitive);
         bool matchesFilterPattern = m_filterPattern.isEmpty() || 
-            this->matchesFilter(file->fileName());  // 使用 this-> 明确指定是成员函数
+            this->matchesFilter(file->fileName());  // 使用 this-> 明确指定是成员函
         
         if (matchesSearchPattern && matchesFilterPattern) {
             m_filteredFiles.append(file);
@@ -297,4 +307,50 @@ void FileListModel::clearPreviews()
     if (!m_files.isEmpty()) {
         emit dataChanged(index(0), index(m_files.size() - 1));
     }
+}
+
+QString FileListModel::getFileId(const QString &filePath) const
+{
+    QString fileId = m_fileIdCache.value(filePath);
+    if (fileId.isEmpty()) {
+        qWarning() << "警告：无法找到文件的ID:" << filePath;
+    }
+    return fileId;
+}
+
+void FileListModel::setFilterByFileIds(const QStringList &fileIds, bool showAllIfEmpty)
+{
+    if (fileIds.isEmpty()) {
+        if (showAllIfEmpty) {
+            qDebug() << "提示：清除过滤器，显示所有文件";
+            beginResetModel();
+            m_filteredFiles = m_allFiles;
+            m_files = m_filteredFiles;
+            endResetModel();
+            emit countChanged();
+        } else {
+            qDebug() << "提示：没有找到匹配的文件，显示空列表";
+            beginResetModel();
+            m_filteredFiles.clear();
+            m_files = m_filteredFiles;
+            endResetModel();
+            emit countChanged();
+        }
+        return;
+    }
+    
+    QSet<QString> fileIdSet = QSet<QString>(fileIds.begin(), fileIds.end());
+    
+    m_filteredFiles.clear();
+    for (const auto &file : m_allFiles) {
+        if (!file->fileId().isEmpty() && fileIdSet.contains(file->fileId())) {
+            m_filteredFiles.append(file);
+        }
+    }
+    
+    beginResetModel();
+    m_files = m_filteredFiles;
+    endResetModel();
+    
+    emit countChanged();
 }

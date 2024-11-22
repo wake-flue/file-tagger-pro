@@ -7,6 +7,10 @@
 #include <QSharedPointer>
 #include "../models/tag.h"
 
+#ifdef Q_OS_WIN
+#include <windows.h>
+#endif
+
 class TagManager : public QObject
 {
     Q_OBJECT
@@ -20,11 +24,9 @@ public slots:
     bool removeTag(int tagId);
     bool updateTag(int tagId, const QString &name, const QColor &color, const QString &description);
     
-    // 文件标签操作
-    bool addTagToFile(const QString &filePath, int tagId);
-    bool removeTagFromFile(const QString &filePath, int tagId);
-    QVector<Tag*> getFileTags(const QString &filePath);
-    QVector<QString> getFilesByTag(int tagId);
+    // 文件标签操作（只保留基于fileId的方法）
+    QList<Tag*> getFileTags(const QString &fileId);
+    QStringList getFilesByTag(int tagId);
     
     // 查询操作
     QVector<Tag*> getAllTags();
@@ -37,12 +39,23 @@ public slots:
     
     Q_INVOKABLE bool isTagNameExists(const QString &name) const;
     Q_INVOKABLE bool deleteTag(int tagId);
+    
+    // 基于fileId的标签操作方法
+    Q_INVOKABLE bool addTagToFileById(const QString &fileId, int tagId);
+    Q_INVOKABLE bool removeTagFromFileById(const QString &fileId, int tagId);
+    Q_INVOKABLE QVector<Tag*> getFileTagsById(const QString &fileId);
+    Q_INVOKABLE QVector<QString> getFilesByTagId(int tagId);
+    
+    // 基础文件标签操作
+    bool addFileTag(const QString &fileId, int tagId);
+    bool removeFileTag(const QString &fileId, int tagId);
+    bool clearFileTags(const QString &fileId);
 
 signals:
     void tagAdded(Tag* tag);
     void tagRemoved(int tagId);
     void tagUpdated(Tag* tag);
-    void fileTagsChanged(const QString &filePath);
+    void fileTagsChanged(const QString &fileId);
     void tagError(const QString &message);
     void tagsChanged();
     void tagDeleted(int tagId);
@@ -61,6 +74,9 @@ private:
     
     QHash<int, QSharedPointer<Tag>> m_tagsCache;
     bool m_cacheInitialized;
+    
+    bool ensureFileIdentifier(const QString &filePath);
+    void migrateOldData(); // 数据迁移
 };
 
 #endif // TAGMANAGER_H 

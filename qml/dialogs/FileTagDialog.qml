@@ -13,7 +13,12 @@ Dialog {
     // 在对话框打开时居中显示
     onOpened: {
         centerDialog()
-        selectedTags = TagManager.getFileTags(filePath)
+        if (!fileId) {
+            console.error("错误：未设置 fileId")
+            close()
+            return
+        }
+        selectedTags = TagManager.getFileTagsById(fileId)
     }
     
     // 窗口大小改变时保持居中
@@ -42,6 +47,7 @@ Dialog {
     
     // 必要的属性声明
     required property QtObject style
+    property string fileId: ""
     property string filePath: ""
     property var selectedTags: []
     
@@ -179,12 +185,12 @@ Dialog {
                                 
                                 onClicked: {
                                     if (tagItem.selected) {
-                                        TagManager.removeTagFromFile(root.filePath, modelData.id)
+                                        TagManager.removeTagFromFileById(fileId, modelData.id)
                                     } else {
-                                        TagManager.addTagToFile(root.filePath, modelData.id)
+                                        TagManager.addTagToFileById(fileId, modelData.id)
                                     }
                                     // 更新选中状态
-                                    root.selectedTags = TagManager.getFileTags(root.filePath)
+                                    root.selectedTags = TagManager.getFileTagsById(fileId)
                                 }
                             }
                         }
@@ -275,7 +281,7 @@ Dialog {
         onAccepted: {
             // 刷新标签列表
             tagRepeater.model = TagManager.getAllTags()
-            selectedTags = TagManager.getFileTags(filePath)
+            selectedTags = TagManager.getFileTagsById(fileId)
         }
     }
     
@@ -285,5 +291,17 @@ Dialog {
             if (tag.id === tagId) return true
         }
         return false
+    }
+    
+    function addTag(tagId) {
+        if (TagManager.addTagToFileById(fileId, tagId)) {
+            selectedTags = TagManager.getFileTagsById(fileId)
+        }
+    }
+    
+    function removeTag(tagId) {
+        if (TagManager.removeTagFromFileById(fileId, tagId)) {
+            selectedTags = TagManager.getFileTagsById(fileId)
+        }
     }
 } 

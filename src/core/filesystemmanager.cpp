@@ -9,6 +9,7 @@
 #include "utils/filetypes.h"
 #include <QSettings>
 #include <QStandardPaths>
+#include "tagmanager.h"
 
 FileSystemManager::FileSystemManager(QObject *parent)
     : QObject(parent)
@@ -100,13 +101,23 @@ void FileSystemManager::setWatchPath(const QString &path)
 
 QString FileSystemManager::getFileId(const QString &filePath)
 {
-    HANDLE hFile = CreateFileW(reinterpret_cast<LPCWSTR>(filePath.utf16()),
-                             FILE_READ_ATTRIBUTES,
-                             FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                             NULL,
-                             OPEN_EXISTING,
-                             FILE_ATTRIBUTE_NORMAL,
-                             NULL);
+    if (m_fileModel) {
+        QString cachedId = m_fileModel->getFileId(filePath);
+        if (!cachedId.isEmpty()) {
+            return cachedId;
+        }
+    }
+    
+    // 如果缓存中没有，再使用Windows API计算
+    HANDLE hFile = CreateFileW(
+        reinterpret_cast<LPCWSTR>(filePath.utf16()),
+        FILE_READ_ATTRIBUTES,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+        NULL,
+        OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL,
+        NULL
+    );
     
     if (hFile == INVALID_HANDLE_VALUE) {
         addLogMessage(QString("无法获取文件ID: %1").arg(filePath));
@@ -338,7 +349,7 @@ void FileSystemManager::openFile(const QString &filePath, const QString &fileTyp
     settings.endGroup();  // 结束分组
     
     if (program.isEmpty()) {
-        addLogMessage(QString("���配置%1文件的播放器 (类型: %2)").arg(fileType, filePath));
+        addLogMessage(QString("配置%1文的播放器 (类型: %2)").arg(fileType, filePath));
         return;
     }
     
@@ -432,4 +443,11 @@ double FileSystemManager::getSpriteTimestamp(const QString &spritePath) const
     
     // 通过 PreviewGenerator 获取时间戳
     return m_previewGenerator->getSpriteTimestamp(spritePath);
+}
+
+void FileSystemManager::onFileRenamed(const QString &oldPath, const QString &newPath)
+{
+    // 由���我们使用 fileId 系统，文件重命名不需要更新数据库
+    // 只需要更新界面显示
+    emit fileRenamed(oldPath, newPath);
 }

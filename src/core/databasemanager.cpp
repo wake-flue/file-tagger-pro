@@ -39,11 +39,19 @@ bool DatabaseManager::initialize()
         return false;
     }
 
+    // 启用外键约束
+    QSqlQuery query(m_db);
+    query.exec("PRAGMA foreign_keys = ON");
+
     // 创建表结构
     if (!createTables()) {
         qWarning() << "创建数据库表失败";
         return false;
     }
+
+    // 创建索引以提高性能
+    query.exec("CREATE INDEX IF NOT EXISTS idx_file_tags_file_id ON file_tags(file_id)");
+    query.exec("CREATE INDEX IF NOT EXISTS idx_file_tags_tag_id ON file_tags(tag_id)");
 
     // 检查并执行数据库升级
     int dbVersion = currentVersion();
@@ -97,12 +105,11 @@ bool DatabaseManager::createFileTagsTable()
     QSqlQuery query;
     return query.exec(
         "CREATE TABLE IF NOT EXISTS file_tags ("
-        "    id INTEGER PRIMARY KEY AUTOINCREMENT,"
-        "    file_path TEXT NOT NULL,"
+        "    file_id TEXT NOT NULL,"  // 文件的唯一标识符
         "    tag_id INTEGER NOT NULL,"
         "    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
-        "    FOREIGN KEY(tag_id) REFERENCES tags(id) ON DELETE CASCADE,"
-        "    UNIQUE(file_path, tag_id)"
+        "    PRIMARY KEY (file_id, tag_id),"
+        "    FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE"
         ")"
     );
 }
@@ -147,10 +154,45 @@ bool DatabaseManager::applyMigration(int version)
     
     switch (version) {
         case 1:
-            // 初始本,不需要迁移
             return true;
             
-        // 后续版本的迁移在这里添加
+        case 2:
+            // 创建临时表
+            if (!query.exec("CREATE TABLE file_tags_temp ("
+                          "file_id TEXT NOT NULL,"
+                          "tag_id INTEGER NOT NULL,"
+                          "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
+                          "PRIMARY KEY (file_id, tag_id),"
+                          "FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE)")) {
+                return false;
+            }
+            
+            // 复制数据
+            if (!query.exec("INSERT INTO file_tags_temp (file_id, tag_id, created_at) "
+                          "SELECT file_id, tag_id, created_at FROM file_tags")) {
+                return false;
+            }
+            
+            // 删除旧表
+            if (!query.exec("DROP TABLE file_tags")) {
+                return false;
+            }
+            
+            // 重命名新表
+            if (!query.exec("ALTER TABLE file_tags_temp RENAME TO file_tags")) {
+                return false;
+            }
+            
+            // 重新创建索引
+            if (!query.exec("CREATE INDEX idx_file_tags_file_id ON file_tags(file_id)")) {
+                return false;
+            }
+            if (!query.exec("CREATE INDEX idx_file_tags_tag_id ON file_tags(tag_id)")) {
+                return false;
+            }
+            
+            return true;
+            
         default:
             qWarning() << "未知的数据库版本:" << version;
             return false;
