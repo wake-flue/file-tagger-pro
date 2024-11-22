@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- 数据库圆柱体 -->
+    <path d="M3 4C3 2.89543 4.79086 2 7 2C9.20914 2 11 2.89543 11 4C11 5.10457 9.20914 6 7 6C4.79086 6 3 5.10457 3 4Z" stroke="#202020" stroke-width="1.2"/>
+    <path d="M3 4V8C3 9.10457 4.79086 10 7 10C9.20914 10 11 9.10457 11 8V4" stroke="#202020" stroke-width="1.2"/>
+    <path d="M3 8V12C3 13.1046 4.79086 14 7 14C9.20914 14 11 13.1046 11 12V8" stroke="#202020" stroke-width="1.2"/>
+    
+    <!-- 恢复箭头 -->
+    <path d="M13.5 5.5C13.5 3.5 12 2 10 2" stroke="#202020" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M10.5 3.5L9.5 1.5L12 1.5L10.5 3.5Z" fill="#202020"/>
+</svg> 

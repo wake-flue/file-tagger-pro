@@ -83,12 +83,12 @@ set(QML_FILES
         qml/dialogs/FolderPickerDialog.qml
         qml/dialogs/SpriteDialog.qml
         qml/dialogs/TagEditDialog.qml
-        qml/dialogs/DatabaseViewerDialog.qml
         qml/dialogs/FileTagDialog.qml
         qml/dialogs/SettingsWindow.qml
         qml/settings/SettingsStyle.qml
         qml/settings/PlayerSettings.qml
         qml/settings/FileTypeSettings.qml
+        qml/settings/DatabaseSettings.qml
 )
 
 # 添加 qmldir 文件到资源列表
@@ -124,6 +124,7 @@ set(RESOURCE_FILES
         resources/images/database.svg
         resources/images/backup.svg
         resources/images/setting.svg
+        resources/images/restore.svg
 )
 
 qt_add_executable(FileTaggingApp

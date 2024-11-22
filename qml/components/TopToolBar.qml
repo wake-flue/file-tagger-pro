@@ -16,7 +16,6 @@ Rectangle {
     required property QtObject settings
     required property QtObject fileManager
     required property QtObject folderDialog
-    required property QtObject dbViewerDialog
     required property QtObject settingsWindow
 
     RowLayout {

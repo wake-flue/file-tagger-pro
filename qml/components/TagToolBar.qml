@@ -15,7 +15,7 @@ Rectangle {
     required property QtObject style
     required property QtObject settings
     required property QtObject fileManager
-    required property QtObject dbViewerDialog
+    required property QtObject settingsWindow
 
     // 内部属性
     property var selectedTagIds: []
@@ -218,69 +218,10 @@ Rectangle {
                 }
 
                 onClicked: {
-                    // TODO: 打开标签管理对话框
-                }
-            }
-
-            // 数据库查看按钮
-            Button {
-                id: dbViewButton
-                icon.source: "qrc:/resources/images/database.svg"
-                icon.width: 14
-                icon.height: 14
-                padding: 6
-                
-                ToolTip {
-                    visible: parent.hovered
-                    text: "数据库管理"
-                    delay: 500
-                }
-
-                background: Rectangle {
-                    implicitWidth: 32
-                    implicitHeight: 28
-                    color: dbViewButton.down ? Qt.darker(root.style.backgroundColor, 1.1) : 
-                           dbViewButton.hovered ? root.style.hoverColor : root.style.backgroundColor
-                    border.color: dbViewButton.down ? root.style.accentColor : 
-                                dbViewButton.hovered ? root.style.accentColor : root.style.borderColor
-                    border.width: 1
-                    radius: 3
-                }
-
-                onClicked: {
-                    if (root.dbViewerDialog) {
-                        root.dbViewerDialog.open()
+                    if (root.settingsWindow) {
+                        root.settingsWindow.currentIndex = 3  // 切换到标签设置页面
+                        root.settingsWindow.show()
                     }
-                }
-            }
-
-            // 数据库备份按钮
-            Button {
-                id: dbBackupButton
-                icon.source: "qrc:/resources/images/backup.svg"
-                icon.width: 14
-                icon.height: 14
-                padding: 6
-                
-                ToolTip {
-                    visible: parent.hovered
-                    text: "备份数据库"
-                    delay: 500
-                }
-
-                background: Rectangle {
-                    implicitWidth: 32
-                    implicitHeight: 28
-                    color: dbBackupButton.down ? Qt.darker(root.style.backgroundColor, 1.1) : 
-                           dbBackupButton.hovered ? root.style.hoverColor : root.style.backgroundColor
-                    border.color: dbBackupButton.down ? root.style.accentColor : 
-                                dbBackupButton.hovered ? root.style.accentColor : root.style.borderColor
-                    border.width: 1
-                    radius: 3
-                }
-
-                onClicked: {
-                    // TODO: 实现数据库备份功能
                 }
             }
         }

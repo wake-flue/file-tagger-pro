@@ -110,7 +110,6 @@ Window {
             settings: settings
             fileManager: fileManager
             folderDialog: folderDialog
-            dbViewerDialog: dbViewerDialog
             settingsWindow: settingsWindow
         }
         
@@ -120,7 +119,7 @@ Window {
             style: style
             settings: settings
             fileManager: fileManager
-            dbViewerDialog: dbViewerDialog
+            settingsWindow: settingsWindow
         }
         
         // 主内容区域
@@ -196,10 +195,6 @@ Window {
     // 直接使用 settings 中的值
     Component.onCompleted: {
         fileManager.fileModel.filterPattern = settings.fileFilter
-    }
-
-    Dialogs.DatabaseViewerDialog {
-        id: dbViewerDialog
     }
 
     Dialogs.FileTagDialog {

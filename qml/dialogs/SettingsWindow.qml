@@ -133,7 +133,11 @@ Window {
                 
                 // 数据库设置
                 Item {
-                    // TODO: 添加数据库设置内容
+                    Settings.DatabaseSettings {
+                        anchors.fill: parent
+                        settings: root.settings
+                        style: root.style
+                    }
                 }
             }
         }
