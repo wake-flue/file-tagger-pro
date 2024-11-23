@@ -23,7 +23,7 @@ Window {
     
     property int spriteCount: 12
     property var spritePaths: []
-    property var presetCounts: [12, 16, 20, 24, 28, 32]
+    property var presetCounts: [12, 16, 20, 24, 28, 32, 36, 64, 128, 256, 512]
     
     // 窗口方法
     function open() {

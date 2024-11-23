@@ -20,7 +20,7 @@ Settings {
         return path
     }
     
-    category: "Players"
+    category: "General"
     
     property string imagePlayer: ""  // 图片查看器路径
     property string videoPlayer: ""  // 视频播放器路径
@@ -34,6 +34,9 @@ Settings {
     property var documentFilter: ["txt", "doc", "docx", "pdf", "xls", "xlsx", "ppt", "pptx", "md"]  // 文档文件格式
     property var archiveFilter: ["zip", "rar", "7z", "tar", "gz", "bz2"]  // 压缩文件格式
     property var devFilter: ["cpp", "h", "hpp", "c", "py", "js", "html", "css", "java", "json", "xml", "yml", "qml"]  // 开发文件格式
+    
+    property int iconSize: 128  // 默认图标大小
+    property string previewQuality: "medium"  // 默认预览质量
     
     // 添加同步方法
     function sync() {
@@ -59,6 +62,10 @@ Settings {
             fileFilter = value;
         } else if (key === "ffmpegPath") {
             ffmpegPath = value;
+        } else if (key === "iconSize") {
+            iconSize = value;
+        } else if (key === "previewQuality") {
+            previewQuality = value;
         }
         
         // 每次设置值后输出当前状态
@@ -68,6 +75,8 @@ Settings {
         console.log("- videoPlayer:", videoPlayer);
         console.log("- fileFilter:", fileFilter);
         console.log("- ffmpegPath:", ffmpegPath);
+        console.log("- iconSize:", iconSize);
+        console.log("- previewQuality:", previewQuality);
     }
     
     function value(key: string, defaultValue: any): any {
@@ -97,6 +106,8 @@ Settings {
         console.log("- videoPlayer:", videoPlayer)
         console.log("- fileFilter:", fileFilter)
         console.log("- ffmpegPath:", ffmpegPath)
+        console.log("- iconSize:", iconSize)
+        console.log("- previewQuality:", previewQuality)
         
         // 强制同步一次设置
         sync()

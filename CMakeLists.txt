@@ -88,6 +88,7 @@ set(QML_FILES
         qml/settings/DatabaseSettings.qml
         qml/settings/LogSettings.qml
         qml/settings/TagSettings.qml
+        qml/settings/GeneralSettings.qml
 )
 
 # 添加 qmldir 文件到资源列表

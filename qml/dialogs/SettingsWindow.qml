@@ -90,20 +90,13 @@ Window {
                 currentIndex: settingsList.currentIndex
                 
                 // 常规设置
-                ColumnLayout {
-                    spacing: 16
-                    
-                    Label {
-                        text: qsTr("常规设置")
-                        font {
-                            family: style?.fontFamily || "Microsoft YaHei"
-                            pixelSize: (style?.defaultFontSize || 12) + 2
-                            bold: true
-                        }
-                        color: style?.textColor || "#202020"
+                Item {
+                    Settings.GeneralSettings {
+                        anchors.fill: parent
+                        settings: root.settings
+                        style: root.style
+                        fileManager: root.fileManager
                     }
-                    
-                    // 添加常规设置项
                 }
                 
                 // 播放器设置（复用现有的播放器设置组件）

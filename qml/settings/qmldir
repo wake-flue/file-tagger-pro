@@ -4,4 +4,5 @@ PlayerSettings 1.0 PlayerSettings.qml
 FileTypeSettings 1.0 FileTypeSettings.qml
 DatabaseSettings 1.0 DatabaseSettings.qml
 LogSettings 1.0 LogSettings.qml
-TagSettings 1.0 TagSettings.qml 
+TagSettings 1.0 TagSettings.qml
+GeneralSettings 1.0 GeneralSettings.qml 

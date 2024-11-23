@@ -15,6 +15,8 @@ class FileListModel : public QAbstractListModel
     Q_PROPERTY(Qt::SortOrder sortOrder READ sortOrder WRITE setSortOrder NOTIFY sortOrderChanged)
     Q_PROPERTY(QString filterPattern READ filterPattern WRITE setFilterPattern NOTIFY filterPatternChanged)
     Q_PROPERTY(QString searchPattern READ searchPattern WRITE setSearchPattern NOTIFY searchPatternChanged)
+    Q_PROPERTY(int iconSize READ iconSize WRITE setIconSize NOTIFY iconSizeChanged)
+    Q_PROPERTY(QString previewQuality READ previewQuality WRITE setPreviewQuality NOTIFY previewQualityChanged)
 
 public:
     // 视图模式枚举
@@ -57,10 +59,13 @@ public:
     Qt::SortOrder sortOrder() const { return m_sortOrder; }
     QString filterPattern() const { return m_filterPattern; }
     QString searchPattern() const { return m_searchPattern; }
+    int iconSize() const { return m_iconSize; }
+    QString previewQuality() const { return m_previewQuality; }
 
     Q_INVOKABLE FileData* getFileData(int index) const;
     QString getFileId(const QString &filePath) const;
     void updateFiles(const QVector<QSharedPointer<FileData>>& newFiles);
+    Q_INVOKABLE void refreshPreviews();
 
 protected:
     QString formatFileSize(qint64 size) const;
@@ -82,6 +87,8 @@ public slots:
         setSearchPattern("");
         setFilterByFileIds(QStringList(), true);
     }
+    void setIconSize(int size);
+    void setPreviewQuality(const QString &quality);
 
 signals:
     void countChanged();
@@ -91,6 +98,9 @@ signals:
     void filterPatternChanged();
     void searchPatternChanged();
     void needGeneratePreviews();
+    void iconSizeChanged();
+    void previewQualityChanged();
+    void restartRequired();
 
 private:
     QVector<QSharedPointer<FileData>> m_files;
@@ -102,6 +112,8 @@ private:
     QString m_filterPattern;
     QString m_searchPattern;
     QHash<QString, QString> m_fileIdCache;
+    int m_iconSize = 128;
+    QString m_previewQuality = "medium";
     
     void initialize();
     void sort();

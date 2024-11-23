@@ -81,7 +81,7 @@ QString PreviewGenerator::generateImagePreview(const QString &path) {
         return QString();
     }
     
-    QSize targetSize(160, 160);
+    QSize targetSize(240, 240);
     QImage scaled = image.scaled(targetSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
     
     if (scaled.isNull()) {
@@ -175,7 +175,7 @@ QString PreviewGenerator::generateVideoPreview(const QString &path) {
     
     int width = codecContext->width;
     int height = codecContext->height;
-    int targetWidth = 160;
+    int targetWidth = 240;
     int targetHeight = height * targetWidth / width;
     
     int numBytes = av_image_get_buffer_size(AV_PIX_FMT_RGB24, targetWidth, targetHeight, 1);
@@ -205,7 +205,8 @@ QString PreviewGenerator::generateVideoPreview(const QString &path) {
     SwsContext *swsContext = sws_getContext(
         width, height, codecContext->pix_fmt,
         targetWidth, targetHeight, AV_PIX_FMT_RGB24,
-        SWS_BILINEAR, nullptr, nullptr, nullptr
+        SWS_LANCZOS | SWS_ACCURATE_RND,
+        nullptr, nullptr, nullptr
     );
     
     if (!swsContext) {
@@ -240,7 +241,7 @@ QString PreviewGenerator::generateVideoPreview(const QString &path) {
                 QString hash = QCryptographicHash::hash(path.toUtf8(), QCryptographicHash::Md5).toHex();
                 QString cachePath = m_cacheDir + "/" + hash + ".jpg";
                 
-                if (image.save(cachePath, "JPG", 90)) {
+                if (image.save(cachePath, "JPG", 95)) {
                     frameExtracted = true;
                     av_packet_unref(packet);
                     

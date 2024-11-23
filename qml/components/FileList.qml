@@ -16,6 +16,23 @@ Item {
     
     Components.Settings {
         id: settings
+        
+        // 添加调试输出
+        Component.onCompleted: {
+            console.log("FileList Settings 初始化完成")
+            console.log("当前图标大小:", iconSize)
+        }
+    }
+    
+    // 添加监听
+    Connections {
+        target: settings
+        
+        function onIconSizeChanged() {
+            console.log("图标大小已更改为:", settings.iconSize)
+            // 强制重新布局
+            gridView.forceLayout()
+        }
     }
     
     Rectangle {
@@ -28,8 +45,17 @@ Item {
             anchors.rightMargin: verticalScrollBar.visible ? verticalScrollBar.width : 0
             clip: true
             
-            cellWidth: model && model.viewMode === FileListModel.LargeIconView ? 160 : parent.width
-            cellHeight: model && model.viewMode === FileListModel.LargeIconView ? 160 : 40
+            cellWidth: {
+                if (!model || model.viewMode !== FileListModel.LargeIconView) 
+                    return width
+                return settings.iconSize + 20  // 添加边距
+            }
+            
+            cellHeight: {
+                if (!model || model.viewMode !== FileListModel.LargeIconView) 
+                    return 40
+                return settings.iconSize + 40  // 为文件名预留空间
+            }
             
             ScrollBar.vertical: verticalScrollBar
             ScrollBar.horizontal: horizontalScrollBar
@@ -110,14 +136,14 @@ Item {
                         
                         Item {
                             Layout.fillWidth: true
-                            Layout.preferredHeight: 100
+                            Layout.preferredHeight: settings.iconSize
                             Layout.alignment: Qt.AlignHCenter
                             
                             Image {
                                 id: previewImage
                                 anchors.centerIn: parent
-                                width: 100
-                                height: 100
+                                width: settings.iconSize
+                                height: settings.iconSize
                                 fillMode: Image.PreserveAspectFit
                                 asynchronous: true
                                 cache: true
@@ -178,10 +204,10 @@ Item {
                             elide: Text.ElideMiddle
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignTop
-                            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                            maximumLineCount: 2
+                            wrapMode: Text.NoWrap
+                            maximumLineCount: 1
                             Layout.fillWidth: true
-                            Layout.preferredHeight: 40
+                            Layout.preferredHeight: 20
                             Layout.alignment: Qt.AlignHCenter
                             Layout.margins: 4
                             
