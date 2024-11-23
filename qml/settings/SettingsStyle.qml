@@ -46,4 +46,43 @@ QtObject {
     // 列表样式
     readonly property color defaultListItemHoverColor: "#f5f5f5"
     readonly property color defaultListItemSelectedColor: "#e5f3ff"
+    
+    // 日志相关样式
+    readonly property color logErrorColor: "#dc3545"
+    readonly property color logWarningColor: "#ffc107"
+    readonly property color logDebugColor: "#6c757d"
+    readonly property color logInfoColor: defaultTextColor
+    
+    // 日志列表样式
+    readonly property color logListBackgroundColor: "#ffffff"
+    readonly property color logListAlternateColor: "#f8f9fa"
+    readonly property int logItemHeight: 32
+    readonly property int logItemPadding: 8
+    
+    // 工具栏样式
+    readonly property color toolbarBackgroundColor: "#f8f9fa"
+    readonly property int toolbarHeight: 40
+    
+    // 下拉框样式
+    readonly property int comboBoxHeight: 32
+    readonly property int comboBoxPopupItemHeight: 32
+    readonly property int comboBoxIndicatorSize: 12
+    readonly property int comboBoxLeftPadding: 12
+    readonly property int comboBoxRightPadding: 36
+    
+    // 下拉框颜色
+    readonly property color comboBoxNormalColor: "#ffffff"
+    readonly property color comboBoxHoverColor: "#f5f5f5"
+    readonly property color comboBoxPressedColor: "#e0e0e0"
+    readonly property color comboBoxBorderColor: "#d1d1d1"
+    readonly property color comboBoxFocusBorderColor: defaultAccentColor
+    
+    // 下拉框弹出项样式
+    readonly property color comboBoxPopupBackgroundColor: "#ffffff"
+    readonly property color comboBoxPopupBorderColor: "#d1d1d1"
+    readonly property color comboBoxItemNormalColor: "transparent"
+    readonly property color comboBoxItemHoverColor: "#f5f5f5"
+    readonly property color comboBoxItemHighlightColor: "#e5f3ff"
+    readonly property color comboBoxItemTextColor: defaultTextColor
+    readonly property color comboBoxItemHighlightedTextColor: defaultAccentColor
 } 

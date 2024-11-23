@@ -68,8 +68,7 @@ Rectangle {
             }
             Label {
                 Layout.fillWidth: true
-                text: fileManager.logMessages.length > 0 ? 
-                      fileManager.logMessages[0].replace(/\[.*?\] /, '') : "就绪"
+                text: fileManager?.logger?.lastMessage ?? "就绪"
                 elide: Text.ElideRight
                 font {
                     family: root.style ? root.style.fontFamily : "Microsoft YaHei"

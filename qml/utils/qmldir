@@ -1,0 +1,2 @@
+module Utils
+singleton Logger 1.0 Logger.qml 

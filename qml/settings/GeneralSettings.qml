@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import FileManager 1.0
+import "../utils" as Utils
 
 ColumnLayout {
     id: root
@@ -212,5 +213,23 @@ ColumnLayout {
         id: hideTimer
         interval: 3000
         onTriggered: restartHint.opacity = 0
+    }
+    
+    Connections {
+        target: settings
+        
+        function onValueChanged(key, value) {
+            Utils.Logger.logOperation(fileManager, "更新设置", key + " = " + value)
+        }
+    }
+    
+    Button {
+        text: qsTr("重置设置")
+        onClicked: {
+            Utils.Logger.logOperation(fileManager, "重置所有设置", "")
+            if (settings) {
+                settings.reset()
+            }
+        }
     }
 } 

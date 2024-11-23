@@ -18,12 +18,30 @@ FileSystemManager::FileSystemManager(QObject *parent)
     , m_fileModel(new FileListModel(this))
     , m_previewGenerator(new PreviewGenerator(this))
 {
+    // 配置日志系统
+    QString logDir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/logs";
+    QDir().mkpath(logDir);  // 确保目录存在
+    QString logPath = logDir + "/filemanager.log";
+    
+    qDebug() << "日志目录:" << logDir;
+    qDebug() << "日志文件路径:" << logPath;
+    
+    m_logger->setLogFilePath(logPath);
+    m_logger->setLogFileMaxSize(5 * 1024 * 1024);  // 5MB
+    m_logger->setMaxLogFiles(10);
+    
+    // 初始化后立即写入一条日志以测试
+    m_logger->info("文件管理器初始化完成");
+    m_logger->refreshFileMessages();
+    
+    emit loggerChanged();  // 通知 logger 属性变化
+    
     qDebug() << "FileSystemManager 构造函数 - 创建的文件模型:" << m_fileModel;
     
     connect(m_fileWatcher, &QFileSystemWatcher::fileChanged,
-            this, &FileSystemManager::fileChanged);
+            this, &FileSystemManager::onFileChanged);
     connect(m_fileWatcher, &QFileSystemWatcher::directoryChanged,
-            this, &FileSystemManager::directoryChanged);
+            this, &FileSystemManager::onDirectoryChanged);
             
     addLogMessage("文件管理器初始化完成");
     
@@ -66,32 +84,47 @@ void FileSystemManager::clearLogs()
 
 void FileSystemManager::setWatchPath(const QString &path)
 {
-    qDebug() << "设置监控路径:" << path;
+    m_logger->info(QString("开始设置监控路径: %1").arg(path));
+    
     if (m_currentPath != path) {
         if (!m_currentPath.isEmpty()) {
             // 移除旧路径的监控
             m_fileWatcher->removePaths(m_fileWatcher->files());
             m_fileWatcher->removePaths(m_fileWatcher->directories());
-            addLogMessage(QString("停止监控目录: %1").arg(m_currentPath));
+            m_logger->info(QString("已停止监控旧路径: %1").arg(m_currentPath));
         }
+        
         m_currentPath = path;
+        
         if (!path.isEmpty()) {
             // 添加新路径的监控
-            m_fileWatcher->addPath(path);
-            // 同时监控子目录
+            if (!m_fileWatcher->addPath(path)) {
+                m_logger->error(QString("添加监控路径失败: %1").arg(path));
+            } else {
+                m_logger->info(QString("成功添加监控路径: %1").arg(path));
+            }
+            
+            // 监控子目录
             QDirIterator it(path, QDir::Dirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+            int subDirCount = 0;
             while (it.hasNext()) {
                 QString subDir = it.next();
-                m_fileWatcher->addPath(subDir);
+                if (m_fileWatcher->addPath(subDir)) {
+                    subDirCount++;
+                } else {
+                    m_logger->warning(QString("添加子目录监控失败: %1").arg(subDir));
+                }
             }
-            addLogMessage(QString("开始监控目录: %1").arg(path));
-            qDebug() << "即将扫描目录:" << path;
-            scanDirectory(path);
-            qDebug() << "目录扫描完成";
+            m_logger->info(QString("已添加 %1 个子目录到监控").arg(subDirCount));
             
-            // 扫描完目录后，检查是否需要生成预览
+            // 扫描目录
+            m_logger->info("开始扫描目录...");
+            scanDirectory(path);
+            m_logger->info("目录扫描完成");
+            
+            // 检查是否需要生成预览
             if (m_fileModel && m_fileModel->viewMode() == FileListModel::LargeIconView) {
-                qDebug() << "当前为大图标视图，开始生成预览...";
+                m_logger->info("当前为大图标视图,开始生成预览...");
                 generatePreviews();
             }
         }
@@ -137,23 +170,18 @@ QString FileSystemManager::getFileId(const QString &filePath)
 
 QVector<QSharedPointer<FileData>> FileSystemManager::scanDirectory(const QString &path, const QStringList &filters)
 {
-    if (path.isEmpty()) {
-        qDebug() << "路径为空，无法扫描";
-        return QVector<QSharedPointer<FileData>>();
-    }
-
-    addLogMessage(QString("开始扫描目录: %1").arg(path));
+    m_logger->info(QString("开始扫描目录: %1").arg(path));
+    m_logger->debug(QString("使用过滤器: %1").arg(filters.join(", ")));
     
-    // 如果没有指定筛选器，使用默认的图片和视频筛选器
     QStringList actualFilters = filters;
     if (actualFilters.isEmpty()) {
         actualFilters = FileTypes::getAllFilters();
+        m_logger->debug(QString("使用默认过滤器: %1").arg(actualFilters.join(", ")));
     }
     
     QDir dir(path);
     if (!dir.exists()) {
-        qDebug() << "目录不存在:" << path;
-        addLogMessage(QString("错误：目录不存在 %1").arg(path));
+        m_logger->error(QString("目录不存在: %1").arg(path));
         return QVector<QSharedPointer<FileData>>();
     }
 
@@ -188,6 +216,13 @@ QVector<QSharedPointer<FileData>> FileSystemManager::scanDirectory(const QString
     
     while (it.hasNext()) {
         QString filePath = it.next();
+        m_logger->debug(QString("正在处理文件: %1").arg(filePath));
+        
+        // 每处理1000个文件输出一次进度
+        if (fileCount % 1000 == 0) {
+            m_logger->info(QString("扫描进度: 已处理 %1 个文件").arg(fileCount));
+        }
+        
         QFileInfo fileInfo = it.fileInfo();
         
         FileData data;
@@ -231,33 +266,28 @@ QVector<QSharedPointer<FileData>> FileSystemManager::scanDirectory(const QString
         files.append(batch);
     }
 
-    addLogMessage(QString("扫描完成，共发现 %1 个文件，其中 %2 个文件发生变化")
-                 .arg(fileCount)
-                 .arg(changedCount));
+    m_logger->info(QString("扫描完成: 共处理 %1 个文件, 新增/修改 %2 个")
+                  .arg(fileCount)
+                  .arg(changedCount));
 
     // 检查文件变化
     bool hasChanges = (m_fileList.size() != files.size()) || (changedCount > 0);
     
     if (hasChanges) {
+        m_logger->info("正在更新文件列表...");
         m_fileList = files;
-        qDebug() << "文件列表已更新，数量:" << files.size();
         
         if (m_fileModel) {
-            qDebug() << "正在更新文件模型...";
-
+            m_logger->debug("正在更新文件模型...");
             m_fileModel->setFiles(files);
-            qDebug() << "文件模型更新完成";
+            m_logger->debug("文件模型更新完成");
         } else {
-            qDebug() << "错误：文模型为空!";
+            m_logger->error("文件模型为空,无法更新!");
         }
-        emit fileListChanged();
         
-        // 输出变化详情
-        if (changedCount > 0) {
-            addLogMessage(QString("修改文件: %1 个").arg(changedCount));
-        }
+        emit fileListChanged();
     } else {
-        addLogMessage("文件列表无变化");
+        m_logger->info("文件列表无变化");
     }
     
     if (m_fileModel && m_fileModel->viewMode() == FileListModel::LargeIconView) {
@@ -319,37 +349,25 @@ void FileSystemManager::generatePreviews()
 
 void FileSystemManager::openFile(const QString &filePath, const QString &fileType)
 {
-    // 确保设置目录存在
-    QDir settingsDir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
-    if (!settingsDir.exists()) {
-        settingsDir.mkpath(".");
-    }
+    m_logger->info(QString("尝试打开文件: %1 (类型: %2)").arg(filePath, fileType));
     
-    // 使用相同的配置文件路径
-    QString iniPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) 
-                     + "/FileTaggingPro.ini";
-    QSettings settings(iniPath, QSettings::IniFormat);
-    settings.beginGroup("Players");  // 使用相同的类别
-                      
-    qDebug() << "Settings 文件路径:" << settings.fileName();
-    qDebug() << "Settings 目录:" << settingsDir.absolutePath();
-    qDebug() << "所有键:" << settings.allKeys();
+    QSettings settings(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) 
+                      + "/FileTaggingPro.ini", QSettings::IniFormat);
+    settings.beginGroup("Players");
     
     QString program;
-    
-    // 根据文件类型选择合适的播放器
     if (FileTypes::isImageFile(fileType)) {
         program = settings.value("imagePlayer").toString();
-        qDebug() << "读取到的图片播放器路径:" << program;
+        m_logger->debug(QString("使用图片查看器: %1").arg(program));
     } else if (FileTypes::isVideoFile(fileType)) {
         program = settings.value("videoPlayer").toString();
-        qDebug() << "读取到的视频播放器路径:" << program;
+        m_logger->debug(QString("使用视频播放器: %1").arg(program));
     }
     
-    settings.endGroup();  // 结束分组
+    settings.endGroup();
     
     if (program.isEmpty()) {
-        addLogMessage(QString("配置%1文的播放器 (类型: %2)").arg(fileType, filePath));
+        m_logger->warning(QString("未配置%1文件的播放器").arg(fileType));
         return;
     }
     
@@ -358,15 +376,25 @@ void FileSystemManager::openFile(const QString &filePath, const QString &fileTyp
     process->setArguments(QStringList() << filePath);
     
     connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            process, &QProcess::deleteLater);
-            
-    connect(process, &QProcess::errorOccurred, this, [this, process](QProcess::ProcessError error) {
-        addLogMessage(QString("打开文件失败: %1").arg(process->errorString()));
+            [this, process, filePath](int exitCode, QProcess::ExitStatus exitStatus) {
+        if (exitStatus == QProcess::CrashExit) {
+            m_logger->error(QString("程序崩溃: %1").arg(process->errorString()));
+        } else if (exitCode != 0) {
+            m_logger->warning(QString("程序退出码: %1").arg(exitCode));
+        } else {
+            m_logger->debug("程序正常退出");
+        }
+        process->deleteLater();
+    });
+    
+    connect(process, &QProcess::errorOccurred, 
+            [this, process](QProcess::ProcessError error) {
+        m_logger->error(QString("打开文件失败: %1").arg(process->errorString()));
         process->deleteLater();
     });
     
     process->start();
-    addLogMessage(QString("正在使用 %1 打开文件: %2").arg(program, filePath));
+    m_logger->info(QString("正在使用 %1 打开文件: %2").arg(program, filePath));
 }
 
 void FileSystemManager::generateVideoSprites(const QString &filePath, int count) {
@@ -447,7 +475,30 @@ double FileSystemManager::getSpriteTimestamp(const QString &spritePath) const
 
 void FileSystemManager::onFileRenamed(const QString &oldPath, const QString &newPath)
 {
-    // 由���我们使用 fileId 系统，文件重命名不需要更新数据库
+    // 由我们使用 fileId 系统，文件重命名不需要更新数据库
     // 只需要更新界面显示
     emit fileRenamed(oldPath, newPath);
+}
+
+void FileSystemManager::onFileChanged(const QString &path)
+{
+    m_logger->info(QString("检测到文件变更: %1").arg(path));
+    
+    QFileInfo fileInfo(path);
+    if (!fileInfo.exists()) {
+        m_logger->warning(QString("文件已被删除: %1").arg(path));
+    } else {
+        m_logger->debug(QString("文件修改时间: %1").arg(
+            fileInfo.lastModified().toString("yyyy-MM-dd hh:mm:ss")));
+    }
+}
+
+void FileSystemManager::onDirectoryChanged(const QString &path)
+{
+    m_logger->info(QString("检测到目录变更: %1").arg(path));
+    
+    QDir dir(path);
+    if (!dir.exists()) {
+        m_logger->warning(QString("目录已被删除: %1").arg(path));
+    }
 }

@@ -89,6 +89,7 @@ set(QML_FILES
         qml/settings/LogSettings.qml
         qml/settings/TagSettings.qml
         qml/settings/GeneralSettings.qml
+        qml/utils/Logger.qml
 )
 
 # 添加 qmldir 文件到资源列表
@@ -96,6 +97,7 @@ set(RESOURCE_FILES
         qml/components/qmldir
         qml/dialogs/qmldir
         qml/settings/qmldir
+        qml/utils/qmldir
         resources/images/file.svg
         resources/images/folder.svg
         resources/images/refresh.svg
@@ -127,6 +129,12 @@ set(RESOURCE_FILES
         resources/images/backup.svg
         resources/images/setting.svg
         resources/images/restore.svg
+        resources/images/dropdown.svg
+        resources/images/info.svg
+        resources/images/warning.svg
+        resources/images/error.svg
+        resources/images/fatal.svg
+        resources/images/chart.svg
 )
 
 qt_add_executable(FileTaggingApp

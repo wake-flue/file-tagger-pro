@@ -5,6 +5,7 @@ import QtQuick.Effects
 import FileManager 1.0
 import "." as Components
 import "../dialogs" as Dialogs
+import "../utils" as Utils
 
 Item {
     id: root
@@ -175,22 +176,6 @@ Item {
                                     loadingTimer.restart();
                                 }
                                 
-                                onStatusChanged: {
-                                    switch (status) {
-                                        case Image.Loading:
-                                            loadingTimer.restart();  // 始计时
-                                            break;
-                                        case Image.Ready:
-                                            loadingTimer.stop();  // 停止计时
-                                            break;
-                                        case Image.Error:
-                                            console.error("预览加载失败:", delegateItem.fileName, source);
-                                            loadingTimer.stop();  // 停止计时
-                                            source = getFileIcon(delegateItem);
-                                            break;
-                                    }
-                                }
-                                
                                 BusyIndicator {
                                     anchors.centerIn: parent
                                     running: delegateItem.previewLoading || parent.status === Image.Loading
@@ -230,6 +215,7 @@ Item {
                         displaySize: displaySize,
                         displayDate: displayDate
                     }
+                    Utils.Logger.logOperation(fileManager, "选中文件", fileName)
                 }
                 
                 onPressAndHold: function(mouse) {
@@ -241,6 +227,7 @@ Item {
                         displaySize: displaySize,
                         displayDate: displayDate
                     }
+                    Utils.Logger.logOperation(fileManager, "长按文件", fileName)
                     contextMenu.popup()
                 }
                 
@@ -255,6 +242,7 @@ Item {
                             displaySize: displaySize,
                             displayDate: displayDate
                         }
+                        Utils.Logger.logOperation(fileManager, "右键点击文件", fileName)
                         contextMenu.popup()
                     }
                 }
@@ -263,13 +251,12 @@ Item {
                 TapHandler {
                     acceptedButtons: Qt.LeftButton
                     onDoubleTapped: {
-                        // 复用相同的类型判断逻辑
-                        if (!delegateItem.fileType) return;
-                        const type = String(delegateItem.fileType).toLowerCase();
+                        if (!delegateItem.fileType) return
+                        const type = String(delegateItem.fileType).toLowerCase()
                         if (settings.imageFilter.includes(type) || settings.videoFilter.includes(type)) {
                             if (root.fileManager) {
-                                console.log("双击打开文件:", delegateItem.filePath, "类型:", delegateItem.fileType);
-                                root.fileManager.openFile(delegateItem.filePath, delegateItem.fileType);
+                                Utils.Logger.logOperation(fileManager, "双击打开文件", delegateItem.fileName)
+                                root.fileManager.openFile(delegateItem.filePath, delegateItem.fileType)
                             }
                         }
                     }
@@ -395,13 +382,13 @@ Item {
                         }
                         
                         onTriggered: {
-                            console.log("尝试打开文件:", delegateItem.filePath, 
-                                      "类型:", delegateItem.fileType)
+                            if (!delegateItem.fileType) {
+                                Utils.Logger.logError(fileManager, "打开文件", delegateItem.fileName, "无效的文件类型")
+                                return
+                            }
+                            Utils.Logger.logOperation(fileManager, "菜单打开文件", delegateItem.fileName)
                             if (root.fileManager) {
-                                console.log("fileManager 可用")
                                 root.fileManager.openFile(delegateItem.filePath, delegateItem.fileType)
-                            } else {
-                                console.error("fileManager 未定义!")
                             }
                         }
                     }
@@ -440,9 +427,10 @@ Item {
                         
                         onTriggered: {
                             if (!delegateItem || !delegateItem.fileId) {
-                                console.error("错误：无法获取文件ID")
+                                Utils.Logger.logError(fileManager, "编辑标签", delegateItem.fileName, "无效的文件ID")
                                 return
                             }
+                            Utils.Logger.logOperation(fileManager, "打开标签编辑", delegateItem.fileName)
                             fileTagDialog.fileId = delegateItem.fileId
                             fileTagDialog.filePath = delegateItem.filePath
                             fileTagDialog.open()
@@ -483,19 +471,18 @@ Item {
                         
                         enabled: delegateItem.filePath ? true : false
                         onTriggered: {
-                            console.log("尝试打开文件夹:", delegateItem.filePath)
                             if (delegateItem.filePath) {
                                 const normalizedPath = delegateItem.filePath.replace(/\\/g, '/')
                                 const folderPath = normalizedPath.substring(0, normalizedPath.lastIndexOf('/'))
                                 
                                 if (folderPath) {
-                                    console.log("打开文件夹:", folderPath)
+                                    Utils.Logger.logOperation(fileManager, "在文件夹中显示", delegateItem.fileName)
                                     Qt.openUrlExternally("file:///" + folderPath)
                                 } else {
-                                    console.error("无法获取文件夹路径")
+                                    Utils.Logger.logError(fileManager, "在文件夹中显示", delegateItem.fileName, "无法获取文件夹路径")
                                 }
                             } else {
-                                console.error("文件路径为空")
+                                Utils.Logger.logError(fileManager, "在文件夹中显示", "未知文件", "文件路径为空")
                             }
                         }
                     }
@@ -543,6 +530,7 @@ Item {
                         }
                         
                         onTriggered: {
+                            Utils.Logger.logOperation(fileManager, "显示调试信息", delegateItem.fileName)
                             console.log("文件信息:", JSON.stringify({
                                 fileName: delegateItem.fileName,
                                 fileType: delegateItem.fileType,
@@ -551,7 +539,6 @@ Item {
                                 displaySize: delegateItem.displaySize,
                                 displayDate: delegateItem.displayDate
                             }, null, 2))
-                            console.log("FileManager 状态:", root.fileManager ? "已定义" : "未定义")
                         }
                     }
 
@@ -569,6 +556,7 @@ Item {
                         }
                         
                         onTriggered: {
+                            Utils.Logger.logOperation(fileManager, "生成视频雪碧图", delegateItem.fileName)
                             spriteDialog.filePath = delegateItem.filePath
                             spriteDialog.open()
                         }
@@ -614,20 +602,33 @@ Item {
         }
     }
     
+    // 添加组件生命周期日志
     Component.onCompleted: {
-        console.log("[FileList] 组件初始化完成")
+        Utils.Logger.logDebug(fileManager, "组件初始化", "FileList")
         if (model) {
-            console.log("[FileList] 当前视图模式:", model.viewMode)
+            Utils.Logger.logDebug(fileManager, "视图模式", 
+                model.viewMode === FileListModel.ListView ? "列表视图" : "大图标视图")
         }
     }
     
+    // 添加视图模式变更日志
     Connections {
         target: model
         function onViewModeChanged() {
             if (model) {
-                console.log("[FileList] 视图模式变更为:", model.viewMode)
+                Utils.Logger.logOperation(fileManager, "视图模式变更", 
+                    model.viewMode === FileListModel.ListView ? "列表视图" : "大图标视图")
             }
         }
+    }
+    
+    // 添加预览加载日志
+    function onPreviewLoadError(fileName) {
+        Utils.Logger.logOperation(fileManager, "预览加载失败", fileName)
+    }
+    
+    function onPreviewLoadSuccess(fileName) {
+        Utils.Logger.logOperation(fileManager, "预览加载成功", fileName)
     }
     
     function getFileIcon(item) {

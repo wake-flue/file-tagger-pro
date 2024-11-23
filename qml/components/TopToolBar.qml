@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import FileManager 1.0
+import "../utils" as Utils
 
 Rectangle {
     id: root
@@ -43,7 +44,7 @@ Rectangle {
                 
                 background: Rectangle {
                     implicitWidth: 90  // 减小按钮宽度
-                    implicitHeight: 28 // 减小按钮高度
+                    implicitHeight: 28 // 减���按钮高度
                     color: selectFolderButton.down ? Qt.darker(root.style.backgroundColor, 1.1) : 
                            selectFolderButton.hovered ? root.style.hoverColor : root.style.backgroundColor
                     border.color: selectFolderButton.down ? root.style.accentColor : 
@@ -121,16 +122,9 @@ Rectangle {
                 }
                 
                 onClicked: {
-                    if (root.fileManager.currentPath) {
-                        // 清除现有的预览缓存
-                        if (root.fileManager.fileModel) {
-                            root.fileManager.fileModel.clearPreviews()  // 需要在 FileListModel 中添加此方法
-                        }
-                        
-                        // 使用当前的过滤器设置重新扫描
-                        let currentFilter = root.settings.fileFilter
-                        let filters = currentFilter ? currentFilter.split(';') : []
-                        root.fileManager.scanDirectory(root.fileManager.currentPath, filters)
+                    Utils.Logger.logOperation(fileManager, "手动刷新目录", "")
+                    if (fileManager.currentPath) {
+                        fileManager.scanDirectory(fileManager.currentPath)
                     }
                 }
             }

@@ -4,7 +4,8 @@ import QtQuick.Controls.Basic  // 添加 Basic 样式
 import QtQuick.Layouts
 import FileManager 1.0
 import "./components" as Components  // 修改导入方式
-import "dialogs" as Dialogs
+import "./dialogs" as Dialogs
+import "./settings" as Settings  // 添加这行
 
 Window {
     width: 800
@@ -53,19 +54,16 @@ Window {
             }
         }
         
-        // 添加错误处理
-        onError: function(errorMessage) {
-            console.error("文件系统错误:", errorMessage)
-            // 可以添加错误通知或其他处理
-        }
-        
+        // 添加文件操作日志记录
         onFileChanged: function(path) {
             console.log("检测到文件变更:", path)
+            fileManager.addLogMessage("检测到文件变更: " + path)
             rescanTimer.restart()
         }
         
         onDirectoryChanged: function(path) {
             console.log("检测到目录变更:", path)
+            fileManager.addLogMessage("检测到目录变更: " + path)
             rescanTimer.restart()
         }
         
@@ -73,9 +71,16 @@ Window {
         onIsScanningChanged: {
             if (isScanning) {
                 console.log("开始扫描目录...")
+                fileManager.addLogMessage("开始扫描目录...")
             } else {
                 console.log("目录扫描完成")
+                fileManager.addLogMessage("目录扫描完成")
             }
+        }
+        
+        onError: function(errorMessage) {
+            console.error("文件系统错误:", errorMessage)
+            fileManager.addLogMessage("错误: " + errorMessage)
         }
     }
 

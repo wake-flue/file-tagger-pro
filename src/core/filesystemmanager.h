@@ -24,6 +24,7 @@ class FileSystemManager : public QObject
     Q_PROPERTY(FileListModel* fileModel READ fileModel CONSTANT)
     Q_PROPERTY(QStringList logMessages READ logMessages NOTIFY logMessagesChanged)
     Q_PROPERTY(bool isScanning READ isScanning NOTIFY isScanningChanged)
+    Q_PROPERTY(Logger* logger READ logger NOTIFY loggerChanged)
 
 public:
     explicit FileSystemManager(QObject *parent = nullptr);
@@ -39,6 +40,7 @@ public:
     QStringList logMessages() const { return m_messages; }
     FileListModel* fileModel() const { return m_fileModel; }
     bool isScanning() const { return m_isScanning; }
+    Logger* logger() const { return m_logger; }
     
     Q_INVOKABLE void setWatchPath(const QString &path);
     Q_INVOKABLE QVector<QSharedPointer<FileData>> scanDirectory(const QString &path, const QStringList &filters = QStringList());
@@ -66,6 +68,7 @@ signals:
     void spritesGenerated(const QStringList &paths);
     void spriteProgress(int current, int total);
     void fileRenamed(const QString &oldPath, const QString &newPath);
+    void loggerChanged();
 
 private:
     void addLogMessage(const QString &message);
@@ -81,6 +84,10 @@ private:
     QString m_ffmpegPath;
     PreviewGenerator *m_previewGenerator;
     bool m_isScanning = false;
+
+private slots:
+    void onFileChanged(const QString &path);
+    void onDirectoryChanged(const QString &path);
 };
 
 #endif // FILESYSTEMMANAGER_H

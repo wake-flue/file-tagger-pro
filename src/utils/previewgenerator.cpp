@@ -77,7 +77,6 @@ void PreviewGenerator::generatePreview(QSharedPointer<FileData> fileData) {
 QString PreviewGenerator::generateImagePreview(const QString &path) {
     QImage image(path);
     if (image.isNull()) {
-        qWarning() << "无法加载图片:" << path;
         return QString();
     }
     
