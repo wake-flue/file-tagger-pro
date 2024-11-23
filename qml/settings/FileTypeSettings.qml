@@ -30,34 +30,37 @@ ColumnLayout {
             }
         })
         
-        // 只更新输入框的文本，不直接应用
         filterInput.isInternalUpdate = true
         filterInput.text = filters.join(";")
         filterInput.isInternalUpdate = false
     }
     
-    // 标题
-    Label {
-        text: qsTr("文件类型设置")
-        font {
-            family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-            pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
-            bold: true
-        }
-        color: style?.textColor ?? settingsStyle.defaultTextColor
-    }
-    
-    // 说明文本
-    Label {
-        text: qsTr("选择要显示的文件类型，或直接输入文件扩展名")
-        wrapMode: Text.Wrap
+    // 标题和说明
+    ColumnLayout {
+        spacing: 4
         Layout.fillWidth: true
-        font {
-            family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-            pixelSize: (style?.defaultFontSize ?? settingsStyle.defaultFontSize) - 1
+        
+        Label {
+            text: qsTr("文件类型设置")
+            font {
+                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                pixelSize: settingsStyle.titleFontSize
+                bold: true
+            }
+            color: style?.textColor ?? settingsStyle.defaultTextColor
         }
-        color: style?.secondaryTextColor ?? settingsStyle.defaultTextColor
-        opacity: settingsStyle.defaultOpacity
+        
+        Label {
+            text: qsTr("选择要显示的文件类型，或直接输入文件扩展名")
+            font {
+                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                pixelSize: settingsStyle.descriptionFontSize
+            }
+            color: style?.secondaryTextColor ?? settingsStyle.defaultSecondaryTextColor
+            opacity: settingsStyle.defaultOpacity
+            Layout.fillWidth: true
+            wrapMode: Text.Wrap
+        }
     }
     
     // 过滤器输入框
@@ -69,9 +72,9 @@ ColumnLayout {
             text: qsTr("自定义筛选器")
             font {
                 family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                pixelSize: (style?.defaultFontSize ?? settingsStyle.defaultFontSize) - 1
+                pixelSize: settingsStyle.descriptionFontSize
             }
-            color: style?.secondaryTextColor ?? settingsStyle.defaultTextColor
+            color: style?.secondaryTextColor ?? settingsStyle.defaultSecondaryTextColor
         }
         
         TextArea {
@@ -82,18 +85,19 @@ ColumnLayout {
             Layout.preferredHeight: 80
             selectByMouse: true
             wrapMode: TextArea.Wrap
+            
             font {
                 family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
+                pixelSize: settingsStyle.defaultFontSize
             }
             
             background: Rectangle {
                 implicitHeight: 80
-                color: filterInput.enabled ? "white" : "#F0F0F0"
+                color: filterInput.enabled ? settingsStyle.defaultInputBackgroundColor : "#F0F0F0"
                 border.color: filterInput.focus ? 
-                    (style?.accentColor ?? settingsStyle.defaultAccentColor) : 
-                    filterInput.hovered ? Qt.lighter(style?.accentColor ?? settingsStyle.defaultAccentColor, 1.5) :
-                    (style?.borderColor ?? settingsStyle.defaultBorderColor)
+                    settingsStyle.defaultInputFocusBorderColor : 
+                    filterInput.hovered ? settingsStyle.defaultButtonHoverBorderColor :
+                    settingsStyle.defaultInputBorderColor
                 border.width: filterInput.focus ? 2 : 1
                 radius: settingsStyle.defaultRadius
             }
@@ -103,13 +107,7 @@ ColumnLayout {
                 visible: filterInput.contentHeight > filterInput.height
             }
             
-            // 添加一个属性来防止重复更新
             property bool isInternalUpdate: false
-            
-            onTextChanged: {
-                if (!settings || isInternalUpdate) return;
-                // 移除自动应用的逻辑，只在点击应用按钮时更新
-            }
         }
     }
     
@@ -122,9 +120,9 @@ ColumnLayout {
             text: qsTr("常用文件类型")
             font {
                 family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                pixelSize: (style?.defaultFontSize ?? settingsStyle.defaultFontSize) - 1
+                pixelSize: settingsStyle.descriptionFontSize
             }
-            color: style?.secondaryTextColor ?? settingsStyle.defaultTextColor
+            color: style?.secondaryTextColor ?? settingsStyle.defaultSecondaryTextColor
         }
         
         Flow {
@@ -153,19 +151,18 @@ ColumnLayout {
                     height: 32
                     spacing: 8
                     
-                    // 自定义样式
                     indicator: Rectangle {
                         implicitWidth: 18
                         implicitHeight: 18
                         radius: 4
                         border.color: typeCheckBox.checked ? 
-                            (style?.accentColor ?? settingsStyle.defaultAccentColor) : 
-                            typeCheckBox.hovered ? Qt.lighter(style?.accentColor ?? settingsStyle.defaultAccentColor, 1.5) :
-                            (style?.borderColor ?? settingsStyle.defaultBorderColor)
+                            settingsStyle.defaultAccentColor : 
+                            typeCheckBox.hovered ? Qt.lighter(settingsStyle.defaultAccentColor, 1.5) :
+                            settingsStyle.defaultInputBorderColor
                         border.width: typeCheckBox.checked ? 2 : 1
-                        color: typeCheckBox.checked ? Qt.alpha(style?.accentColor ?? settingsStyle.defaultAccentColor, 0.1) : "white"
+                        color: typeCheckBox.checked ? Qt.alpha(settingsStyle.defaultAccentColor, 0.1) : 
+                               settingsStyle.defaultInputBackgroundColor
                         
-                        // 选中标记
                         Image {
                             source: "qrc:/resources/images/checkmark.svg"
                             width: 12
@@ -194,23 +191,20 @@ ColumnLayout {
                             text: typeCheckBox.text
                             font {
                                 family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                                pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
+                                pixelSize: settingsStyle.defaultFontSize
                             }
                             color: typeCheckBox.checked ? 
-                                (style?.accentColor ?? settingsStyle.defaultAccentColor) : 
-                                (style?.textColor ?? settingsStyle.defaultTextColor)
+                                settingsStyle.defaultAccentColor : 
+                                settingsStyle.defaultTextColor
                             Layout.fillWidth: true
                             elide: Text.ElideRight
                         }
                     }
                     
-                    // 处理选中状态变化
                     onCheckedChanged: {
                         if (checked) {
                             if (modelData.type === "all") {
-                                // 如果选择"全部"，取消其他所有选择
                                 selectedTypes = ["all"]
-                                // 更新其他复选框状态
                                 for (let i = 0; i < parent.children.length; i++) {
                                     let checkbox = parent.children[i]
                                     if (checkbox !== this && checkbox instanceof CheckBox) {
@@ -218,11 +212,9 @@ ColumnLayout {
                                     }
                                 }
                             } else {
-                                // 如果选择其他类型，移除"全部"选项
                                 let allIndex = selectedTypes.indexOf("all")
                                 if (allIndex !== -1) {
                                     selectedTypes.splice(allIndex, 1)
-                                    // 更新"全部"复选框状态
                                     for (let i = 0; i < parent.children.length; i++) {
                                         let checkbox = parent.children[i]
                                         if (checkbox instanceof CheckBox && 
@@ -247,18 +239,66 @@ ColumnLayout {
         }
     }
     
+    Item { Layout.fillHeight: true }
+    
+    // 底部按钮区域
+    RowLayout {
+        Layout.fillWidth: true
+        Layout.topMargin: 12
+        spacing: 8
+        
+        Item { Layout.fillWidth: true }
+        
+        Button {
+            id: applyButton
+            text: qsTr("应用")
+            enabled: filterInput.text !== (settings?.fileFilter ?? "")
+            
+            background: Rectangle {
+                implicitWidth: 80
+                implicitHeight: settingsStyle.defaultButtonHeight
+                radius: settingsStyle.defaultRadius
+                color: applyButton.enabled ? 
+                       (applyButton.down ? Qt.darker(settingsStyle.defaultAccentColor, 1.1) :
+                        applyButton.hovered ? Qt.lighter(settingsStyle.defaultAccentColor, 1.1) :
+                        settingsStyle.defaultAccentColor) :
+                       "#F0F0F0"
+                
+                Behavior on color {
+                    ColorAnimation { duration: 100 }
+                }
+            }
+            
+            contentItem: Text {
+                text: applyButton.text
+                font {
+                    family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                    pixelSize: settingsStyle.defaultFontSize
+                }
+                color: applyButton.enabled ? "white" : settingsStyle.defaultSecondaryTextColor
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+            
+            onClicked: {
+                if (!settings) return;
+                settings.setValue("fileFilter", filterInput.text)
+                if (fileManager && fileManager.fileModel) {
+                    fileManager.fileModel.filterPattern = filterInput.text
+                }
+            }
+        }
+    }
+    
     // 初始化组件
     Component.onCompleted: {
         if (!settings) return;
         
-        // 解析当前过滤器
         let currentFilters = (settings.fileFilter || "").split(";").map(f => f.trim().toLowerCase())
         
-        // 如果是全部文件
         if (currentFilters.length === 1 && currentFilters[0] === "*.*") {
             selectedTypes = ["all"]
         } else {
-            // 创建类型映射
             let typeMap = {
                 image: settings.imageFilter || [],
                 video: settings.videoFilter || [],
@@ -268,7 +308,6 @@ ColumnLayout {
                 dev: settings.devFilter || []
             }
             
-            // 检查每个类型
             Object.entries(typeMap).forEach(([type, extensions]) => {
                 if (!extensions) return;
                 let typeFilters = extensions.map(ext => "*." + ext.toLowerCase())
@@ -281,7 +320,6 @@ ColumnLayout {
             })
         }
         
-        // 更新复选框状态
         Qt.callLater(() => {
             for (let i = 0; i < typeRepeater.count; i++) {
                 let checkbox = typeRepeater.itemAt(i)
@@ -294,79 +332,11 @@ ColumnLayout {
                               checkbox.text === "压缩包" ? "archive" :
                               checkbox.text === "开发" ? "dev" : ""
                     
-                    // 设置标志防止触发更新
                     checkbox.checked = selectedTypes.includes(type)
                 }
             }
         })
     }
     
-    // 添加 fileManager 属性
     required property var fileManager
-    
-    // 在底部添加应用按钮
-    Item {
-        Layout.fillHeight: true  // 添加弹性空间
-    }
-    
-    // 分隔线
-    Rectangle {
-        Layout.fillWidth: true
-        height: 1
-        color: style?.borderColor ?? settingsStyle.defaultBorderColor
-        opacity: 0.5
-    }
-    
-    // 底部按钮区域
-    RowLayout {
-        Layout.fillWidth: true
-        Layout.topMargin: 12
-        spacing: 8
-        
-        Item { Layout.fillWidth: true }  // 右对齐按钮
-        
-        Button {
-            id: applyButton
-            text: qsTr("应用")
-            enabled: filterInput.text !== (settings?.fileFilter ?? "")  // 只有当过滤器发生变化时才启用
-            
-            background: Rectangle {
-                implicitWidth: 80
-                implicitHeight: 32
-                radius: 4
-                color: applyButton.enabled ? 
-                       (applyButton.down ? Qt.darker(style?.accentColor ?? settingsStyle.defaultAccentColor, 1.1) :
-                        applyButton.hovered ? Qt.lighter(style?.accentColor ?? settingsStyle.defaultAccentColor, 1.1) :
-                        (style?.accentColor ?? settingsStyle.defaultAccentColor)) :
-                       "#F0F0F0"
-                
-                Behavior on color {
-                    ColorAnimation { duration: 100 }
-                }
-            }
-            
-            contentItem: Text {
-                text: applyButton.text
-                font {
-                    family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                    pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
-                }
-                color: applyButton.enabled ? "white" : style?.secondaryTextColor ?? "#666666"
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-            
-            onClicked: {
-                if (!settings) return;
-                
-                // 应用新的过滤器设置
-                settings.setValue("fileFilter", filterInput.text)
-                
-                // 更新文件模型的过滤器
-                if (fileManager && fileManager.fileModel) {
-                    fileManager.fileModel.filterPattern = filterInput.text
-                }
-            }
-        }
-    }
 } 

@@ -22,8 +22,8 @@ ColumnLayout {
         onTriggered: {
             if (settings) {
                 console.log("保存新的图标大小:", iconSizeSlider.value)
-                settings.iconSize = iconSizeSlider.value  // 直接设置属性
-                settings.setValue("iconSize", iconSizeSlider.value)  // 同时调用方法保存
+                settings.iconSize = iconSizeSlider.value
+                settings.setValue("iconSize", iconSizeSlider.value)
                 if (fileManager && fileManager.fileModel) {
                     fileManager.fileModel.iconSize = iconSizeSlider.value
                 }
@@ -31,28 +31,32 @@ ColumnLayout {
         }
     }
     
-    // 标题
-    Label {
-        text: qsTr("常规设置")
-        font {
-            family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-            pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
-            bold: true
-        }
-        color: style?.textColor ?? settingsStyle.defaultTextColor
-    }
-    
-    // 说明文本
-    Label {
-        text: qsTr("调整应用程序的基本显示和行为")
-        font {
-            family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-            pixelSize: (style?.defaultFontSize ?? settingsStyle.defaultFontSize) - 1
-        }
-        color: style?.secondaryTextColor ?? settingsStyle.defaultTextColor
-        opacity: settingsStyle.defaultOpacity
+    // 标题和说明
+    ColumnLayout {
+        spacing: 4
         Layout.fillWidth: true
-        wrapMode: Text.Wrap
+        
+        Label {
+            text: qsTr("常规设置")
+            font {
+                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                pixelSize: settingsStyle.titleFontSize
+                bold: true
+            }
+            color: style?.textColor ?? settingsStyle.defaultTextColor
+        }
+        
+        Label {
+            text: qsTr("调整应用程序的基本显示和行为")
+            font {
+                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                pixelSize: settingsStyle.descriptionFontSize
+            }
+            color: style?.secondaryTextColor ?? settingsStyle.defaultSecondaryTextColor
+            opacity: settingsStyle.defaultOpacity
+            Layout.fillWidth: true
+            wrapMode: Text.Wrap
+        }
     }
     
     // 图标大小设置
@@ -65,7 +69,7 @@ ColumnLayout {
             text: qsTr("大图标视图设置")
             font {
                 family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
+                pixelSize: settingsStyle.defaultFontSize
                 bold: true
             }
             color: style?.textColor ?? settingsStyle.defaultTextColor
@@ -79,7 +83,7 @@ ColumnLayout {
             Label {
                 text: qsTr("图标大小")
                 font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                font.pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
+                font.pixelSize: settingsStyle.defaultFontSize
                 color: style?.textColor ?? settingsStyle.defaultTextColor
             }
             
@@ -97,12 +101,12 @@ ColumnLayout {
                     width: iconSizeSlider.availableWidth
                     height: 4
                     radius: 2
-                    color: style?.borderColor ?? settingsStyle.defaultBorderColor
+                    color: settingsStyle.defaultBorderColor
                     
                     Rectangle {
                         width: iconSizeSlider.visualPosition * parent.width
                         height: parent.height
-                        color: style?.accentColor ?? settingsStyle.defaultAccentColor
+                        color: settingsStyle.defaultAccentColor
                         radius: 2
                     }
                 }
@@ -115,8 +119,8 @@ ColumnLayout {
                     height: 16
                     radius: 8
                     color: iconSizeSlider.pressed ? 
-                           Qt.darker(style?.accentColor ?? settingsStyle.defaultAccentColor, 1.1) : 
-                           style?.accentColor ?? settingsStyle.defaultAccentColor
+                           Qt.darker(settingsStyle.defaultAccentColor, 1.1) : 
+                           settingsStyle.defaultAccentColor
                     
                     Behavior on color {
                         ColorAnimation { duration: 100 }
@@ -130,13 +134,13 @@ ColumnLayout {
                 }
             }
             
-            // 添加提示文本
+            // 提示文本
             Label {
                 id: restartHint
                 text: qsTr("修改图标大小需要重启应用后生效")
                 font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                font.pixelSize: (style?.defaultFontSize ?? settingsStyle.defaultFontSize) - 2
-                color: "#FF6B6B"  // 使用醒目的红色
+                font.pixelSize: settingsStyle.descriptionFontSize
+                color: "#FF6B6B"
                 opacity: 0
                 
                 Behavior on opacity {
@@ -148,8 +152,8 @@ ColumnLayout {
             Label {
                 text: Math.round(iconSizeSlider.value) + " px"
                 font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                font.pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
-                color: style?.secondaryTextColor ?? settingsStyle.defaultTextColor
+                font.pixelSize: settingsStyle.defaultFontSize
+                color: style?.secondaryTextColor ?? settingsStyle.defaultSecondaryTextColor
                 Layout.minimumWidth: 50
             }
         }
@@ -159,23 +163,15 @@ ColumnLayout {
             text: qsTr("重置为默认值")
             Layout.topMargin: settingsStyle.defaultSpacing
             
-            onClicked: {
-                iconSizeSlider.value = 128
-            }
-            
             background: Rectangle {
                 implicitWidth: 120
-                implicitHeight: settingsStyle.defaultInputHeight
-                color: parent.pressed ? 
-                       style?.buttonPressedColor ?? settingsStyle.defaultButtonPressedColor :
-                       parent.hovered ? 
-                       style?.buttonHoverColor ?? settingsStyle.defaultButtonHoverColor :
-                       style?.buttonNormalColor ?? settingsStyle.defaultButtonNormalColor
-                border.color: parent.pressed ?
-                            style?.buttonPressedBorderColor ?? settingsStyle.defaultButtonPressedBorderColor :
-                            parent.hovered ?
-                            style?.buttonHoverBorderColor ?? settingsStyle.defaultButtonHoverBorderColor :
-                            style?.buttonNormalBorderColor ?? settingsStyle.defaultButtonNormalBorderColor
+                implicitHeight: settingsStyle.defaultButtonHeight
+                color: parent.down ? settingsStyle.defaultButtonPressedColor :
+                       parent.hovered ? settingsStyle.defaultButtonHoverColor :
+                       settingsStyle.defaultButtonNormalColor
+                border.color: parent.down ? settingsStyle.defaultButtonPressedBorderColor :
+                            parent.hovered ? settingsStyle.defaultButtonHoverBorderColor :
+                            settingsStyle.defaultButtonNormalBorderColor
                 border.width: 1
                 radius: settingsStyle.defaultRadius
             }
@@ -183,40 +179,32 @@ ColumnLayout {
             contentItem: Text {
                 text: parent.text
                 font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                font.pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
+                font.pixelSize: settingsStyle.defaultFontSize
                 color: style?.textColor ?? settingsStyle.defaultTextColor
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
+            }
+            
+            onClicked: {
+                iconSizeSlider.value = 128
             }
         }
     }
     
     Item { Layout.fillHeight: true }
     
-    // 添加组件初始化检查
+    // 组件初始化检查
     Component.onCompleted: {
-        // 确保设置值正确加载
         if (settings) {
             iconSizeSlider.value = settings.iconSize
         }
     }
     
-    // 添加属性变化监听
+    // 属性变化监听
     Connections {
         target: settings
         function onIconSizeChanged() {
             iconSizeSlider.value = settings.iconSize
-        }
-    }
-    
-    // 在Slider后面添加
-    Connections {
-        target: fileListModel
-        function onRestartRequired() {
-            restartHint.opacity = 1  // 显示提示文本
-            
-            // 3秒后自动隐藏提示
-            hideTimer.restart()
         }
     }
     

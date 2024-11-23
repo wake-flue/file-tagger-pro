@@ -26,7 +26,7 @@ ColumnLayout {
             )
     }
     
-    // 标题区域
+    // 标题和说明
     ColumnLayout {
         spacing: 4
         Layout.fillWidth: true
@@ -35,7 +35,7 @@ ColumnLayout {
             text: qsTr("标签管理")
             font {
                 family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
+                pixelSize: settingsStyle.titleFontSize
                 bold: true
             }
             color: style?.textColor ?? settingsStyle.defaultTextColor
@@ -45,9 +45,9 @@ ColumnLayout {
             text: qsTr("管理文件标签，包括创建、编辑和删除标签")
             font {
                 family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                pixelSize: (style?.defaultFontSize ?? settingsStyle.defaultFontSize) - 1
+                pixelSize: settingsStyle.descriptionFontSize
             }
-            color: style?.secondaryTextColor ?? settingsStyle.defaultTextColor
+            color: style?.secondaryTextColor ?? settingsStyle.defaultSecondaryTextColor
             opacity: settingsStyle.defaultOpacity
             Layout.fillWidth: true
             wrapMode: Text.Wrap
@@ -55,279 +55,236 @@ ColumnLayout {
     }
     
     // 工具栏
-    Rectangle {
+    RowLayout {
         Layout.fillWidth: true
-        Layout.preferredHeight: 48
-        color: style?.backgroundColor ?? settingsStyle.defaultButtonNormalColor
-        radius: settingsStyle.defaultRadius
+        Layout.topMargin: settingsStyle.defaultItemSpacing
+        spacing: 8
         
-        RowLayout {
-            anchors {
-                fill: parent
-                margins: 8
-            }
-            spacing: 8
+        Button {
+            text: qsTr("新建标签")
+            icon.source: "qrc:/resources/images/add.svg"
+            icon.width: 16
+            icon.height: 16
             
-            Button {
-                text: qsTr("新建标签")
-                icon.source: "qrc:/resources/images/add.svg"
-                icon.width: 16
-                icon.height: 16
-                
-                background: Rectangle {
-                    implicitWidth: 100
-                    implicitHeight: 32
-                    color: parent.down ? Qt.darker(style?.accentColor ?? settingsStyle.defaultAccentColor, 1.1) :
-                           parent.hovered ? Qt.lighter(style?.accentColor ?? settingsStyle.defaultAccentColor, 1.1) : 
-                           style?.accentColor ?? settingsStyle.defaultAccentColor
-                    radius: settingsStyle.defaultRadius
-                    
-                    Behavior on color {
-                        ColorAnimation { duration: 100 }
-                    }
-                }
-                
-                contentItem: RowLayout {
-                    spacing: 6
-                    Image {
-                        source: parent.parent.icon.source
-                        sourceSize.width: parent.parent.icon.width
-                        sourceSize.height: parent.parent.icon.height
-                    }
-                    Label {
-                        text: parent.parent.text
-                        color: "white"
-                        font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                        font.pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
-                    }
-                }
-                
-                onClicked: {
-                    editDialog.editMode = false
-                    editDialog.tagId = -1
-                    editDialog.tagName = ""
-                    editDialog.tagColor = Qt.rgba(0, 0.47, 0.83, 1)
-                    editDialog.tagDescription = ""
-                    editDialog.open()
-                }
+            background: Rectangle {
+                implicitWidth: 100
+                implicitHeight: settingsStyle.defaultButtonHeight
+                color: parent.down ? Qt.darker(settingsStyle.defaultAccentColor, 1.1) :
+                       parent.hovered ? Qt.lighter(settingsStyle.defaultAccentColor, 1.1) :
+                       settingsStyle.defaultAccentColor
+                radius: settingsStyle.defaultRadius
             }
             
-            // 添加刷新按钮
-            Button {
-                id: refreshButton
-                icon.source: "qrc:/resources/images/refresh.svg"
-                icon.width: 16
-                icon.height: 16
-                
-                background: Rectangle {
-                    implicitWidth: 32
-                    implicitHeight: 32
-                    color: parent.down ? Qt.darker(style?.backgroundColor ?? settingsStyle.defaultButtonNormalColor, 1.1) :
-                           parent.hovered ? (style?.hoverColor ?? settingsStyle.defaultButtonHoverColor) : 
-                           style?.backgroundColor ?? settingsStyle.defaultButtonNormalColor
-                    border.color: parent.down ? (style?.accentColor ?? settingsStyle.defaultAccentColor) :
-                                parent.hovered ? (style?.accentColor ?? settingsStyle.defaultAccentColor) :
-                                style?.borderColor ?? settingsStyle.defaultBorderColor
-                    border.width: 1
-                    radius: settingsStyle.defaultRadius
-                    
-                    Behavior on color {
-                        ColorAnimation { duration: 100 }
-                    }
+            contentItem: RowLayout {
+                spacing: 6
+                Image {
+                    source: parent.parent.icon.source
+                    sourceSize.width: parent.parent.icon.width
+                    sourceSize.height: parent.parent.icon.height
                 }
-                
-                ToolTip {
-                    visible: parent.hovered
-                    text: qsTr("刷新列表")
-                    delay: 500
+                Label {
+                    text: parent.parent.text
+                    color: "white"
                     font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                    font.pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
-                }
-                
-                onClicked: {
-                    searchField.text = ""  // 清空搜索框
-                    refreshTagList()       // 刷新列表
+                    font.pixelSize: settingsStyle.defaultFontSize
                 }
             }
             
-            Item { Layout.fillWidth: true }
-            
-            TextField {
-                id: searchField
-                placeholderText: qsTr("搜索标签...")
-                Layout.preferredWidth: 200
-                
-                background: Rectangle {
-                    implicitHeight: 32
-                    color: style?.backgroundColor ?? settingsStyle.defaultButtonNormalColor
-                    border.color: parent.activeFocus ? 
-                                (style?.accentColor ?? settingsStyle.defaultAccentColor) : 
-                                "transparent"
-                    border.width: parent.activeFocus ? 2 : 0
-                    radius: settingsStyle.defaultRadius
-                }
-                
-                font {
-                    family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                    pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
-                }
-                
-                onTextChanged: refreshTagList()
+            onClicked: {
+                editDialog.editMode = false
+                editDialog.tagId = -1
+                editDialog.tagName = ""
+                editDialog.tagColor = Qt.rgba(0, 0.47, 0.83, 1)
+                editDialog.tagDescription = ""
+                editDialog.open()
             }
+        }
+        
+        Button {
+            id: refreshButton
+            icon.source: "qrc:/resources/images/refresh.svg"
+            icon.width: 16
+            icon.height: 16
+            
+            background: Rectangle {
+                implicitWidth: settingsStyle.defaultButtonHeight
+                implicitHeight: settingsStyle.defaultButtonHeight
+                color: parent.down ? settingsStyle.defaultButtonPressedColor :
+                       parent.hovered ? settingsStyle.defaultButtonHoverColor :
+                       settingsStyle.defaultButtonNormalColor
+                border.color: parent.down ? settingsStyle.defaultButtonPressedBorderColor :
+                            parent.hovered ? settingsStyle.defaultButtonHoverBorderColor :
+                            settingsStyle.defaultButtonNormalBorderColor
+                border.width: 1
+                radius: settingsStyle.defaultRadius
+            }
+            
+            ToolTip {
+                visible: parent.hovered
+                text: qsTr("刷新列表")
+                delay: 500
+                font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                font.pixelSize: settingsStyle.defaultFontSize
+            }
+            
+            onClicked: {
+                searchField.text = ""
+                refreshTagList()
+            }
+        }
+        
+        Item { Layout.fillWidth: true }
+        
+        TextField {
+            id: searchField
+            placeholderText: qsTr("搜索标签...")
+            Layout.preferredWidth: 200
+            selectByMouse: true
+            
+            background: Rectangle {
+                implicitHeight: settingsStyle.defaultInputHeight
+                color: settingsStyle.defaultInputBackgroundColor
+                border.color: parent.activeFocus ? 
+                            settingsStyle.defaultInputFocusBorderColor :
+                            parent.hovered ? 
+                            settingsStyle.defaultButtonHoverBorderColor :
+                            settingsStyle.defaultInputBorderColor
+                border.width: parent.activeFocus ? 2 : 1
+                radius: settingsStyle.defaultRadius
+            }
+            
+            font {
+                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                pixelSize: settingsStyle.defaultFontSize
+            }
+            
+            onTextChanged: refreshTagList()
         }
     }
     
-    // 标签列表容器
-    Rectangle {
+    // 标签列表
+    ListView {
+        id: tagListView
         Layout.fillWidth: true
         Layout.fillHeight: true
-        color: style?.backgroundColor ?? settingsStyle.defaultButtonNormalColor
-        border.color: style?.borderColor ?? settingsStyle.defaultBorderColor
-        border.width: 1
-        radius: settingsStyle.defaultRadius
+        Layout.topMargin: settingsStyle.defaultSpacing
+        clip: true
+        model: TagManager.getAllTags()
+        spacing: 1
         
-        ListView {
-            id: tagListView
-            anchors.fill: parent
-            anchors.margins: 8
-            clip: true
-            model: TagManager.getAllTags()
+        delegate: ItemDelegate {
+            id: tagDelegate
+            width: ListView.view.width
+            height: 48
             
-            delegate: ItemDelegate {
-                id: tagDelegate
-                width: ListView.view.width
-                height: 48
+            required property var modelData
+            
+            background: Rectangle {
+                color: tagDelegate.hovered ? 
+                       settingsStyle.defaultListItemHoverColor : 
+                       "transparent"
+            }
+            
+            RowLayout {
+                anchors {
+                    fill: parent
+                    leftMargin: 16
+                    rightMargin: 16
+                }
+                spacing: 12
                 
-                required property var modelData
-                
-                background: Rectangle {
-                    color: tagDelegate.hovered ? 
-                           (style?.hoverColor ?? settingsStyle.defaultButtonHoverColor) : 
-                           "transparent"
-                    radius: settingsStyle.defaultRadius
+                Rectangle {
+                    width: 24
+                    height: 24
+                    radius: 12
+                    color: tagDelegate.modelData?.color ?? "transparent"
+                    
+                    Behavior on scale {
+                        NumberAnimation { duration: 100 }
+                    }
+                    
+                    scale: tagDelegate.hovered ? 1.1 : 1.0
                 }
                 
-                RowLayout {
-                    anchors {
-                        fill: parent
-                        leftMargin: 16
-                        rightMargin: 16
-                    }
-                    spacing: 12
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 2
                     
-                    // 颜色标记
-                    Rectangle {
-                        width: 24
-                        height: 24
-                        radius: 12
-                        color: tagDelegate.modelData?.color ?? "transparent"
-                        border.width: 1
-                        border.color: tagDelegate.modelData?.color ? 
-                                    Qt.darker(tagDelegate.modelData.color, 1.1) : 
-                                    "transparent"
-                        
-                        Behavior on scale {
-                            NumberAnimation { duration: 100 }
+                    Label {
+                        text: tagDelegate.modelData?.name ?? ""
+                        font {
+                            family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                            pixelSize: settingsStyle.defaultFontSize
                         }
-                        
-                        scale: tagDelegate.hovered ? 1.1 : 1.0
+                        color: style?.textColor ?? settingsStyle.defaultTextColor
                     }
                     
-                    // 标签信息
-                    ColumnLayout {
+                    Label {
+                        text: tagDelegate.modelData?.description ?? ""
+                        font {
+                            family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                            pixelSize: settingsStyle.descriptionFontSize
+                        }
+                        color: style?.secondaryTextColor ?? settingsStyle.defaultSecondaryTextColor
+                        opacity: settingsStyle.defaultOpacity
+                        elide: Text.ElideRight
                         Layout.fillWidth: true
-                        spacing: 2
+                    }
+                }
+                
+                Row {
+                    spacing: 8
+                    
+                    Button {
+                        icon.source: "qrc:/resources/images/edit.svg"
+                        icon.width: 16
+                        icon.height: 16
                         
-                        Label {
-                            text: tagDelegate.modelData?.name ?? ""
-                            font {
-                                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                                pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
-                            }
-                            color: style?.textColor ?? settingsStyle.defaultTextColor
+                        background: Rectangle {
+                            implicitWidth: settingsStyle.defaultButtonHeight
+                            implicitHeight: settingsStyle.defaultButtonHeight
+                            color: parent.down ? settingsStyle.defaultButtonPressedColor :
+                                   parent.hovered ? settingsStyle.defaultButtonHoverColor :
+                                   "transparent"
+                            radius: settingsStyle.defaultRadius
                         }
                         
-                        Label {
-                            text: tagDelegate.modelData?.description ?? ""
-                            font {
-                                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                                pixelSize: (style?.defaultFontSize ?? settingsStyle.defaultFontSize) - 2
-                            }
-                            color: style?.secondaryTextColor ?? settingsStyle.defaultTextColor
-                            opacity: settingsStyle.defaultOpacity
-                            elide: Text.ElideRight
-                            Layout.fillWidth: true
+                        onClicked: {
+                            editDialog.editMode = true
+                            editDialog.tagId = tagDelegate.modelData.id
+                            editDialog.tagName = tagDelegate.modelData.name
+                            editDialog.tagColor = tagDelegate.modelData.color
+                            editDialog.tagDescription = tagDelegate.modelData.description
+                            editDialog.open()
                         }
                     }
                     
-                    // 操作按钮
-                    Row {
-                        spacing: 8
+                    Button {
+                        icon.source: "qrc:/resources/images/delete.svg"
+                        icon.width: 16
+                        icon.height: 16
                         
-                        Button {
-                            icon.source: "qrc:/resources/images/edit.svg"
-                            icon.width: 16
-                            icon.height: 16
-                            
-                            background: Rectangle {
-                                implicitWidth: 32
-                                implicitHeight: 32
-                                color: parent.down ? 
-                                       (style?.hoverColor ?? settingsStyle.defaultButtonPressedColor) :
-                                       parent.hovered ? 
-                                       (style?.backgroundColor ?? settingsStyle.defaultButtonHoverColor) : 
-                                       "transparent"
-                                radius: settingsStyle.defaultRadius
-                            }
-                            
-                            onClicked: {
-                                editDialog.editMode = true
-                                editDialog.tagId = tagDelegate.modelData.id
-                                editDialog.tagName = tagDelegate.modelData.name
-                                editDialog.tagColor = tagDelegate.modelData.color
-                                editDialog.tagDescription = tagDelegate.modelData.description
-                                editDialog.open()
-                            }
+                        background: Rectangle {
+                            implicitWidth: settingsStyle.defaultButtonHeight
+                            implicitHeight: settingsStyle.defaultButtonHeight
+                            color: parent.down ? Qt.darker("#dc3545", 1.1) :
+                                   parent.hovered ? Qt.lighter("#dc3545", 1.1) :
+                                   "transparent"
+                            radius: settingsStyle.defaultRadius
                         }
                         
-                        Button {
-                            icon.source: "qrc:/resources/images/delete.svg"
-                            icon.width: 16
-                            icon.height: 16
-                            
-                            background: Rectangle {
-                                implicitWidth: 32
-                                implicitHeight: 32
-                                color: parent.down ? 
-                                       Qt.darker("#dc3545", 1.1) :
-                                       parent.hovered ? 
-                                       Qt.lighter("#dc3545", 1.1) : 
-                                       "transparent"
-                                radius: settingsStyle.defaultRadius
-                            }
-                            
-                            onClicked: {
-                                deleteConfirmDialog.tagId = tagDelegate.modelData.id
-                                deleteConfirmDialog.tagName = tagDelegate.modelData.name
-                                deleteConfirmDialog.open()
-                            }
+                        onClicked: {
+                            deleteConfirmDialog.tagId = tagDelegate.modelData.id
+                            deleteConfirmDialog.tagName = tagDelegate.modelData.name
+                            deleteConfirmDialog.open()
                         }
                     }
                 }
             }
-            
-            ScrollBar.vertical: ScrollBar {
-                active: true
-                policy: ScrollBar.AsNeeded
-            }
-            
-            // 添加分隔线
-            section.delegate: Rectangle {
-                width: parent.width
-                height: 1
-                color: style?.borderColor ?? settingsStyle.defaultBorderColor
-                opacity: 0.5
-            }
+        }
+        
+        ScrollBar.vertical: ScrollBar {
+            policy: ScrollBar.AsNeeded
         }
     }
     
@@ -336,26 +293,15 @@ ColumnLayout {
         id: editDialog
         style: root.style
         
-        // 添加关闭信号处理
         onClosed: {
             if (result === Dialog.Accepted) {
                 refreshTagList()
             }
         }
         
-        // 添加标签操作的结果处理
-        onTagAdded: {
-            refreshTagList()  // 添加标签后刷新
-        }
-        
-        onTagUpdated: {
-            refreshTagList()  // 更新标签后刷新
-        }
-        
-        onTagError: {
-            // TODO: 可以添加错误提示对话框
-            console.error("标签操作失败:", message)
-        }
+        onTagAdded: refreshTagList()
+        onTagUpdated: refreshTagList()
+        onTagError: console.error("标签操作失败:", message)
     }
     
     // 删除确认对话框
@@ -367,7 +313,6 @@ ColumnLayout {
         property int tagId: -1
         property string tagName: ""
         
-        // 居中显示
         x: (parent.width - width) / 2
         y: (parent.height - height) / 2
         
@@ -378,7 +323,7 @@ ColumnLayout {
                 text: qsTr("确定要删除标签吗？")
                 font {
                     family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                    pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
+                    pixelSize: settingsStyle.defaultFontSize
                 }
                 color: style?.textColor ?? settingsStyle.defaultTextColor
                 wrapMode: Text.Wrap
@@ -389,9 +334,9 @@ ColumnLayout {
                 text: qsTr("此操作不可撤销。")
                 font {
                     family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                    pixelSize: (style?.defaultFontSize ?? settingsStyle.defaultFontSize) - 1
+                    pixelSize: settingsStyle.descriptionFontSize
                 }
-                color: style?.secondaryTextColor ?? settingsStyle.defaultTextColor
+                color: style?.secondaryTextColor ?? settingsStyle.defaultSecondaryTextColor
                 opacity: settingsStyle.defaultOpacity
             }
         }
@@ -403,7 +348,7 @@ ColumnLayout {
                 
                 background: Rectangle {
                     implicitWidth: 80
-                    implicitHeight: 32
+                    implicitHeight: settingsStyle.defaultButtonHeight
                     color: parent.down ? settingsStyle.defaultButtonPressedColor :
                            parent.hovered ? settingsStyle.defaultButtonHoverColor :
                            settingsStyle.defaultButtonNormalColor
@@ -421,7 +366,7 @@ ColumnLayout {
                 
                 background: Rectangle {
                     implicitWidth: 80
-                    implicitHeight: 32
+                    implicitHeight: settingsStyle.defaultButtonHeight
                     color: parent.down ? Qt.darker("#dc3545", 1.1) :
                            parent.hovered ? Qt.lighter("#dc3545", 1.1) :
                            "#dc3545"
@@ -435,7 +380,7 @@ ColumnLayout {
                     verticalAlignment: Text.AlignVCenter
                     font {
                         family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                        pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
+                        pixelSize: settingsStyle.defaultFontSize
                     }
                 }
             }
@@ -446,7 +391,6 @@ ColumnLayout {
                 if (TagManager.deleteTag(tagId)) {
                     refreshTagList()
                 } else {
-                    // 可以添加错误提示
                     console.error("删除标签失败")
                 }
             }

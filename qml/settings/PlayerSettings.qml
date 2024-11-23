@@ -15,16 +15,45 @@ ColumnLayout {
     // 使用统一的样式对象
     property SettingsStyle settingsStyle: SettingsStyle {}
     
+    // 标题和说明
+    ColumnLayout {
+        spacing: 4
+        Layout.fillWidth: true
+        
+        Label {
+            text: qsTr("播放器设置")
+            font {
+                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                pixelSize: settingsStyle.titleFontSize
+                bold: true
+            }
+            color: style?.textColor ?? settingsStyle.defaultTextColor
+        }
+        
+        Label {
+            text: qsTr("设置图片查看器和视频播放器的路径")
+            font {
+                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                pixelSize: settingsStyle.descriptionFontSize
+            }
+            color: style?.secondaryTextColor ?? settingsStyle.defaultSecondaryTextColor
+            opacity: settingsStyle.defaultOpacity
+            Layout.fillWidth: true
+            wrapMode: Text.Wrap
+        }
+    }
+    
     // 图片查看器设置
     ColumnLayout {
         Layout.fillWidth: true
+        Layout.topMargin: settingsStyle.defaultSpacing
         spacing: settingsStyle.defaultItemSpacing
         
         Label {
             text: qsTr("图片查看器")
             font {
                 family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
+                pixelSize: settingsStyle.defaultFontSize
                 bold: true
             }
             color: style?.textColor ?? settingsStyle.defaultTextColor
@@ -34,15 +63,14 @@ ColumnLayout {
             text: qsTr("选择或输入图片查看器路径")
             font {
                 family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                pixelSize: (style?.defaultFontSize ?? settingsStyle.defaultFontSize) - 1
+                pixelSize: settingsStyle.descriptionFontSize
             }
-            color: style?.textColor ?? settingsStyle.defaultTextColor
+            color: style?.secondaryTextColor ?? settingsStyle.defaultSecondaryTextColor
             opacity: settingsStyle.defaultOpacity
         }
         
         RowLayout {
             Layout.fillWidth: true
-            Layout.topMargin: settingsStyle.defaultItemSpacing
             spacing: 8
             
             TextField {
@@ -54,15 +82,17 @@ ColumnLayout {
                 
                 font {
                     family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                    pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
+                    pixelSize: settingsStyle.defaultFontSize
                 }
                 
                 background: Rectangle {
                     implicitHeight: settingsStyle.defaultInputHeight
-                    color: "white"
+                    color: settingsStyle.defaultInputBackgroundColor
                     border.color: parent.activeFocus ? 
-                        (style?.accentColor ?? settingsStyle.defaultAccentColor) : 
-                        (style?.borderColor ?? settingsStyle.defaultBorderColor)
+                                settingsStyle.defaultInputFocusBorderColor :
+                                parent.hovered ? 
+                                settingsStyle.defaultButtonHoverBorderColor :
+                                settingsStyle.defaultInputBorderColor
                     border.width: parent.activeFocus ? 2 : 1
                     radius: settingsStyle.defaultRadius
                 }
@@ -77,16 +107,15 @@ ColumnLayout {
                 icon.source: "qrc:/resources/images/folder.svg"
                 icon.width: 14
                 icon.height: 14
-                padding: 6
                 
                 background: Rectangle {
                     implicitWidth: settingsStyle.defaultButtonWidth
                     implicitHeight: settingsStyle.defaultButtonHeight
-                    color: parent.pressed ? settingsStyle.defaultButtonPressedColor : 
-                           parent.hovered ? settingsStyle.defaultButtonHoverColor : 
+                    color: parent.down ? settingsStyle.defaultButtonPressedColor :
+                           parent.hovered ? settingsStyle.defaultButtonHoverColor :
                            settingsStyle.defaultButtonNormalColor
-                    border.color: parent.pressed ? settingsStyle.defaultButtonPressedBorderColor :
-                                parent.hovered ? settingsStyle.defaultButtonHoverBorderColor : 
+                    border.color: parent.down ? settingsStyle.defaultButtonPressedBorderColor :
+                                parent.hovered ? settingsStyle.defaultButtonHoverBorderColor :
                                 settingsStyle.defaultButtonNormalBorderColor
                     border.width: 1
                     radius: settingsStyle.defaultRadius
@@ -95,19 +124,15 @@ ColumnLayout {
                 contentItem: RowLayout {
                     spacing: 4
                     Image {
-                        source: "qrc:/resources/images/folder.svg"
-                        sourceSize.width: 14
-                        sourceSize.height: 14
-                        Layout.alignment: Qt.AlignVCenter
+                        source: parent.parent.icon.source
+                        sourceSize.width: parent.parent.icon.width
+                        sourceSize.height: parent.parent.icon.height
                     }
                     Label {
-                        text: qsTr("浏览")
-                        font {
-                            family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                            pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
-                        }
+                        text: parent.parent.text
+                        font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                        font.pixelSize: settingsStyle.defaultFontSize
                         color: style?.textColor ?? settingsStyle.defaultTextColor
-                        Layout.alignment: Qt.AlignVCenter
                     }
                 }
                 
@@ -119,26 +144,17 @@ ColumnLayout {
         }
     }
     
-    // 分隔线
-    Rectangle {
-        Layout.fillWidth: true
-        height: 1
-        color: style?.borderColor ?? settingsStyle.defaultBorderColor
-        opacity: 0.5
-        Layout.topMargin: settingsStyle.defaultSpacing
-        Layout.bottomMargin: settingsStyle.defaultSpacing
-    }
-    
     // 视频播放器设置
     ColumnLayout {
         Layout.fillWidth: true
+        Layout.topMargin: settingsStyle.defaultSpacing
         spacing: settingsStyle.defaultItemSpacing
         
         Label {
             text: qsTr("视频播放器")
             font {
                 family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
+                pixelSize: settingsStyle.defaultFontSize
                 bold: true
             }
             color: style?.textColor ?? settingsStyle.defaultTextColor
@@ -148,15 +164,14 @@ ColumnLayout {
             text: qsTr("选择或输入视频播放器路径")
             font {
                 family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                pixelSize: (style?.defaultFontSize ?? settingsStyle.defaultFontSize) - 1
+                pixelSize: settingsStyle.descriptionFontSize
             }
-            color: style?.textColor ?? settingsStyle.defaultTextColor
+            color: style?.secondaryTextColor ?? settingsStyle.defaultSecondaryTextColor
             opacity: settingsStyle.defaultOpacity
         }
         
         RowLayout {
             Layout.fillWidth: true
-            Layout.topMargin: settingsStyle.defaultItemSpacing
             spacing: 8
             
             TextField {
@@ -168,15 +183,17 @@ ColumnLayout {
                 
                 font {
                     family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                    pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
+                    pixelSize: settingsStyle.defaultFontSize
                 }
                 
                 background: Rectangle {
                     implicitHeight: settingsStyle.defaultInputHeight
-                    color: "white"
+                    color: settingsStyle.defaultInputBackgroundColor
                     border.color: parent.activeFocus ? 
-                        (style?.accentColor ?? settingsStyle.defaultAccentColor) : 
-                        (style?.borderColor ?? settingsStyle.defaultBorderColor)
+                                settingsStyle.defaultInputFocusBorderColor :
+                                parent.hovered ? 
+                                settingsStyle.defaultButtonHoverBorderColor :
+                                settingsStyle.defaultInputBorderColor
                     border.width: parent.activeFocus ? 2 : 1
                     radius: settingsStyle.defaultRadius
                 }
@@ -191,16 +208,15 @@ ColumnLayout {
                 icon.source: "qrc:/resources/images/folder.svg"
                 icon.width: 14
                 icon.height: 14
-                padding: 6
                 
                 background: Rectangle {
                     implicitWidth: settingsStyle.defaultButtonWidth
                     implicitHeight: settingsStyle.defaultButtonHeight
-                    color: parent.pressed ? settingsStyle.defaultButtonPressedColor : 
-                           parent.hovered ? settingsStyle.defaultButtonHoverColor : 
+                    color: parent.down ? settingsStyle.defaultButtonPressedColor :
+                           parent.hovered ? settingsStyle.defaultButtonHoverColor :
                            settingsStyle.defaultButtonNormalColor
-                    border.color: parent.pressed ? settingsStyle.defaultButtonPressedBorderColor :
-                                parent.hovered ? settingsStyle.defaultButtonHoverBorderColor : 
+                    border.color: parent.down ? settingsStyle.defaultButtonPressedBorderColor :
+                                parent.hovered ? settingsStyle.defaultButtonHoverBorderColor :
                                 settingsStyle.defaultButtonNormalBorderColor
                     border.width: 1
                     radius: settingsStyle.defaultRadius
@@ -209,19 +225,15 @@ ColumnLayout {
                 contentItem: RowLayout {
                     spacing: 4
                     Image {
-                        source: "qrc:/resources/images/folder.svg"
-                        sourceSize.width: 14
-                        sourceSize.height: 14
-                        Layout.alignment: Qt.AlignVCenter
+                        source: parent.parent.icon.source
+                        sourceSize.width: parent.parent.icon.width
+                        sourceSize.height: parent.parent.icon.height
                     }
                     Label {
-                        text: qsTr("浏览")
-                        font {
-                            family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                            pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
-                        }
+                        text: parent.parent.text
+                        font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                        font.pixelSize: settingsStyle.defaultFontSize
                         color: style?.textColor ?? settingsStyle.defaultTextColor
-                        Layout.alignment: Qt.AlignVCenter
                     }
                 }
                 
@@ -232,6 +244,8 @@ ColumnLayout {
             }
         }
     }
+    
+    Item { Layout.fillHeight: true }
     
     // 文件选择对话框
     FileDialog {
@@ -256,6 +270,4 @@ ColumnLayout {
             }
         }
     }
-    
-    Item { Layout.fillHeight: true }
 } 
