@@ -10,6 +10,7 @@ Rectangle {
     required property var fileManager
     required property var fileList
     required property var logDialog
+    required property var settingsWindow
     
     color: style.backgroundColor
     border.color: style.borderColor
@@ -81,7 +82,7 @@ Rectangle {
         // 查看日志按钮
         Button {
             id: viewLogButton
-            icon.source: "qrc:/resources/images/log.svg"
+            icon.source: "qrc:/resources/images/logger.svg"
             icon.width: 16
             icon.height: 16
             padding: 6
@@ -104,14 +105,18 @@ Rectangle {
                        viewLogButton.hovered ? Qt.alpha(root.style ? root.style.accentColor : "#0078D4", 0.1) : 
                        "transparent"
                 radius: 4
-                
                 border.color: viewLogButton.down || viewLogButton.hovered ? 
                             Qt.alpha(root.style ? root.style.accentColor : "#0078D4", 0.3) : 
                             "transparent"
                 border.width: 1
             }
             
-            onClicked: logDialog.open()
+            onClicked: {
+                if (root.settingsWindow) {
+                    root.settingsWindow.currentIndex = 5  // 切换到日志设置页面
+                    root.settingsWindow.show()
+                }
+            }
         }
     }
 } 

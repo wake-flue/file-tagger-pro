@@ -8,10 +8,10 @@ import "./dialogs" as Dialogs
 import "./settings" as Settings  // 添加这行
 
 Window {
-    width: 800
-    height: 600
+    width: 960
+    height: 680
     visible: true
-    title: qsTr("文件标签应用")
+    title: qsTr("FileTaggerPro")
 
     // 添加全局字体和颜色定义
     QtObject {
@@ -189,6 +189,7 @@ Window {
             fileManager: fileManager
             fileList: fileList
             logDialog: logDialog
+            settingsWindow: settingsWindow
         }
 
     } // 这里是 ColumnLayout 的结束括号
