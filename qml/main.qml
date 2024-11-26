@@ -40,6 +40,32 @@ Window {
         }
     }
 
+    // 添加属性来存储窗口状态
+    property rect previousWindowState: Qt.rect(0, 0, 960, 680)
+    property size dragStartSize: Qt.size(960, 680)  // 添加这个属性到Window对象中
+    
+    onVisibilityChanged: {
+        // 进入全屏时保存当前状态
+        if (visibility === Window.Maximized) {
+            if (previousWindowState.width === 0) {
+                previousWindowState = Qt.rect(x, y, width, height)
+            }
+        }
+    }
+
+    // 监听窗口尺寸变化
+    onWidthChanged: {
+        if (width >= minimumWidth && visibility !== Window.Maximized) {
+            dragStartSize.width = width
+        }
+    }
+    
+    onHeightChanged: {
+        if (height >= minimumHeight && visibility !== Window.Maximized) {
+            dragStartSize.height = height
+        }
+    }
+
     // 主容器
     Rectangle {
         id: mainContainer
@@ -78,8 +104,8 @@ Window {
                 // 应用图标
                 Image {
                     Layout.leftMargin: 8
-                    Layout.preferredWidth: 20
-                    Layout.preferredHeight: 20
+                    Layout.preferredWidth: 18
+                    Layout.preferredHeight: 18
                     source: "qrc:/resources/icons/app_icon.svg"
                 }
 
@@ -161,23 +187,85 @@ Window {
                 anchors.fill: parent
                 anchors.rightMargin: 138
                 property point clickPos: Qt.point(0, 0)
+                property bool isDragging: false
+                property point startWindowPos: Qt.point(0, 0)
+                property point startMousePos: Qt.point(0, 0)
+                property bool needsSizeCheck: false
 
                 function handlePressed(mouseX, mouseY) {
                     clickPos = Qt.point(mouseX, mouseY)
+                    startWindowPos = Qt.point(mainWindow.x, mainWindow.y)
+                    startMousePos = mapToGlobal(mouseX, mouseY)
+                    mainWindow.dragStartSize = Qt.size(mainWindow.width, mainWindow.height)
+                    isDragging = false
+                    needsSizeCheck = false
                 }
 
                 function handlePositionChanged(mouseX, mouseY) {
-                    if (mainWindow.visibility !== Window.Maximized) {
-                        var delta = Qt.point(mouseX - clickPos.x, mouseY - clickPos.y)
-                        mainWindow.x += delta.x
-                        mainWindow.y += delta.y
+                    if (!isDragging) {
+                        var currentGlobalPos = mapToGlobal(mouseX, mouseY)
+                        var deltaX = Math.abs(currentGlobalPos.x - startMousePos.x)
+                        var deltaY = Math.abs(currentGlobalPos.y - startMousePos.y)
+                        
+                        if (deltaX > 5 || deltaY > 5) {
+                            isDragging = true
+                            if (mainWindow.visibility === Window.Maximized) {
+                                mainWindow.showNormal()
+                                var relativeX = mouseX / titleBar.width
+                                mainWindow.width = previousWindowState.width
+                                mainWindow.height = previousWindowState.height
+                                mainWindow.dragStartSize = Qt.size(previousWindowState.width, previousWindowState.height)
+                                
+                                var newX = currentGlobalPos.x - (mainWindow.width * relativeX)
+                                var newY = currentGlobalPos.y - (clickPos.y)
+                                mainWindow.x = newX
+                                mainWindow.y = newY
+                                startWindowPos = Qt.point(newX, newY)
+                                startMousePos = currentGlobalPos
+                            }
+                            needsSizeCheck = true
+                        }
                     }
+                    
+                    if (isDragging && mainWindow.visibility !== Window.Maximized) {
+                        mainWindow.width = mainWindow.dragStartSize.width
+                        mainWindow.height = mainWindow.dragStartSize.height
+                        
+                        var currentPos = mapToGlobal(mouseX, mouseY)
+                        var totalDeltaX = currentPos.x - startMousePos.x
+                        var totalDeltaY = currentPos.y - startMousePos.y
+                        
+                        mainWindow.x = startWindowPos.x + totalDeltaX
+                        mainWindow.y = startWindowPos.y + totalDeltaY
+                    }
+                }
+
+                function checkAndAdjustSize() {
+                    if (!needsSizeCheck) return
+                    
+                    var targetWidth = Math.max(mainWindow.width, minimumWidth)
+                    var targetHeight = Math.max(mainWindow.height, minimumHeight)
+                    
+                    if (mainWindow.width < mainWindow.dragStartSize.width * 0.8) {
+                        targetWidth = mainWindow.dragStartSize.width
+                    }
+                    if (mainWindow.height < mainWindow.dragStartSize.height * 0.8) {
+                        targetHeight = mainWindow.dragStartSize.height
+                    }
+                    
+                    if (targetWidth !== mainWindow.width || targetHeight !== mainWindow.height) {
+                        mainWindow.width = targetWidth
+                        mainWindow.height = targetHeight
+                    }
+                    
+                    needsSizeCheck = false
                 }
 
                 function handleDoubleClicked() {
                     if (mainWindow.visibility === Window.Maximized) {
                         mainWindow.showNormal()
                     } else {
+                        previousWindowState = Qt.rect(mainWindow.x, mainWindow.y, mainWindow.width, mainWindow.height)
                         mainWindow.showMaximized()
                     }
                 }
@@ -185,6 +273,13 @@ Window {
                 onPressed: function(event) { handlePressed(event.x, event.y) }
                 onPositionChanged: function(event) { handlePositionChanged(event.x, event.y) }
                 onDoubleClicked: handleDoubleClicked()
+                onReleased: {
+                    if (isDragging) {
+                        checkAndAdjustSize()
+                    }
+                    isDragging = false
+                    startWindowPos = Qt.point(mainWindow.x, mainWindow.y)
+                }
             }
         }
 
@@ -240,7 +335,7 @@ Window {
                         model: fileManager.fileModel
                         fileManager: fileManager
                         style: style
-                        width: parent.width * splitter.position  // 使用分割线位置
+                        width: parent.width * splitter.position  // 用分割线位置
                         height: parent.height
 
                         // 监听模型变化
@@ -414,7 +509,7 @@ Window {
                 console.log("开始扫描目录:", path)
                 fileManager.scanDirectory(path, filters)
             } catch (error) {
-                console.error("设置目录失败:", error)
+                console.error("设目录失败:", error)
                 // 这里可以添加错误提示对话框
             }
         }
