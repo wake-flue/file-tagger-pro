@@ -7,10 +7,12 @@ Rectangle {
     property real minimumPosition: 0.2  // 最小位置
     property real maximumPosition: 0.8  // 最大位置
     property bool dragging: mouseArea.drag.active
+    property bool panelVisible: false  // 添加面板可见性属性
     
     width: 4
     height: parent.height
-    color: mouseArea.pressed ? "#999999" : "#cccccc"
+    visible: panelVisible  // 根据面板可见性控制分割线显示
+    opacity: 0
     
     MouseArea {
         id: mouseArea
@@ -21,6 +23,7 @@ Rectangle {
         drag.axis: Drag.XAxis
         drag.minimumX: parent.parent.width * minimumPosition
         drag.maximumX: parent.parent.width * maximumPosition
+        enabled: panelVisible  // 只在面板可见时允许拖动
         
         onPositionChanged: {
             if (drag.active) {

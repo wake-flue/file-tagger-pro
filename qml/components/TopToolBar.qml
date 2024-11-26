@@ -81,14 +81,13 @@ Rectangle {
 
             Button {
                 id: refreshButton
-                text: "刷新"
                 icon.source: "qrc:/resources/images/refresh.svg"
                 icon.width: 14
                 icon.height: 14
                 padding: 6
                 
                 background: Rectangle {
-                    implicitWidth: 70  // 减小按钮宽度
+                    implicitWidth: 24
                     implicitHeight: 28
                     color: refreshButton.down ? Qt.darker(root.style.backgroundColor, 1.1) : 
                            refreshButton.hovered ? root.style.hoverColor : root.style.backgroundColor
@@ -110,13 +109,6 @@ Rectangle {
                         sourceSize.height: 14
                         width: refreshButton.icon.width
                         height: refreshButton.icon.height
-                        Layout.alignment: Qt.AlignVCenter
-                    }
-                    Text {
-                        text: refreshButton.text
-                        color: root.style.textColor
-                        font.family: root.style.fontFamily
-                        font.pixelSize: root.style.defaultFontSize - 1
                         Layout.alignment: Qt.AlignVCenter
                     }
                 }

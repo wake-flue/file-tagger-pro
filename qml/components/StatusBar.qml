@@ -15,7 +15,6 @@ Rectangle {
     color: style.backgroundColor
     border.color: style.borderColor
     border.width: 1
-    radius: 4
     height: 32
 
     RowLayout {

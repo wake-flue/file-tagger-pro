@@ -74,14 +74,13 @@ Window {
         border.color: style.borderColor
         border.width: 1
 
-        // 使用MultiEffect替代DropShadow
         layer.enabled: true
         layer.effect: MultiEffect {
             shadowEnabled: true
-            shadowColor: "#80000000"
+            shadowColor: "#40000000"
             shadowBlur: 1.0
             shadowHorizontalOffset: 0
-            shadowVerticalOffset: 2
+            shadowVerticalOffset: 1
         }
 
         // 标题栏
@@ -89,7 +88,7 @@ Window {
             id: titleBar
             height: 32
             color: style.backgroundColor
-            radius: 8
+            radius: 0
             anchors {
                 top: parent.top
                 left: parent.left
@@ -319,15 +318,14 @@ Window {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 color: style.backgroundColor
-                border.color: style.borderColor
-                border.width: 1
-                radius: 4
+                border.color: "transparent"
+                border.width: 0
+                radius: 0
 
-                // 使用 Row 替换 RowLayout，以便更好地控制分割
-                Row {
+                // 使用 Item 替代 Row
+                Item {
                     anchors.fill: parent
-                    anchors.margins: 8
-                    spacing: 0  // 移除间距，分割线控制
+                    anchors.margins: 4
 
                     // 左侧文件表
                     Components.FileList {
@@ -335,17 +333,12 @@ Window {
                         model: fileManager.fileModel
                         fileManager: fileManager
                         style: style
-                        width: parent.width * splitter.position  // 用分割线位置
+                        width: detailPanel.isVisible ? parent.width * splitter.position : parent.width
                         height: parent.height
-
-                        // 监听模型变化
-                        Connections {
-                            target: fileManager.fileModel
-                            function onRowsInserted() {
-                                console.log("新增文件，当前总数:", fileManager.fileModel.rowCount())
-                            }
-                            function onRowsRemoved() {
-                                console.log("移除文件，当前总数:", fileManager.fileModel.rowCount())
+                        Behavior on width {
+                            NumberAnimation {
+                                duration: 150
+                                easing.type: Easing.OutQuad
                             }
                         }
                     }
@@ -357,24 +350,147 @@ Window {
                         position: 0.7  // 初始位置设为70%
                         minimumPosition: 0.3  // 最小30%
                         maximumPosition: 0.8  // 最大80%
-
-                        // 添加拖动时的视觉反馈
-                        Rectangle {
-                            visible: parent.dragging
-                            color: "#80000000"
-                            width: 1
-                            height: parent.parent.height
-                            x: parent.width / 2
+                        panelVisible: detailPanel.isVisible
+                        x: fileList.width
+                        visible: opacity > 0
+                        opacity: detailPanel.isVisible ? 1 : 0
+                        Behavior on x {
+                            NumberAnimation {
+                                duration: 150
+                                easing.type: Easing.OutQuad
+                            }
+                        }
+                        Behavior on opacity {
+                            NumberAnimation {
+                                duration: 100
+                                easing.type: Easing.OutQuad
+                            }
                         }
                     }
 
                     // 右侧详情面板
                     Components.DetailPanel {
-                        width: parent.width * (1 - splitter.position) - splitter.width
+                        id: detailPanel
+                        x: splitter.x + splitter.width
+                        width: isVisible ? parent.width - x : 0
                         height: parent.height
                         style: style
                         selectedItem: fileList.selectedItem
                         settings: settings
+                        isVisible: false
+                        opacity: isVisible ? 1 : 0
+                        scale: isVisible ? 1 : 0.95
+                        
+                        Behavior on opacity {
+                            NumberAnimation {
+                                duration: 100
+                                easing.type: Easing.OutQuad
+                            }
+                        }
+                        Behavior on scale {
+                            NumberAnimation {
+                                duration: 150
+                                easing.type: Easing.OutQuad
+                            }
+                        }
+                        Behavior on width {
+                            NumberAnimation {
+                                duration: 150
+                                easing.type: Easing.OutQuad
+                            }
+                        }
+                        
+                        // 添加阴影效果
+                        layer.enabled: true
+                        layer.effect: MultiEffect {
+                            shadowEnabled: true
+                            shadowColor: "#40000000"
+                            shadowBlur: 1.0
+                            shadowHorizontalOffset: 0
+                            shadowVerticalOffset: 1
+                        }
+                    }
+
+                    // 右侧触发器
+                    Rectangle {
+                        id: rightTrigger
+                        width: 32
+                        height: 32
+                        radius: width / 2
+                        color: rightTriggerArea.containsMouse ? style.hoverColor : style.backgroundColor
+                        border.color: style.borderColor
+                        border.width: 1
+                        z: 1  // 确保在最上层
+                        scale: rightTriggerArea.pressed ? 0.95 : 1.0
+                        
+                        Behavior on scale {
+                            NumberAnimation {
+                                duration: 100
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+                        
+                        // 固定在右下角
+                        anchors {
+                            right: parent.right
+                            bottom: parent.bottom
+                            margins: 16
+                        }
+                        
+                        // 添加阴影效果
+                        layer.enabled: true
+                        layer.effect: MultiEffect {
+                            shadowEnabled: true
+                            shadowColor: "#40000000"
+                            shadowBlur: 1.0
+                            shadowHorizontalOffset: 0
+                            shadowVerticalOffset: 1
+                        }
+                        
+                        // 箭头图标容器
+                        Item {
+                            anchors.centerIn: parent
+                            width: 16
+                            height: 16
+
+                            // 左箭头
+                            Image {
+                                id: leftArrowIcon
+                                anchors.fill: parent
+                                source: "qrc:/resources/images/chevron-left.svg"
+                                opacity: !detailPanel.isVisible ? (rightTriggerArea.containsMouse ? 0.9 : 0.7) : 0
+                                
+                                Behavior on opacity {
+                                    NumberAnimation {
+                                        duration: 100
+                                        easing.type: Easing.OutQuad
+                                    }
+                                }
+                            }
+
+                            // 右箭头
+                            Image {
+                                id: rightArrowIcon
+                                anchors.fill: parent
+                                source: "qrc:/resources/images/chevron-right.svg"
+                                opacity: detailPanel.isVisible ? (rightTriggerArea.containsMouse ? 0.9 : 0.7) : 0
+                                
+                                Behavior on opacity {
+                                    NumberAnimation {
+                                        duration: 100
+                                        easing.type: Easing.OutQuad
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // 鼠标区域
+                        MouseArea {
+                            id: rightTriggerArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onClicked: detailPanel.isVisible = !detailPanel.isVisible
+                        }
                     }
                 }
             }

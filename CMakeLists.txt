@@ -103,6 +103,9 @@ set(RESOURCE_FILES
         resources/images/window-maximize.svg
         resources/images/window-restore.svg
         resources/images/window-close.svg
+        resources/images/unselected-file.svg
+        resources/images/chevron-left.svg
+        resources/images/chevron-right.svg
         resources/images/file.svg
         resources/images/folder.svg
         resources/images/refresh.svg

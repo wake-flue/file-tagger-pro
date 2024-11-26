@@ -16,6 +16,18 @@ Rectangle {
 
     // 计算预览区域的高度
     readonly property real previewHeight: Math.min(width * 0.75, height * 0.6)
+    
+    // 添加显示状态属性
+    property bool isVisible: false
+    
+    // 添加动画效果
+    x: isVisible ? 0 : parent.width
+    Behavior on x {
+        NumberAnimation {
+            duration: 300
+            easing.type: Easing.OutCubic
+        }
+    }
 
     ColumnLayout {
         id: mainLayout
@@ -74,7 +86,7 @@ Rectangle {
 
                     source: {
                         if (!root.selectedItem) {
-                            return "qrc:/resources/images/file.svg"
+                            return "qrc:/resources/images/unselected-file.svg"
                         }
                         
                         const fileType = (root.selectedItem.fileType || "").toLowerCase()
@@ -93,13 +105,13 @@ Rectangle {
                             return "qrc:/resources/images/code.svg"
                         }
                         
-                        return root.selectedItem.fileIcon || "qrc:/resources/images/file.svg"
+                        return root.selectedItem.fileIcon || "qrc:/resources/images/unselected-file.svg"
                     }
 
                     onStatusChanged: {
                         if (status === Image.Error) {
                             console.warn("Error loading image:", source)
-                            source = "qrc:/resources/images/file.svg"
+                            source = "qrc:/resources/images/unselected-file.svg"
                         }
                     }
 
