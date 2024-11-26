@@ -19,9 +19,15 @@ Rectangle {
 
     // 内部属性
     property var selectedTagIds: []
+    property var tagList: TagManager.getAllTags()
 
     // 添加 fileList 属性声明
     required property var fileList
+
+    // 刷新标签列表
+    function refreshTagList() {
+        tagList = TagManager.getAllTags()
+    }
 
     RowLayout {
         anchors {
@@ -47,7 +53,7 @@ Rectangle {
                 height: parent.height
 
                 Repeater {
-                    model: TagManager.getAllTags()
+                    model: root.tagList
                     
                     CheckBox {
                         id: tagCheckBox
@@ -271,12 +277,31 @@ Rectangle {
     // 监听标签变化
     Connections {
         target: TagManager
+        
         function onTagsChanged() {
+            console.log("标签列表已更新")
+            // 刷新标签列表
+            root.refreshTagList()
             // 清除已失效的选中标签
             root.selectedTagIds = root.selectedTagIds.filter(id => 
                 TagManager.getTagById(id) !== null
             )
             updateFileFilter()
+        }
+        
+        function onTagAdded(tag) {
+            console.log("新标签已添加:", tag.name)
+            root.refreshTagList()
+        }
+        
+        function onTagRemoved(tagId) {
+            console.log("标签已删除:", tagId)
+            root.refreshTagList()
+        }
+        
+        function onTagUpdated(tag) {
+            console.log("标签已更新:", tag.name)
+            root.refreshTagList()
         }
     }
 } 

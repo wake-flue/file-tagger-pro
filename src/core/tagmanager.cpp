@@ -65,20 +65,20 @@ bool TagManager::addTag(const QString &name, const QColor &color, const QString 
     QSqlQuery query(db);
     
     // 准备SQL语句
-    query.prepare("INSERT INTO tags (name, color, description, created_at, updated_at) "
-                 "VALUES (:name, :color, :description, :created_at, :updated_at)");
+    query.prepare("INSERT INTO tags (name, color, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?)");
     
     // 绑定参数
-    query.bindValue(":name", name);
-    query.bindValue(":color", color.name(QColor::HexRgb));
-    query.bindValue(":description", description);
+    query.addBindValue(name);
+    query.addBindValue(color.name(QColor::HexRgb));
+    query.addBindValue(description);
     QDateTime now = QDateTime::currentDateTime();
-    query.bindValue(":created_at", now);
-    query.bindValue(":updated_at", now);
+    query.addBindValue(now);
+    query.addBindValue(now);
     
     // 执行SQL
     if (!query.exec()) {
         qWarning() << "添加标签失败:" << query.lastError().text();
+        emit tagError(QString("添加标签失败: %1").arg(query.lastError().text()));
         return false;
     }
     
@@ -97,6 +97,7 @@ bool TagManager::addTag(const QString &name, const QColor &color, const QString 
     m_tagsCache.insert(newTagId, tag);
     
     // 发出信号通知标签列表已更新
+    emit tagAdded(tag.data());
     emit tagsChanged();
     
     return true;
@@ -107,8 +108,8 @@ bool TagManager::removeTag(int tagId)
     QSqlDatabase db = DatabaseManager::instance().database();
     QSqlQuery query(db);
     
-    query.prepare("DELETE FROM tags WHERE id = :id");
-    query.bindValue(":id", tagId);
+    query.prepare("DELETE FROM tags WHERE id = ?");
+    query.addBindValue(tagId);
     
     if (!query.exec()) {
         qWarning() << "删除标签失败:" << query.lastError().text();
@@ -127,12 +128,12 @@ bool TagManager::updateTag(int tagId, const QString &name, const QColor &color, 
     QSqlDatabase db = DatabaseManager::instance().database();
     QSqlQuery query(db);
     
-    query.prepare("UPDATE tags SET name = :name, color = :color, description = :description, "
-                 "updated_at = CURRENT_TIMESTAMP WHERE id = :id");
-    query.bindValue(":name", name);
-    query.bindValue(":color", color.name());
-    query.bindValue(":description", description);
-    query.bindValue(":id", tagId);
+    query.prepare("UPDATE tags SET name = ?, color = ?, description = ?, "
+                 "updated_at = CURRENT_TIMESTAMP WHERE id = ?");
+    query.addBindValue(name);
+    query.addBindValue(color.name());
+    query.addBindValue(description);
+    query.addBindValue(tagId);
     
     if (!query.exec()) {
         qWarning() << "更新标签失败:" << query.lastError().text();
@@ -159,10 +160,9 @@ bool TagManager::addFileTag(const QString &fileId, int tagId)
     QSqlDatabase db = DatabaseManager::instance().database();
     QSqlQuery query(db);
     
-    query.prepare("INSERT OR IGNORE INTO file_tags (file_id, tag_id) "
-                 "VALUES (:file_id, :tag_id)");
-    query.bindValue(":file_id", fileId);
-    query.bindValue(":tag_id", tagId);
+    query.prepare("INSERT OR IGNORE INTO file_tags (file_id, tag_id) VALUES (?, ?)");
+    query.addBindValue(fileId);
+    query.addBindValue(tagId);
     
     if (!query.exec()) {
         qWarning() << "添加文件标签失败:" << query.lastError().text();
@@ -178,10 +178,9 @@ bool TagManager::removeFileTag(const QString &fileId, int tagId)
     QSqlDatabase db = DatabaseManager::instance().database();
     QSqlQuery query(db);
     
-    query.prepare("DELETE FROM file_tags "
-                 "WHERE file_id = :file_id AND tag_id = :tag_id");
-    query.bindValue(":file_id", fileId);
-    query.bindValue(":tag_id", tagId);
+    query.prepare("DELETE FROM file_tags WHERE file_id = ? AND tag_id = ?");
+    query.addBindValue(fileId);
+    query.addBindValue(tagId);
     
     if (!query.exec()) {
         qWarning() << "移除文件标签失败:" << query.lastError().text();
@@ -200,8 +199,8 @@ QList<Tag*> TagManager::getFileTags(const QString &fileId)
     
     query.prepare("SELECT t.* FROM tags t "
                  "INNER JOIN file_tags ft ON ft.tag_id = t.id "
-                 "WHERE ft.file_id = :file_id");
-    query.bindValue(":file_id", fileId);
+                 "WHERE ft.file_id = ?");
+    query.addBindValue(fileId);
     
     if (!query.exec()) {
         qWarning() << "获取文件标签失败:" << query.lastError().text();
@@ -227,8 +226,8 @@ QStringList TagManager::getFilesByTag(int tagId)
     QSqlQuery query(db);
     
     query.prepare("SELECT DISTINCT file_id FROM file_tags "
-                 "WHERE tag_id = :tag_id");
-    query.bindValue(":tag_id", tagId);
+                 "WHERE tag_id = ?");
+    query.addBindValue(tagId);
     
     if (!query.exec()) {
         qWarning() << "获取标签文件失败:" << query.lastError().text();
@@ -247,8 +246,8 @@ bool TagManager::clearFileTags(const QString &fileId)
     QSqlDatabase db = DatabaseManager::instance().database();
     QSqlQuery query(db);
     
-    query.prepare("DELETE FROM file_tags WHERE file_id = :file_id");
-    query.bindValue(":file_id", fileId);
+    query.prepare("DELETE FROM file_tags WHERE file_id = ?");
+    query.addBindValue(fileId);
     
     if (!query.exec()) {
         qWarning() << "清除文件标签失败:" << query.lastError().text();
@@ -322,9 +321,9 @@ QStringList TagManager::getRecentFiles(int limit)
         "SELECT DISTINCT file_id "
         "FROM file_tags "
         "ORDER BY created_at DESC "
-        "LIMIT :limit"
+        "LIMIT ?"
     );
-    query.bindValue(":limit", limit);
+    query.addBindValue(limit);
     
     if (query.exec()) {
         while (query.next()) {
@@ -361,6 +360,7 @@ bool TagManager::deleteTag(int tagId)
 {
     if (tagId <= 0) {
         qWarning() << "Invalid tag ID:" << tagId;
+        emit tagError("无效的标签ID");
         return false;
     }
     
@@ -369,12 +369,14 @@ bool TagManager::deleteTag(int tagId)
     // 首先删除标签与文件的关联
     if (!db.execute("DELETE FROM file_tags WHERE tag_id = ?", {tagId})) {
         qWarning() << "Failed to delete tag associations";
+        emit tagError("删除标签关联失败");
         return false;
     }
     
     // 然后删除标签本身
     if (!db.execute("DELETE FROM tags WHERE id = ?", {tagId})) {
         qWarning() << "Failed to delete tag";
+        emit tagError("删除标签失败");
         return false;
     }
     
@@ -383,12 +385,33 @@ bool TagManager::deleteTag(int tagId)
         m_tagsCache.remove(tagId);
     }
     
+    qDebug() << "标签已删除:" << tagId;
     emit tagDeleted(tagId);
+    emit tagRemoved(tagId);  // 为了向后兼容
+    emit tagsChanged();      // 通知所有监听者标签列表已更新
+    
     return true;
 }
 
 bool TagManager::addTagToFileById(const QString &fileId, int tagId)
 {
+    if (fileId.isEmpty()) {
+        qWarning() << "添加文件标签失败: fileId 为空";
+        return false;
+    }
+    
+    if (tagId <= 0) {
+        qWarning() << "添加文件标签失败: 无效的 tagId:" << tagId;
+        return false;
+    }
+    
+    // 检查标签是否存在
+    if (!m_tagsCache.contains(tagId)) {
+        qWarning() << "添加文件标签失败: 标签不存在, tagId:" << tagId;
+        return false;
+    }
+    
+    qDebug() << "正在添加文件标签 - fileId:" << fileId << "tagId:" << tagId;
     return addFileTag(fileId, tagId);
 }
 
@@ -406,9 +429,9 @@ QVector<Tag*> TagManager::getFileTagsById(const QString &fileId)
     query.prepare(
         "SELECT t.* FROM tags t "
         "INNER JOIN file_tags ft ON t.id = ft.tag_id "
-        "WHERE ft.file_id = :fileId"
+        "WHERE ft.file_id = ?"
     );
-    query.bindValue(":fileId", fileId);
+    query.addBindValue(fileId);
     
     if (query.exec()) {
         while (query.next()) {

@@ -13,12 +13,14 @@ Dialog {
     // 在对话框打开时居中显示
     onOpened: {
         centerDialog()
+        console.log("对话框打开 - fileId:", fileId, "filePath:", filePath)
         if (!fileId) {
             console.error("错误：未设置 fileId")
             close()
             return
         }
         selectedTags = TagManager.getFileTagsById(fileId)
+        console.log("当前已选标签:", JSON.stringify(selectedTags))
     }
     
     // 窗口大小改变时保持居中
@@ -184,10 +186,18 @@ Dialog {
                                 cursorShape: Qt.PointingHandCursor
                                 
                                 onClicked: {
+                                    console.log("添加标签 - fileId:", fileId, "tagId:", modelData.id)
+                                    let success = false
                                     if (tagItem.selected) {
-                                        TagManager.removeTagFromFileById(fileId, modelData.id)
+                                        success = TagManager.removeTagFromFileById(fileId, modelData.id)
+                                        if (!success) {
+                                            console.error("移除标签失败 - fileId:", fileId, "tagId:", modelData.id)
+                                        }
                                     } else {
-                                        TagManager.addTagToFileById(fileId, modelData.id)
+                                        success = TagManager.addTagToFileById(fileId, modelData.id)
+                                        if (!success) {
+                                            console.error("添加标签失败 - fileId:", fileId, "tagId:", modelData.id)
+                                        }
                                     }
                                     // 更新选中状态
                                     root.selectedTags = TagManager.getFileTagsById(fileId)
@@ -302,6 +312,28 @@ Dialog {
     function removeTag(tagId) {
         if (TagManager.removeTagFromFileById(fileId, tagId)) {
             selectedTags = TagManager.getFileTagsById(fileId)
+        }
+    }
+    
+    // 监听标签变化
+    Connections {
+        target: TagManager
+        
+        function onTagsChanged() {
+            // 刷新标签列表
+            tagRepeater.model = TagManager.getAllTags()
+        }
+        
+        function onFileTagsChanged(changedFileId) {
+            if (changedFileId === fileId) {
+                // 更新当前文件的标签
+                selectedTags = TagManager.getFileTagsById(fileId)
+            }
+        }
+        
+        function onTagError(message) {
+            // 显示错误消息
+            console.error(message)
         }
     }
 } 

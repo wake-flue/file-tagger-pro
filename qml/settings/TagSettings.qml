@@ -396,4 +396,47 @@ ColumnLayout {
             }
         }
     }
+    
+    // 监听标签变化
+    Connections {
+        target: TagManager
+        
+        function onTagAdded(tag) {
+            refreshTagList()
+        }
+        
+        function onTagRemoved(tagId) {
+            refreshTagList()
+        }
+        
+        function onTagUpdated(tag) {
+            refreshTagList()
+        }
+        
+        function onTagError(message) {
+            // 显示错误消息
+            errorDialog.text = message
+            errorDialog.open()
+        }
+    }
+    
+    // 错误提示对话框
+    Dialog {
+        id: errorDialog
+        title: qsTr("错误")
+        modal: true
+        
+        property alias text: messageLabel.text
+        
+        Label {
+            id: messageLabel
+            width: parent.width
+            wrapMode: Text.Wrap
+            font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+            font.pixelSize: settingsStyle.defaultFontSize
+            color: style?.textColor ?? settingsStyle.defaultTextColor
+        }
+        
+        standardButtons: Dialog.Ok
+    }
 } 
