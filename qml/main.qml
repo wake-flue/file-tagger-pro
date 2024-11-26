@@ -1,22 +1,26 @@
 import QtQuick
 import QtQuick.Window
-import QtQuick.Controls.Basic  // 添加 Basic 样式
+import QtQuick.Controls.Basic
 import QtQuick.Layouts
+import QtQuick.Effects
 import FileManager 1.0
-import "./components" as Components  // 修改导入方式
+import "./components" as Components
 import "./dialogs" as Dialogs
-import "./settings" as Settings  // 添加这行
+import "./settings" as Settings
 
 Window {
+    id: mainWindow
     width: 960
     height: 680
     visible: true
     title: qsTr("FileTaggerPro")
+    flags: Qt.Window | Qt.FramelessWindowHint
+    color: "transparent"
 
     // 添加全局字体和颜色定义
     QtObject {
         id: style
-        readonly property color accentColor: "#0078D4"  // Windows 10/11 主题色
+        readonly property color accentColor: "#0078D4"
         readonly property color backgroundColor: "#FFFFFF"
         readonly property color borderColor: "#E5E5E5"
         readonly property color textColor: "#202020"
@@ -25,7 +29,6 @@ Window {
         readonly property color selectedColor: "#E5F3FF"
         readonly property int defaultFontSize: 12
         readonly property string fontFamily: {
-            // 根据系统选择合适的字体
             switch (Qt.platform.os) {
                 case "windows":
                     return "Microsoft YaHei"
@@ -37,166 +40,384 @@ Window {
         }
     }
 
+    // 主容器
+    Rectangle {
+        id: mainContainer
+        anchors.fill: parent
+        color: style.backgroundColor
+        border.color: style.borderColor
+        border.width: 1
+
+        // 使用MultiEffect替代DropShadow
+        layer.enabled: true
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowColor: "#80000000"
+            shadowBlur: 1.0
+            shadowHorizontalOffset: 0
+            shadowVerticalOffset: 2
+        }
+
+        // 标题栏
+        Rectangle {
+            id: titleBar
+            height: 32
+            color: style.backgroundColor
+            radius: 8
+            anchors {
+                top: parent.top
+                left: parent.left
+                right: parent.right
+            }
+
+            // 标题栏内容
+            RowLayout {
+                anchors.fill: parent
+                spacing: 0
+
+                // 应用图标
+                Image {
+                    Layout.leftMargin: 8
+                    Layout.preferredWidth: 20
+                    Layout.preferredHeight: 20
+                    source: "qrc:/resources/icons/app_icon.svg"
+                }
+
+                // 标题文本
+                Text {
+                    Layout.leftMargin: 8
+                    text: mainWindow.title
+                    color: style.textColor
+                    font.family: style.fontFamily
+                    font.pixelSize: style.defaultFontSize
+                }
+
+                // 弹性空间
+                Item {
+                    Layout.fillWidth: true
+                }
+
+                // 窗口控制按钮
+                Row {
+                    Layout.alignment: Qt.AlignRight
+                    spacing: 0
+
+                    // 最小化按钮
+                    Loader {
+                        sourceComponent: titleBarButtonComponent
+                        onLoaded: {
+                            item.iconSource = "qrc:/resources/images/window-minimize.svg"
+                            item.clicked.connect(function() { mainWindow.showMinimized() })
+                        }
+                    }
+
+                    // 最大化/还原按钮
+                    Loader {
+                        id: maximizeButton
+                        sourceComponent: titleBarButtonComponent
+                        property bool isMaximized: mainWindow.visibility === Window.Maximized
+
+                        Component.onCompleted: {
+                            item.iconSource = isMaximized ? "qrc:/resources/images/window-restore.svg" : "qrc:/resources/images/window-maximize.svg"
+                        }
+
+                        Connections {
+                            target: mainWindow
+                            function onVisibilityChanged() {
+                                if (maximizeButton.item) {
+                                    maximizeButton.item.iconSource = mainWindow.visibility === Window.Maximized ? 
+                                        "qrc:/resources/images/window-restore.svg" : "qrc:/resources/images/window-maximize.svg"
+                                }
+                            }
+                        }
+
+                        onLoaded: {
+                            item.clicked.connect(function() {
+                                if (mainWindow.visibility === Window.Maximized) {
+                                    mainWindow.showNormal()
+                                } else {
+                                    mainWindow.showMaximized()
+                                }
+                            })
+                        }
+                    }
+
+                    // 关闭按钮
+                    Loader {
+                        sourceComponent: titleBarButtonComponent
+                        onLoaded: {
+                            item.iconSource = "qrc:/resources/images/window-close.svg"
+                            item.hoverColor = "#E81123"
+                            item.hoverTextColor = "#FFFFFF"
+                            item.clicked.connect(function() { mainWindow.close() })
+                        }
+                    }
+                }
+            }
+
+            // 标题栏拖动区域
+            MouseArea {
+                id: titleBarMouseArea
+                anchors.fill: parent
+                anchors.rightMargin: 138
+                property point clickPos: Qt.point(0, 0)
+
+                function handlePressed(mouseX, mouseY) {
+                    clickPos = Qt.point(mouseX, mouseY)
+                }
+
+                function handlePositionChanged(mouseX, mouseY) {
+                    if (mainWindow.visibility !== Window.Maximized) {
+                        var delta = Qt.point(mouseX - clickPos.x, mouseY - clickPos.y)
+                        mainWindow.x += delta.x
+                        mainWindow.y += delta.y
+                    }
+                }
+
+                function handleDoubleClicked() {
+                    if (mainWindow.visibility === Window.Maximized) {
+                        mainWindow.showNormal()
+                    } else {
+                        mainWindow.showMaximized()
+                    }
+                }
+
+                onPressed: function(event) { handlePressed(event.x, event.y) }
+                onPositionChanged: function(event) { handlePositionChanged(event.x, event.y) }
+                onDoubleClicked: handleDoubleClicked()
+            }
+        }
+
+        // 原有内容容器
+        ColumnLayout {
+            anchors {
+                top: titleBar.bottom
+                left: parent.left
+                right: parent.right
+                bottom: parent.bottom
+                margins: 1
+            }
+            spacing: 8
+
+            // TopToolBar
+            Components.TopToolBar {
+                Layout.fillWidth: true
+                style: style
+                settings: settings
+                fileManager: fileManager
+                folderDialog: folderDialog
+                settingsWindow: settingsWindow
+            }
+            
+            // TagToolBar
+            Components.TagToolBar {
+                Layout.fillWidth: true
+                style: style
+                settings: settings
+                fileManager: fileManager
+                settingsWindow: settingsWindow
+                fileList: fileList
+            }
+            
+            // 主内容区域
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                color: style.backgroundColor
+                border.color: style.borderColor
+                border.width: 1
+                radius: 4
+
+                // 使用 Row 替换 RowLayout，以便更好地控制分割
+                Row {
+                    anchors.fill: parent
+                    anchors.margins: 8
+                    spacing: 0  // 移除间距，分割线控制
+
+                    // 左侧文件表
+                    Components.FileList {
+                        id: fileList
+                        model: fileManager.fileModel
+                        fileManager: fileManager
+                        style: style
+                        width: parent.width * splitter.position  // 使用分割线位置
+                        height: parent.height
+
+                        // 监听模型变化
+                        Connections {
+                            target: fileManager.fileModel
+                            function onRowsInserted() {
+                                console.log("新增文件，当前总数:", fileManager.fileModel.rowCount())
+                            }
+                            function onRowsRemoved() {
+                                console.log("移除文件，当前总数:", fileManager.fileModel.rowCount())
+                            }
+                        }
+                    }
+
+                    // 分割线
+                    Components.Splitter {
+                        id: splitter
+                        height: parent.height
+                        position: 0.7  // 初始位置设为70%
+                        minimumPosition: 0.3  // 最小30%
+                        maximumPosition: 0.8  // 最大80%
+
+                        // 添加拖动时的视觉反馈
+                        Rectangle {
+                            visible: parent.dragging
+                            color: "#80000000"
+                            width: 1
+                            height: parent.parent.height
+                            x: parent.width / 2
+                        }
+                    }
+
+                    // 右侧详情面板
+                    Components.DetailPanel {
+                        width: parent.width * (1 - splitter.position) - splitter.width
+                        height: parent.height
+                        style: style
+                        selectedItem: fileList.selectedItem
+                        settings: settings
+                    }
+                }
+            }
+
+            // 底部状态栏
+            Components.StatusBar {
+                Layout.fillWidth: true
+                style: style
+                fileManager: fileManager
+                fileList: fileList
+                logDialog: logDialog
+                settingsWindow: settingsWindow
+            }
+
+        } // 这里是 ColumnLayout 的结束括号
+
+        // 窗口缩放区域
+        MouseArea {
+            id: resizeArea
+            width: 8
+            height: 8
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            cursorShape: Qt.SizeFDiagCursor
+
+            property point clickPos: Qt.point(0, 0)
+
+            function handlePressed(mouseX, mouseY) {
+                clickPos = Qt.point(mouseX, mouseY)
+            }
+
+            function handlePositionChanged(mouseX, mouseY) {
+                if (pressed && mainWindow.visibility !== Window.Maximized) {
+                    var delta = Qt.point(mouseX - clickPos.x, mouseY - clickPos.y)
+                    mainWindow.width = Math.max(mainWindow.width + delta.x, mainWindow.minimumWidth)
+                    mainWindow.height = Math.max(mainWindow.height + delta.y, mainWindow.minimumHeight)
+                }
+            }
+
+            onPressed: function(event) { handlePressed(event.x, event.y) }
+            onPositionChanged: function(event) { handlePositionChanged(event.x, event.y) }
+        }
+    }
+
+    // 标题栏按钮组件
+    Component {
+        id: titleBarButtonComponent
+        Rectangle {
+            property string buttonText: ""
+            property string iconSource: ""
+            property color hoverColor: style.hoverColor
+            property color hoverTextColor: style.textColor
+            property color normalColor: "transparent"
+            property color normalTextColor: style.textColor
+            
+            width: 46
+            height: 32
+            color: mouseArea.containsMouse ? hoverColor : normalColor
+            
+            Image {
+                id: buttonIcon
+                anchors.centerIn: parent
+                source: parent.iconSource
+                sourceSize.width: 10
+                sourceSize.height: 10
+                visible: parent.iconSource !== ""
+            }
+            
+            MultiEffect {
+                source: buttonIcon
+                anchors.fill: buttonIcon
+                colorization: 1.0
+                colorizationColor: mouseArea.containsMouse ? parent.hoverTextColor : parent.normalTextColor
+            }
+            
+            MouseArea {
+                id: mouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+                onClicked: parent.clicked()
+            }
+            
+            signal clicked()
+        }
+    }
+
+    // 设置最小窗口大小
+    minimumWidth: 800
+    minimumHeight: 600
+
+    // 其他组件
     FileSystemManager {
         id: fileManager
         
-        // 添加防抖动定时器
-        property var rescanTimer: Timer {
-            interval: 1000  // 1秒防抖动
-            repeat: false
-            onTriggered: {
-                let currentFilter = settings.value("fileFilter", "")
-                let filters = currentFilter ? currentFilter.split(';') : []
-                if (fileManager.currentPath) {
-                    console.log("执行目录扫描:", fileManager.currentPath)
-                    fileManager.scanDirectory(fileManager.currentPath, filters)
-                }
-            }
-        }
-        
-        // 添加文件操作日志记录
+        // 添加必要的信号处理
         onFileChanged: function(path) {
-            console.log("检测到文件变更:", path)
-            fileManager.addLogMessage("检测到文件变更: " + path)
+            console.log("文件变更:", path)
             rescanTimer.restart()
         }
         
         onDirectoryChanged: function(path) {
-            console.log("检测到目录变更:", path)
-            fileManager.addLogMessage("检测到目录变更: " + path)
+            console.log("目录变更:", path)
             rescanTimer.restart()
         }
         
-        // 监控扫描状态变化
+        // 添加扫描完成的处理
         onIsScanningChanged: {
-            if (isScanning) {
-                console.log("开始扫描目录...")
-                fileManager.addLogMessage("开始扫描目录...")
-            } else {
-                console.log("目录扫描完成")
-                fileManager.addLogMessage("目录扫描完成")
+            if (!isScanning) {
+                console.log("扫描完成，文件数:", fileModel.rowCount())
             }
-        }
-        
-        onError: function(errorMessage) {
-            console.error("文件系统错误:", errorMessage)
-            fileManager.addLogMessage("错误: " + errorMessage)
         }
     }
 
     Dialogs.FolderPickerDialog {
         id: folderDialog
+        
         onFolderSelected: function(path) {
             if (!path) {
-                console.warn("未选择有效路径")
+                console.log("未选择有效路径")
                 return
             }
             
             try {
+                // 设置监视路径
                 fileManager.setWatchPath(path)
+                
+                // 获取当前过滤器设置
                 let currentFilter = settings.value("fileFilter", "")
                 let filters = currentFilter ? currentFilter.split(';') : []
+                
+                // 扫描目录
+                console.log("开始扫描目录:", path)
                 fileManager.scanDirectory(path, filters)
             } catch (error) {
-                console.error("设置监视路径失败:", error)
-                // 可以添加错误提示对话框
+                console.error("设置目录失败:", error)
+                // 这里可以添加错误提示对话框
             }
         }
-    }
-
-    ColumnLayout {
-        anchors.fill: parent
-        spacing: 8
-        
-        // TopToolBar
-        Components.TopToolBar {
-            Layout.fillWidth: true
-            style: style
-            settings: settings
-            fileManager: fileManager
-            folderDialog: folderDialog
-            settingsWindow: settingsWindow
-        }
-        
-        // TagToolBar
-        Components.TagToolBar {
-            Layout.fillWidth: true
-            style: style
-            settings: settings
-            fileManager: fileManager
-            settingsWindow: settingsWindow
-            fileList: fileList
-        }
-        
-        // 主内容区域
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            color: style.backgroundColor
-            border.color: style.borderColor
-            border.width: 1
-            radius: 4
-
-            // 使用 Row 替换 RowLayout，以便更好地控制分割
-            Row {
-                anchors.fill: parent
-                anchors.margins: 8
-                spacing: 0  // 移除间距，分割线控制
-
-                // 左侧文件表
-                Components.FileList {
-                    id: fileList
-                    model: fileManager.fileModel
-                    fileManager: fileManager
-                    style: style
-                    width: parent.width * splitter.position  // 使用分割线位置
-                    height: parent.height
-                }
-
-                // 分割线
-                Components.Splitter {
-                    id: splitter
-                    height: parent.height
-                    position: 0.7  // 初始位置设为70%
-                    minimumPosition: 0.3  // 最小30%
-                    maximumPosition: 0.8  // 最大80%
-
-                    // 添加拖动时的视觉反馈
-                    Rectangle {
-                        visible: parent.dragging
-                        color: "#80000000"
-                        width: 1
-                        height: parent.parent.height
-                        x: parent.width / 2
-                    }
-                }
-
-                // 右侧详情面板
-                Components.DetailPanel {
-                    width: parent.width * (1 - splitter.position) - splitter.width
-                    height: parent.height
-                    style: style
-                    selectedItem: fileList.selectedItem
-                    settings: settings
-                }
-            }
-        }
-
-        // 底部状态栏
-        Components.StatusBar {
-            Layout.fillWidth: true
-            style: style
-            fileManager: fileManager
-            fileList: fileList
-            logDialog: logDialog
-            settingsWindow: settingsWindow
-        }
-
-    } // 这里是 ColumnLayout 的结束括号
-
-    // 直接使用 settings 中的值
-    Component.onCompleted: {
-        fileManager.fileModel.filterPattern = settings.fileFilter
     }
 
     Dialogs.FileTagDialog {
@@ -204,7 +425,6 @@ Window {
         style: style
     }
 
-    // 添加设置窗口
     Dialogs.SettingsWindow {
         id: settingsWindow
         style: style
@@ -212,8 +432,14 @@ Window {
         fileManager: fileManager
     }
 
-    // 添加 Settings 实例
     Components.Settings {
         id: settings
     }
-} // 这里是 Window 的结束括号
+
+    Component.onCompleted: {
+        if (settings && settings.fileFilter) {
+            fileManager.fileModel.filterPattern = settings.fileFilter
+            console.log("应用文件过滤器:", settings.fileFilter)
+        }
+    }
+}

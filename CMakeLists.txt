@@ -98,6 +98,11 @@ set(RESOURCE_FILES
         qml/dialogs/qmldir
         qml/settings/qmldir
         qml/utils/qmldir
+        resources/icons/app_icon.svg
+        resources/images/window-minimize.svg
+        resources/images/window-maximize.svg
+        resources/images/window-restore.svg
+        resources/images/window-close.svg
         resources/images/file.svg
         resources/images/folder.svg
         resources/images/refresh.svg

@@ -222,14 +222,4 @@ ColumnLayout {
             Utils.Logger.logOperation(fileManager, "更新设置", key + " = " + value)
         }
     }
-    
-    Button {
-        text: qsTr("重置设置")
-        onClicked: {
-            Utils.Logger.logOperation(fileManager, "重置所有设置", "")
-            if (settings) {
-                settings.reset()
-            }
-        }
-    }
 } 

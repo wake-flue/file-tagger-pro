@@ -1,6 +1,7 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QIcon>
 #include "core/filesystemmanager.h"
 #include "models/filedata.h"
 #include "models/filelistmodel.h"
@@ -16,6 +17,10 @@ Q_DECLARE_METATYPE(QVector<FileData>)
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
+    
+    // 设置应用程序图标
+    QIcon appIcon(":/resources/icons/app_icon.svg");
+    app.setWindowIcon(appIcon);
     
     // 初始化数据库
     if (!DatabaseManager::instance().initialize()) {
