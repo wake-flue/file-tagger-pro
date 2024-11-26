@@ -6,212 +6,466 @@ import "../dialogs" as Dialogs
 
 Rectangle {
     id: root
-    color: "#f5f5f5"
-    radius: 4
+    color: "#ffffff"
+    radius: 8
 
     // 必要的属性声明
     required property var style
     required property var selectedItem
     required property var settings
 
+    // 计算预览区域的高度
+    readonly property real previewHeight: Math.min(width * 0.75, height * 0.6)
+
     ColumnLayout {
-        anchors {
-            fill: parent
-            margins: 12
-        }
-        spacing: 12
+        id: mainLayout
+        anchors.fill: parent
+        anchors.margins: 16
+        spacing: 16
 
         // 预览区域
-        Rectangle {
+        Item {
+            id: previewContainer
             Layout.fillWidth: true
-            Layout.preferredHeight: {
-                if (!previewImage.source || previewImage.status !== Image.Ready) {
-                    return width * 0.75  // 默认高宽比
+            Layout.preferredHeight: root.previewHeight
+            Layout.maximumHeight: root.height
+            Layout.alignment: Qt.AlignTop
+
+            // 阴影
+            Rectangle {
+                id: shadow
+                anchors.fill: previewRect
+                anchors.margins: -2
+                color: "transparent"
+                radius: previewRect.radius + 2
+
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: 2
+                    color: "#20000000"
+                    radius: parent.radius
                 }
-                // 根据图片实际比例计算合适的高度
-                const ratio = previewImage.sourceSize.height / previewImage.sourceSize.width
-                return Math.min(width * ratio, parent.height * 0.9)
             }
-            Layout.minimumHeight: 100
-            color: "#f8f9fa"
-            border.color: root.style.borderColor
-            border.width: 1
-            radius: 4
-            clip: true
 
-            // 预览图片或默认图标
-            Image {
-                id: previewImage
-                anchors.centerIn: parent
-                width: Math.min(parent.width, parent.height / (sourceSize.height / sourceSize.width))
-                height: Math.min(parent.height, parent.width * (sourceSize.height / sourceSize.width))
-                fillMode: Image.PreserveAspectFit
-                source: {
-                    if (!root.selectedItem) {
-                        return "qrc:/resources/images/file.svg"
+            // 预览容器
+            Rectangle {
+                id: previewRect
+                anchors.fill: parent
+                color: "#f8f9fa"
+                border.color: "transparent"
+                radius: 12
+                clip: true
+
+                // 预览图片或默认图标
+                Image {
+                    id: previewImage
+                    anchors.centerIn: parent
+                    width: parent.width * 0.9
+                    height: parent.height * 0.9
+                    fillMode: Image.PreserveAspectFit
+                    sourceSize {
+                        width: Math.min(1920, parent.width * Screen.devicePixelRatio)
+                        height: Math.min(1920, parent.height * Screen.devicePixelRatio)
                     }
-                    
-                    const fileType = (root.selectedItem.fileType || "").toLowerCase()
-                    
-                    // 根据 settings 中定义的文件类型返回对应图标
-                    if (root.settings.imageFilter.includes(fileType)) {
-                        // 如果是图片文件，优先显示实际图片
-                        return "file:///" + root.selectedItem.filePath
-                    } else if (root.settings.videoFilter.includes(fileType)) {
-                        return "qrc:/resources/images/video.svg"
-                    } else if (root.settings.audioFilter.includes(fileType)) {
-                        return "qrc:/resources/images/audio.svg"
-                    } else if (root.settings.documentFilter.includes(fileType)) {
-                        return "qrc:/resources/images/text.svg"
-                    } else if (root.settings.archiveFilter.includes(fileType)) {
-                        return "qrc:/resources/images/archive.svg"
-                    } else if (root.settings.devFilter.includes(fileType)) {
-                        return "qrc:/resources/images/code.svg"
+                    autoTransform: true
+                    asynchronous: true
+                    cache: true
+                    smooth: true
+
+                    source: {
+                        if (!root.selectedItem) {
+                            return "qrc:/resources/images/file.svg"
+                        }
+                        
+                        const fileType = (root.selectedItem.fileType || "").toLowerCase()
+                        
+                        if (root.settings.imageFilter.includes(fileType)) {
+                            return "file:///" + root.selectedItem.filePath.replace(/\\/g, '/')
+                        } else if (root.settings.videoFilter.includes(fileType)) {
+                            return "qrc:/resources/images/video.svg"
+                        } else if (root.settings.audioFilter.includes(fileType)) {
+                            return "qrc:/resources/images/audio.svg"
+                        } else if (root.settings.documentFilter.includes(fileType)) {
+                            return "qrc:/resources/images/text.svg"
+                        } else if (root.settings.archiveFilter.includes(fileType)) {
+                            return "qrc:/resources/images/archive.svg"
+                        } else if (root.settings.devFilter.includes(fileType)) {
+                            return "qrc:/resources/images/code.svg"
+                        }
+                        
+                        return root.selectedItem.fileIcon || "qrc:/resources/images/file.svg"
                     }
-                    
-                    // 默认图标
-                    return root.selectedItem.fileIcon || "qrc:/resources/images/file.svg"
+
+                    onStatusChanged: {
+                        if (status === Image.Error) {
+                            console.warn("Error loading image:", source)
+                            source = "qrc:/resources/images/file.svg"
+                        }
+                    }
+
+                    opacity: status === Image.Ready ? 1 : 0
+                    Behavior on opacity {
+                        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                    }
                 }
-                asynchronous: true
-                cache: true
 
-                // 加载失败时显示默认图标
-                onStatusChanged: {
-                    if (status === Image.Error) {
-                        source = "qrc:/resources/images/file.svg"
-                    }
+                // 加载指示器
+                BusyIndicator {
+                    id: loadingIndicator
+                    anchors.centerIn: parent
+                    running: previewImage.status === Image.Loading
+                    visible: running
+                    width: 32
+                    height: 32
                 }
 
-                opacity: status === Image.Ready ? 1 : 0
-                Behavior on opacity {
-                    NumberAnimation { duration: 100 }
+                // 错误提示
+                Rectangle {
+                    anchors.fill: parent
+                    color: "#fff5f5"
+                    visible: previewImage.status === Image.Error
+                    
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: 8
+                        
+                        Image {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            source: "qrc:/resources/images/error.svg"
+                            sourceSize.width: 32
+                            sourceSize.height: 32
+                            opacity: 0.6
+                        }
+                        
+                        Text {
+                            text: "图片加载失败"
+                            color: "#ff4d4f"
+                            font.pixelSize: root.style.defaultFontSize
+                            font.family: root.style.fontFamily
+                        }
+                    }
                 }
             }
         }
 
         // 文件信息区域
-        ColumnLayout {
+        ScrollView {
+            id: scrollView
             Layout.fillWidth: true
-            Layout.fillHeight: false
-            spacing: 12
+            Layout.fillHeight: true
+            clip: true
 
-            // 标题栏
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 8
+            ColumnLayout {
+                width: scrollView.width
+                spacing: 16
 
-                Image {
-                    source: "qrc:/resources/images/file.svg"
-                    sourceSize.width: 14
-                    sourceSize.height: 14
-                    opacity: 0.7
-                }
-
-                Label {
-                    text: "文件详情"
-                    font {
-                        family: root.style.fontFamily
-                        bold: true
-                        pixelSize: root.style.defaultFontSize
-                    }
-                    color: root.style.textColor
-                }
-
-                Rectangle {
+                // 标题栏
+                RowLayout {
                     Layout.fillWidth: true
-                    height: 1
-                    color: root.style.borderColor
-                    opacity: 0.5
-                    Layout.alignment: Qt.AlignVCenter
-                }
-            }
+                    spacing: 12
+                    Layout.bottomMargin: 4
 
-            // 文件详情内容
-            Repeater {
-                model: [
-                    {
-                        label: "文件名", 
-                        value: root.selectedItem ? (root.selectedItem.fileName || "-") : "-"
-                    },
-                    {
-                        label: "类型", 
-                        value: root.selectedItem ? (root.selectedItem.fileType || "-") : "-"
-                    },
-                    {
-                        label: "大小", 
-                        value: root.selectedItem ? (root.selectedItem.displaySize || "-") : "-"
-                    },
-                    {
-                        label: "修改时间", 
-                        value: root.selectedItem ? (root.selectedItem.displayDate || "-") : "-"
+                    Rectangle {
+                        width: 32
+                        height: 32
+                        radius: 16
+                        color: "#f0f2f5"
+
+                        Image {
+                            anchors.centerIn: parent
+                            source: "qrc:/resources/images/file.svg"
+                            sourceSize.width: 16
+                            sourceSize.height: 16
+                            opacity: 0.8
+                        }
                     }
-                ]
-                
-                delegate: ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 4
-                    
+
                     Label {
-                        text: modelData.label
-                        font.family: root.style.fontFamily
-                        font.pixelSize: root.style.defaultFontSize - 1
-                        color: root.style.secondaryTextColor
-                    }
-                    
-                    Label {
-                        text: modelData.value || "-"
-                        font.family: root.style.fontFamily
-                        font.pixelSize: root.style.defaultFontSize
+                        text: "文件详情"
+                        font {
+                            family: root.style.fontFamily
+                            bold: true
+                            pixelSize: root.style.defaultFontSize + 2
+                        }
                         color: root.style.textColor
-                        Layout.fillWidth: true
-                        wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     }
-                    
+
                     Rectangle {
                         Layout.fillWidth: true
                         height: 1
                         color: root.style.borderColor
                         opacity: 0.3
-                        visible: index < 3
+                        Layout.alignment: Qt.AlignVCenter
                     }
                 }
-            }
 
-            // 路径显示
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 4
+                // 文件详情内容
+                GridLayout {
+                    Layout.fillWidth: true
+                    columns: 2
+                    columnSpacing: 12
+                    rowSpacing: 12
 
-                Label {
-                    text: "路径"
-                    font.family: root.style.fontFamily
-                    font.pixelSize: root.style.defaultFontSize - 1
-                    color: root.style.secondaryTextColor
+                    // 文件名（占据两列）
+                    Rectangle {
+                        Layout.columnSpan: 2
+                        Layout.fillWidth: true
+                        implicitHeight: fileNameColumn.implicitHeight + 24
+                        color: "#f8f9fa"
+                        radius: 8
+                        
+                        ColumnLayout {
+                            id: fileNameColumn
+                            anchors {
+                                left: parent.left
+                                right: parent.right
+                                verticalCenter: parent.verticalCenter
+                                margins: 12
+                            }
+                            spacing: 6
+                            
+                            RowLayout {
+                                spacing: 8
+                                
+                                Image {
+                                    source: "qrc:/resources/images/file.svg"
+                                    sourceSize.width: 14
+                                    sourceSize.height: 14
+                                    opacity: 0.6
+                                }
+                                
+                                Label {
+                                    text: "文件名"
+                                    font {
+                                        family: root.style.fontFamily
+                                        pixelSize: root.style.defaultFontSize - 1
+                                    }
+                                    color: root.style.secondaryTextColor
+                                }
+                            }
+                            
+                            Label {
+                                text: root.selectedItem ? (root.selectedItem.fileName || "-") : "-"
+                                font {
+                                    family: root.style.fontFamily
+                                    pixelSize: root.style.defaultFontSize
+                                    weight: Font.Medium
+                                }
+                                color: root.style.textColor
+                                Layout.fillWidth: true
+                                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                            }
+                        }
+                    }
+
+                    // 类型
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: typeColumn.implicitHeight + 24
+                        color: "#f8f9fa"
+                        radius: 8
+                        
+                        ColumnLayout {
+                            id: typeColumn
+                            anchors {
+                                left: parent.left
+                                right: parent.right
+                                verticalCenter: parent.verticalCenter
+                                margins: 12
+                            }
+                            spacing: 6
+                            
+                            RowLayout {
+                                spacing: 8
+                                
+                                Image {
+                                    source: "qrc:/resources/images/type.svg"
+                                    sourceSize.width: 14
+                                    sourceSize.height: 14
+                                    opacity: 0.6
+                                }
+                                
+                                Label {
+                                    text: "类型"
+                                    font {
+                                        family: root.style.fontFamily
+                                        pixelSize: root.style.defaultFontSize - 1
+                                    }
+                                    color: root.style.secondaryTextColor
+                                }
+                            }
+                            
+                            Label {
+                                text: root.selectedItem ? (root.selectedItem.fileType || "-") : "-"
+                                font {
+                                    family: root.style.fontFamily
+                                    pixelSize: root.style.defaultFontSize
+                                    weight: Font.Medium
+                                }
+                                color: root.style.textColor
+                                Layout.fillWidth: true
+                                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                            }
+                        }
+                    }
+
+                    // 大小
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: sizeColumn.implicitHeight + 24
+                        color: "#f8f9fa"
+                        radius: 8
+                        
+                        ColumnLayout {
+                            id: sizeColumn
+                            anchors {
+                                left: parent.left
+                                right: parent.right
+                                verticalCenter: parent.verticalCenter
+                                margins: 12
+                            }
+                            spacing: 6
+                            
+                            RowLayout {
+                                spacing: 8
+                                
+                                Image {
+                                    source: "qrc:/resources/images/size.svg"
+                                    sourceSize.width: 14
+                                    sourceSize.height: 14
+                                    opacity: 0.6
+                                }
+                                
+                                Label {
+                                    text: "大小"
+                                    font {
+                                        family: root.style.fontFamily
+                                        pixelSize: root.style.defaultFontSize - 1
+                                    }
+                                    color: root.style.secondaryTextColor
+                                }
+                            }
+                            
+                            Label {
+                                text: root.selectedItem ? (root.selectedItem.displaySize || "-") : "-"
+                                font {
+                                    family: root.style.fontFamily
+                                    pixelSize: root.style.defaultFontSize
+                                    weight: Font.Medium
+                                }
+                                color: root.style.textColor
+                                Layout.fillWidth: true
+                                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                            }
+                        }
+                    }
+
+                    // 修改时间（占据两列）
+                    Rectangle {
+                        Layout.columnSpan: 2
+                        Layout.fillWidth: true
+                        implicitHeight: timeColumn.implicitHeight + 24
+                        color: "#f8f9fa"
+                        radius: 8
+                        
+                        ColumnLayout {
+                            id: timeColumn
+                            anchors {
+                                left: parent.left
+                                right: parent.right
+                                verticalCenter: parent.verticalCenter
+                                margins: 12
+                            }
+                            spacing: 6
+                            
+                            RowLayout {
+                                spacing: 8
+                                
+                                Image {
+                                    source: "qrc:/resources/images/time.svg"
+                                    sourceSize.width: 14
+                                    sourceSize.height: 14
+                                    opacity: 0.6
+                                }
+                                
+                                Label {
+                                    text: "修改时间"
+                                    font {
+                                        family: root.style.fontFamily
+                                        pixelSize: root.style.defaultFontSize - 1
+                                    }
+                                    color: root.style.secondaryTextColor
+                                }
+                            }
+                            
+                            Label {
+                                text: root.selectedItem ? (root.selectedItem.displayDate || "-") : "-"
+                                font {
+                                    family: root.style.fontFamily
+                                    pixelSize: root.style.defaultFontSize
+                                    weight: Font.Medium
+                                }
+                                color: root.style.textColor
+                                Layout.fillWidth: true
+                                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                            }
+                        }
+                    }
                 }
 
+                // 路径显示
                 Rectangle {
                     Layout.fillWidth: true
-                    height: pathLabel.height + 16
+                    implicitHeight: pathColumn.implicitHeight + 24
                     color: "#f8f9fa"
-                    radius: 4
+                    radius: 8
 
-                    Label {
-                        id: pathLabel
+                    ColumnLayout {
+                        id: pathColumn
                         anchors {
-                            fill: parent
-                            margins: 8
+                            left: parent.left
+                            right: parent.right
+                            verticalCenter: parent.verticalCenter
+                            margins: 12
                         }
-                        text: root.selectedItem ? (root.selectedItem.filePath || "-") : "-"
-                        font.family: root.style.fontFamily
-                        font.pixelSize: root.style.defaultFontSize
-                        color: root.style.textColor
-                        wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                        elide: Text.ElideMiddle
+                        spacing: 6
+
+                        RowLayout {
+                            spacing: 8
+                            
+                            Image {
+                                source: "qrc:/resources/images/path.svg"
+                                sourceSize.width: 14
+                                sourceSize.height: 14
+                                opacity: 0.6
+                            }
+                            
+                            Label {
+                                text: "路径"
+                                font {
+                                    family: root.style.fontFamily
+                                    pixelSize: root.style.defaultFontSize - 1
+                                }
+                                color: root.style.secondaryTextColor
+                            }
+                        }
+
+                        Label {
+                            id: pathLabel
+                            text: root.selectedItem ? (root.selectedItem.filePath || "-") : "-"
+                            font {
+                                family: root.style.fontFamily
+                                pixelSize: root.style.defaultFontSize
+                                weight: Font.Medium
+                            }
+                            color: root.style.textColor
+                            Layout.fillWidth: true
+                            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                            elide: Text.ElideMiddle
+                        }
                     }
                 }
             }
         }
-
-        Item { Layout.fillHeight: true }  // 占位符
     }
 } 

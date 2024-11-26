@@ -141,6 +141,10 @@ set(RESOURCE_FILES
         resources/images/fatal.svg
         resources/images/chart.svg
         resources/images/logger.svg
+        resources/images/path.svg
+        resources/images/type.svg
+        resources/images/size.svg
+        resources/images/time.svg
 )
 
 qt_add_executable(FileTaggingApp
