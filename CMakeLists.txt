@@ -77,6 +77,7 @@ set(QML_FILES
         qml/components/StatusBar.qml
         qml/components/Settings.qml
         qml/components/TagToolBar.qml
+        qml/components/MainContainer.qml
         qml/dialogs/FolderPickerDialog.qml
         qml/dialogs/SpriteDialog.qml
         qml/dialogs/TagEditDialog.qml

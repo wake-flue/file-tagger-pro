@@ -68,7 +68,7 @@ Window {
 
     // 主容器
     Rectangle {
-        id: mainContainer
+        id: rootContainer
         anchors.fill: parent
         color: style.backgroundColor
         border.color: style.borderColor
@@ -310,202 +310,38 @@ Window {
                 settings: settings
                 fileManager: fileManager
                 settingsWindow: settingsWindow
-                fileList: fileList
+                fileList: mainContainer.fileList
             }
             
             // 主内容区域
-            Rectangle {
+            Components.MainContainer {
+                id: mainContainer
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                color: style.backgroundColor
-                border.color: "transparent"
-                border.width: 0
-                radius: 0
-
-                // 使用 Item 替代 Row
-                Item {
-                    anchors.fill: parent
-                    anchors.margins: 4
-
-                    // 左侧文件表
-                    Components.FileList {
-                        id: fileList
-                        model: fileManager.fileModel
-                        fileManager: fileManager
-                        style: style
-                        width: detailPanel.isVisible ? parent.width * splitter.position : parent.width
-                        height: parent.height
-                        Behavior on width {
-                            NumberAnimation {
-                                duration: 150
-                                easing.type: Easing.OutQuad
-                            }
-                        }
-                    }
-
-                    // 分割线
-                    Components.Splitter {
-                        id: splitter
-                        height: parent.height
-                        position: 0.7  // 初始位置设为70%
-                        minimumPosition: 0.3  // 最小30%
-                        maximumPosition: 0.8  // 最大80%
-                        panelVisible: detailPanel.isVisible
-                        x: fileList.width
-                        visible: opacity > 0
-                        opacity: detailPanel.isVisible ? 1 : 0
-                        Behavior on x {
-                            NumberAnimation {
-                                duration: 150
-                                easing.type: Easing.OutQuad
-                            }
-                        }
-                        Behavior on opacity {
-                            NumberAnimation {
-                                duration: 100
-                                easing.type: Easing.OutQuad
-                            }
-                        }
-                    }
-
-                    // 右侧详情面板
-                    Components.DetailPanel {
-                        id: detailPanel
-                        x: splitter.x + splitter.width
-                        width: isVisible ? parent.width - x : 0
-                        height: parent.height
-                        style: style
-                        selectedItem: fileList.selectedItem
-                        settings: settings
-                        isVisible: false
-                        opacity: isVisible ? 1 : 0
-                        scale: isVisible ? 1 : 0.95
-                        
-                        Behavior on opacity {
-                            NumberAnimation {
-                                duration: 100
-                                easing.type: Easing.OutQuad
-                            }
-                        }
-                        Behavior on scale {
-                            NumberAnimation {
-                                duration: 150
-                                easing.type: Easing.OutQuad
-                            }
-                        }
-                        Behavior on width {
-                            NumberAnimation {
-                                duration: 150
-                                easing.type: Easing.OutQuad
-                            }
-                        }
-                        
-                        // 添加阴影效果
-                        layer.enabled: true
-                        layer.effect: MultiEffect {
-                            shadowEnabled: true
-                            shadowColor: "#40000000"
-                            shadowBlur: 1.0
-                            shadowHorizontalOffset: 0
-                            shadowVerticalOffset: 1
-                        }
-                    }
-
-                    // 右侧触发器
-                    Rectangle {
-                        id: rightTrigger
-                        width: 32
-                        height: 32
-                        radius: width / 2
-                        color: rightTriggerArea.containsMouse ? style.hoverColor : style.backgroundColor
-                        border.color: style.borderColor
-                        border.width: 1
-                        z: 1  // 确保在最上层
-                        scale: rightTriggerArea.pressed ? 0.95 : 1.0
-                        
-                        Behavior on scale {
-                            NumberAnimation {
-                                duration: 100
-                                easing.type: Easing.OutCubic
-                            }
-                        }
-                        
-                        // 固定在右下角
-                        anchors {
-                            right: parent.right
-                            bottom: parent.bottom
-                            margins: 16
-                        }
-                        
-                        // 添加阴影效果
-                        layer.enabled: true
-                        layer.effect: MultiEffect {
-                            shadowEnabled: true
-                            shadowColor: "#40000000"
-                            shadowBlur: 1.0
-                            shadowHorizontalOffset: 0
-                            shadowVerticalOffset: 1
-                        }
-                        
-                        // 箭头图标容器
-                        Item {
-                            anchors.centerIn: parent
-                            width: 16
-                            height: 16
-
-                            // 左箭头
-                            Image {
-                                id: leftArrowIcon
-                                anchors.fill: parent
-                                source: "qrc:/resources/images/chevron-left.svg"
-                                opacity: !detailPanel.isVisible ? (rightTriggerArea.containsMouse ? 0.9 : 0.7) : 0
-                                
-                                Behavior on opacity {
-                                    NumberAnimation {
-                                        duration: 100
-                                        easing.type: Easing.OutQuad
-                                    }
-                                }
-                            }
-
-                            // 右箭头
-                            Image {
-                                id: rightArrowIcon
-                                anchors.fill: parent
-                                source: "qrc:/resources/images/chevron-right.svg"
-                                opacity: detailPanel.isVisible ? (rightTriggerArea.containsMouse ? 0.9 : 0.7) : 0
-                                
-                                Behavior on opacity {
-                                    NumberAnimation {
-                                        duration: 100
-                                        easing.type: Easing.OutQuad
-                                    }
-                                }
-                            }
-                        }
-                        
-                        // 鼠标区域
-                        MouseArea {
-                            id: rightTriggerArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            onClicked: detailPanel.isVisible = !detailPanel.isVisible
-                        }
-                    }
+                
+                style: style
+                settings: settings
+                fileManager: fileManager
+                
+                onFileListVisibilityChanged: function(visible) {
+                    console.log("文件列表可见性改变:", visible)
+                }
+                
+                onDetailPanelVisibilityChanged: function(visible) {
+                    console.log("详情面板可见性改变:", visible)
                 }
             }
-
+            
             // 底部状态栏
             Components.StatusBar {
                 Layout.fillWidth: true
                 style: style
                 fileManager: fileManager
-                fileList: fileList
+                fileList: mainContainer.fileList
                 logDialog: logDialog
                 settingsWindow: settingsWindow
             }
-
-        } // 这里是 ColumnLayout 的结束括号
+        }
 
         // 窗口缩放区域
         MouseArea {
@@ -625,8 +461,7 @@ Window {
                 console.log("开始扫描目录:", path)
                 fileManager.scanDirectory(path, filters)
             } catch (error) {
-                console.error("设目录失败:", error)
-                // 这里可以添加错误提示对话框
+                console.error("设置目录失败:", error)
             }
         }
     }

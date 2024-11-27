@@ -6,6 +6,4 @@ DetailPanel 1.0 DetailPanel.qml
 StatusBar 1.0 StatusBar.qml
 Settings 1.0 Settings.qml
 TagToolBar 1.0 TagToolBar.qml
-
-
-
+MainContainer 1.0 MainContainer.qml
