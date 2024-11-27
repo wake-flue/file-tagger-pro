@@ -73,6 +73,24 @@ public:
     
     QString lastMessage() const { return m_lastMessage; }
     
+    // 日志路径管理
+    static QString getLogBasePath();
+    static QString getModuleLogPath(const QString &moduleName);
+    static void ensureLogDirectories();
+    
+    // 日志类型
+    enum LogType {
+        General,    // 通用日志
+        Database,   // 数据库日志
+        FileSystem, // 文件系统日志
+        Network,    // 网络日志
+        UI         // 界面日志
+    };
+    Q_ENUM(LogType)
+    
+    static QString getLogTypeString(LogType type);
+    static QString getLogFilePath(LogType type);
+    
 signals:
     void messagesChanged();
     void logLevelChanged();
@@ -95,7 +113,6 @@ private:
     void writeToFile(const QString &message);
     void rotateLogFiles();
     void initializeLogFile();
-    QString generateLogFileName() const;
     void updateFileMessages();
     void updateLogStats();
     
@@ -111,6 +128,9 @@ private:
     QStringList m_fileMessages;
     QString m_searchPattern;
     QString m_lastMessage;
+    
+    // 日志文件扩展名
+    static const QString LOG_FILE_EXTENSION;
 };
 
 #endif // LOGGER_H

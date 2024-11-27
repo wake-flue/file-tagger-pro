@@ -4,6 +4,9 @@
 #include <QTextStream>
 #include <QStandardPaths>
 
+// 定义常量
+const QString Logger::LOG_FILE_EXTENSION = ".log";
+
 Logger::Logger(QObject *parent)
     : QObject(parent)
     , m_logLevel(Info)
@@ -11,7 +14,7 @@ Logger::Logger(QObject *parent)
     , m_maxLogFiles(DEFAULT_MAX_LOG_FILES)
 {
     // 设置默认日志目录
-    QString logDir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/logs";
+    QString logDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/logs";
     QDir().mkpath(logDir);
     setLogFilePath(logDir + "/app.log");
 }
@@ -34,21 +37,15 @@ void Logger::setLogFilePath(const QString &path)
 
 void Logger::initializeLogFile()
 {
-    if (m_logFile.isOpen()) {
-        m_logFile.close();
-    }
-
-    QFileInfo fileInfo(m_logFilePath);
-    QDir().mkpath(fileInfo.absolutePath());  // 确保目录存在
-
-    m_logFile.setFileName(m_logFilePath);
-    if (!m_logFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
-        qWarning() << "无法打开日志文件:" << m_logFilePath << ", 错误:" << m_logFile.errorString();
-        return;
-    }
+    // 使用静态方法确保日志目录存在
+    Logger::ensureLogDirectories();
     
-    qDebug() << "成功打开日志文件:" << m_logFilePath;
-    updateFileMessages();  // 初始化后立即更新文件消息
+    if (!m_logFilePath.isEmpty()) {
+        m_logFile.setFileName(m_logFilePath);
+        if (!m_logFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
+            qWarning() << "Failed to open log file:" << m_logFilePath;
+        }
+    }
 }
 
 void Logger::writeToFile(const QString &message)
@@ -409,4 +406,59 @@ QVariantMap Logger::getLogStatsByTimeRange(const QDateTime &start, const QDateTi
     stats["endTime"] = end.toString("yyyy-MM-dd hh:mm:ss");
     
     return stats;
+}
+
+QString Logger::getLogBasePath()
+{
+    QString basePath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/logs";
+    QDir dir(basePath);
+    if (!dir.exists()) {
+        dir.mkpath(".");
+    }
+    return basePath;
+}
+
+QString Logger::getModuleLogPath(const QString &moduleName)
+{
+    QString path = getLogBasePath() + "/" + moduleName;
+    QDir dir(path);
+    if (!dir.exists()) {
+        dir.mkpath(".");
+    }
+    return path;
+}
+
+void Logger::ensureLogDirectories()
+{
+    QDir baseDir(getLogBasePath());
+    if (!baseDir.exists()) {
+        baseDir.mkpath(".");
+    }
+    
+    // 创建各模块日志目录
+    QStringList modules = {"database", "filesystem", "network", "ui", "general"};
+    for (const QString &module : modules) {
+        QDir moduleDir(getModuleLogPath(module));
+        if (!moduleDir.exists()) {
+            moduleDir.mkpath(".");
+        }
+    }
+}
+
+QString Logger::getLogTypeString(LogType type)
+{
+    switch (type) {
+        case General:    return "general";
+        case Database:   return "database";
+        case FileSystem: return "filesystem";
+        case Network:    return "network";
+        case UI:         return "ui";
+        default:         return "unknown";
+    }
+}
+
+QString Logger::getLogFilePath(LogType type)
+{
+    QString moduleName = getLogTypeString(type);
+    return getModuleLogPath(moduleName) + "/current.log";
 }

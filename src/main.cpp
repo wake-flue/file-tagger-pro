@@ -11,6 +11,7 @@
 #include <QStandardPaths>
 #include "core/databasemanager.h"
 #include "core/tagmanager.h"
+#include "utils/logger.h"
 
 Q_DECLARE_METATYPE(QVector<FileData>)
 
@@ -18,20 +19,28 @@ int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
     
+    // 设置应用程序信息
+    app.setOrganizationName("Wake");
+    app.setOrganizationDomain("wake.com");
+    app.setApplicationName("FileTaggingPro");
+    
+    // 初始化日志系统
+    Logger::ensureLogDirectories();
+    Logger* appLogger = new Logger(nullptr);
+    appLogger->setLogFilePath(Logger::getLogFilePath(Logger::General));
+    appLogger->setLogLevel(Logger::Info);
+    appLogger->info("应用程序启动");
+    
     // 设置应用程序图标
     QIcon appIcon(":/resources/icons/app_icon.svg");
     app.setWindowIcon(appIcon);
     
     // 初始化数据库
     if (!DatabaseManager::instance().initialize()) {
-        qWarning() << "数据库初始化失败!";
+        appLogger->error("数据库初始化失败");
         return -1;
     }
-    
-    // 设置应用程序信息
-    app.setOrganizationName("Wake");
-    app.setOrganizationDomain("wake.com");
-    app.setApplicationName("FileTaggingPro");
+    appLogger->info("数据库初始化成功");
     
     // 设置样式必须在创建 QApplication 之后，加载 QML 之前
     QQuickStyle::setStyle("Basic");
@@ -70,6 +79,11 @@ int main(int argc, char *argv[])
             QCoreApplication::exit(-1);
     }, Qt::QueuedConnection);
     engine.load(url);
+    
+    appLogger->info("应用程序初始化完成");
 
-    return app.exec();
+    int result = app.exec();
+    appLogger->info("应用程序退出");
+    delete appLogger;
+    return result;
 }

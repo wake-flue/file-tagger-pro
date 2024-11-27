@@ -52,6 +52,7 @@ QtObject {
     readonly property color logWarningColor: "#ffc107"
     readonly property color logDebugColor: "#6c757d"
     readonly property color logInfoColor: defaultTextColor
+    readonly property color logOperationColor: "#28a745"
     
     // 日志列表样式
     readonly property color logListBackgroundColor: "#ffffff"

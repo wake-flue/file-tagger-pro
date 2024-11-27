@@ -84,24 +84,18 @@ ColumnLayout {
                 background: Rectangle {
                     implicitWidth: parent.implicitWidth
                     implicitHeight: parent.implicitHeight
-                    color: parent.down ? settingsStyle.comboBoxPressedColor :
-                           parent.hovered ? settingsStyle.comboBoxHoverColor :
-                           settingsStyle.comboBoxNormalColor
-                    border.color: parent.visualFocus ? settingsStyle.comboBoxFocusBorderColor :
-                                 parent.down || parent.hovered ? settingsStyle.defaultAccentColor :
-                                 settingsStyle.comboBoxBorderColor
+                    color: {
+                        if (parent.down) return settingsStyle.comboBoxPressedColor
+                        if (parent.hovered) return settingsStyle.comboBoxHoverColor
+                        return settingsStyle.comboBoxNormalColor
+                    }
+                    border.color: {
+                        if (parent.visualFocus) return settingsStyle.comboBoxFocusBorderColor
+                        if (parent.down || parent.hovered) return settingsStyle.defaultAccentColor
+                        return settingsStyle.comboBoxBorderColor
+                    }
                     border.width: parent.visualFocus ? 2 : 1
                     radius: settingsStyle.defaultRadius
-                    
-                    // 下拉箭头
-                    Image {
-                        x: parent.width - width - 8
-                        y: (parent.height - height) / 2
-                        width: settingsStyle.comboBoxIndicatorSize
-                        height: settingsStyle.comboBoxIndicatorSize
-                        source: "qrc:/resources/images/dropdown.svg"
-                        sourceSize: Qt.size(width, height)
-                    }
                 }
                 
                 contentItem: Label {
@@ -115,62 +109,6 @@ ColumnLayout {
                     verticalAlignment: Text.AlignVCenter
                     elide: Text.ElideRight
                 }
-                
-                popup: Popup {
-                    y: parent.height + 4
-                    width: parent.width
-                    height: Math.min(contentItem.implicitHeight, 200)
-                    padding: 1
-                    
-                    background: Rectangle {
-                        color: settingsStyle.comboBoxPopupBackgroundColor
-                        border.color: settingsStyle.comboBoxPopupBorderColor
-                        border.width: 1
-                        radius: settingsStyle.defaultRadius
-                    }
-                    
-                    contentItem: ListView {
-                        clip: true
-                        implicitHeight: contentHeight
-                        model: logLevelFilter.popup.visible ? logLevelFilter.delegateModel : null
-                        currentIndex: logLevelFilter.highlightedIndex
-                        ScrollIndicator.vertical: ScrollIndicator { }
-                        
-                        delegate: ItemDelegate {
-                            width: parent.width
-                            height: settingsStyle.comboBoxPopupItemHeight
-                            padding: settingsStyle.comboBoxLeftPadding
-                            highlighted: logLevelFilter.highlightedIndex === index
-                            
-                            background: Rectangle {
-                                color: parent.highlighted ? settingsStyle.comboBoxItemHighlightColor :
-                                       parent.hovered ? settingsStyle.comboBoxItemHoverColor :
-                                       settingsStyle.comboBoxItemNormalColor
-                            }
-                            
-                            contentItem: Label {
-                                text: modelData.text
-                                color: parent.highlighted ? settingsStyle.comboBoxItemHighlightedTextColor :
-                                       settingsStyle.comboBoxItemTextColor
-                                font {
-                                    family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                                    pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
-                                }
-                                verticalAlignment: Text.AlignVCenter
-                                elide: Text.ElideRight
-                            }
-                        }
-                    }
-                }
-                
-                // 添加当前值属性
-                property int currentLogLevel: 0
-                
-                // 监听选择变化
-                onCurrentValueChanged: {
-                    currentLogLevel = currentValue
-                    updateLogList()
-                }
             }
             
             TextField {
@@ -181,10 +119,10 @@ ColumnLayout {
                 
                 background: Rectangle {
                     implicitHeight: settingsStyle.defaultInputHeight
-                    color: style?.inputBackgroundColor ?? settingsStyle.defaultInputBackgroundColor
+                    color: settingsStyle.defaultInputBackgroundColor
                     border.color: parent.activeFocus ? 
-                                (style?.accentColor ?? settingsStyle.defaultAccentColor) :
-                                (style?.inputBorderColor ?? settingsStyle.defaultInputBorderColor)
+                                settingsStyle.defaultInputFocusBorderColor :
+                                settingsStyle.defaultInputBorderColor
                     border.width: parent.activeFocus ? 2 : 1
                     radius: settingsStyle.defaultRadius
                 }
@@ -193,8 +131,8 @@ ColumnLayout {
                     family: style?.fontFamily ?? settingsStyle.defaultFontFamily
                     pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
                 }
+                color: style?.textColor ?? settingsStyle.defaultTextColor
                 
-                // 添加搜索文本变化监听
                 onTextChanged: {
                     updateLogList()
                 }
@@ -214,15 +152,15 @@ ColumnLayout {
                     implicitWidth: settingsStyle.defaultButtonWidth
                     implicitHeight: settingsStyle.defaultButtonHeight
                     color: parent.down || parent.checked ? 
-                           (style?.buttonPressedColor ?? settingsStyle.defaultButtonPressedColor) :
+                           settingsStyle.defaultButtonPressedColor :
                            parent.hovered ? 
-                           (style?.buttonHoverColor ?? settingsStyle.defaultButtonHoverColor) :
-                           (style?.buttonNormalColor ?? settingsStyle.defaultButtonNormalColor)
+                           settingsStyle.defaultButtonHoverColor :
+                           settingsStyle.defaultButtonNormalColor
                     border.color: parent.down || parent.checked ?
-                                (style?.buttonPressedBorderColor ?? settingsStyle.defaultButtonPressedBorderColor) :
+                                settingsStyle.defaultButtonPressedBorderColor :
                                 parent.hovered ?
-                                (style?.buttonHoverBorderColor ?? settingsStyle.defaultButtonHoverBorderColor) :
-                                (style?.buttonNormalBorderColor ?? settingsStyle.defaultButtonNormalBorderColor)
+                                settingsStyle.defaultButtonHoverBorderColor :
+                                settingsStyle.defaultButtonNormalBorderColor
                     border.width: 1
                     radius: settingsStyle.defaultRadius
                 }
@@ -252,7 +190,7 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
         color: settingsStyle.logListBackgroundColor
-        border.color: style?.borderColor ?? settingsStyle.defaultBorderColor
+        border.color: settingsStyle.defaultBorderColor
         border.width: 1
         radius: settingsStyle.defaultRadius
         
@@ -291,6 +229,8 @@ ColumnLayout {
                             return settingsStyle.logWarningColor
                         if (modelData.includes("[DEBUG]"))
                             return settingsStyle.logDebugColor
+                        if (modelData.includes("操作|"))
+                            return settingsStyle.logOperationColor
                         return settingsStyle.logInfoColor
                     }
                 }
@@ -397,14 +337,14 @@ ColumnLayout {
             }
         }
         
-        // 历史日志文件
+        // 历史日志文件改为全部日志文件
         ColumnLayout {
             spacing: 2
             Layout.fillWidth: true
             Layout.topMargin: 8
             
             Label {
-                text: qsTr("历史日志文件:")
+                text: qsTr("全部日志文件:")
                 font {
                     family: style?.fontFamily ?? settingsStyle.defaultFontFamily
                     pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
@@ -413,32 +353,47 @@ ColumnLayout {
                 color: style?.textColor ?? settingsStyle.defaultTextColor
             }
             
-            Flow {
+            // 使用 ScrollView 替换 Flow
+            ScrollView {
                 Layout.fillWidth: true
-                spacing: 8
+                Layout.preferredHeight: Math.min(contentHeight, 200) // 最大高度200
                 
-                Repeater {
-                    model: fileManager?.logger?.getLogFiles() ?? []
-                    delegate: Label {
-                        required property string modelData
-                        
-                        text: {
-                            const logDir = fileManager?.logger?.getCurrentLogFile()?.replace(/[^\/\\]*$/, '') ?? ""
-                            return logDir + modelData
-                        }
-                        font {
-                            family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                            pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
-                        }
-                        color: style?.linkColor ?? "#0366d6"
-                        wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                        
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (parent.text) {
-                                    Qt.openUrlExternally("file:///" + parent.text)
+                contentHeight: logFilesColumn.implicitHeight
+                
+                ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                
+                clip: true
+                
+                ColumnLayout {
+                    id: logFilesColumn
+                    width: parent.width
+                    spacing: 4
+                    
+                    Repeater {
+                        model: fileManager?.logger?.getLogFiles() ?? []
+                        delegate: Label {
+                            required property string modelData
+                            
+                            Layout.fillWidth: true
+                            text: {
+                                const logDir = fileManager?.logger?.getCurrentLogFile()?.replace(/[^\/\\]*$/, '') ?? ""
+                                return logDir + modelData
+                            }
+                            font {
+                                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                                pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
+                            }
+                            color: style?.linkColor ?? "#0366d6"
+                            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                            
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    if (parent.text) {
+                                        Qt.openUrlExternally("file:///" + parent.text)
+                                    }
                                 }
                             }
                         }
@@ -491,10 +446,11 @@ ColumnLayout {
                 Repeater {
                     model: [
                         { label: "调试", key: "debug", color: "#6c757d", icon: "qrc:/resources/images/debug.svg" },
+                        { label: "操作", key: "operation", color: "#28a745", icon: "qrc:/resources/images/info.svg" },
                         { label: "信息", key: "info", color: "#0366d6", icon: "qrc:/resources/images/info.svg" },
                         { label: "警告", key: "warn", color: "#ffc107", icon: "qrc:/resources/images/warning.svg" },
                         { label: "错误", key: "error", color: "#dc3545", icon: "qrc:/resources/images/error.svg" },
-                        { label: "致命", key: "fatal", color: "#721c24", icon: "qrc:/resources/images/fatal.svg" },
+                        { label: "致命", key: "fatal", color: "#721c24", icon: "qrc:/resources/images/error.svg" },
                         { label: "总计", key: "total", color: style?.accentColor ?? "#0078D4", icon: "qrc:/resources/images/chart.svg" }
                     ]
                     
@@ -524,6 +480,13 @@ ColumnLayout {
                                     source: modelData.icon
                                     sourceSize: Qt.size(16, 16)
                                     opacity: 0.8
+                                    
+                                    // 添加错误处理
+                                    onStatusChanged: {
+                                        if (status === Image.Error) {
+                                            source = "qrc:/resources/images/info.svg"  // 使用默认图标
+                                        }
+                                    }
                                 }
                             }
                             

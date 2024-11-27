@@ -1,10 +1,17 @@
 #include "databasemanager.h"
-#include <QtCore/QStandardPaths>
-#include <QtCore/QDir>
-#include <QtCore/QDebug>
-#include <QtSql/QSqlQuery>
-#include <QtSql/QSqlError>
-#include <QtSql/QSqlDatabase>
+
+// Qt Core
+#include <QStandardPaths>
+#include <QDir>
+#include <QDebug>
+#include <QDateTime>
+
+// Qt SQL
+#include <QSqlQuery>
+#include <QSqlError>
+#include <QSqlDatabase>
+
+// Project includes
 #include "../utils/logger.h"
 
 DatabaseManager::DatabaseManager(QObject *parent)
@@ -12,14 +19,9 @@ DatabaseManager::DatabaseManager(QObject *parent)
     , m_initialized(false)
     , m_logger(new Logger(this))
 {
-    // 设置日志文件路径
-    QString logPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/logs";
-    QDir logDir(logPath);
-    if (!logDir.exists()) {
-        logDir.mkpath(".");
-    }
-    m_logger->setLogFilePath(logPath + "/database.log");
-    m_logger->setLogLevel(Logger::Info);  // 设置日志级别
+    m_logger->setLogFilePath(Logger::getLogFilePath(Logger::Database));
+    m_logger->setLogLevel(Logger::Info);
+    m_logger->info("数据库管理器初始化开始");
 }
 
 DatabaseManager& DatabaseManager::instance()
@@ -31,22 +33,21 @@ DatabaseManager& DatabaseManager::instance()
 bool DatabaseManager::initialize()
 {
     if (m_initialized) {
+        m_logger->debug("数据库管理器已经初始化");
         return true;
     }
 
-    // 确保数据目录存在
     QString dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     QDir dir(dataPath);
     if (!dir.exists()) {
         dir.mkpath(".");
     }
 
-    // 初始化数据库连接
     m_db = QSqlDatabase::addDatabase("QSQLITE");
     m_db.setDatabaseName(dataPath + "/filetags.db");
 
     if (!m_db.open()) {
-        m_logger->error(QString("[DatabaseManager] 无法打开数据库: %1").arg(m_db.lastError().text()));
+        m_logger->error(QString("数据库连接失败: %1").arg(m_db.lastError().text()));
         return false;
     }
 
@@ -56,27 +57,23 @@ bool DatabaseManager::initialize()
 
     // 创建表结构
     if (!createTables()) {
-        m_logger->error("[DatabaseManager] 创建数据库表失败");
+        m_logger->error("数据库表创建失败");
         return false;
     }
-
-    // 创建索引以提高性能
-    query.exec("CREATE INDEX IF NOT EXISTS idx_file_tags_file_id ON file_tags(file_id)");
-    query.exec("CREATE INDEX IF NOT EXISTS idx_file_tags_tag_id ON file_tags(tag_id)");
 
     // 检查并执行数据库升级
     int dbVersion = currentVersion();
     if (dbVersion < CURRENT_DB_VERSION) {
-        m_logger->info(QString("[DatabaseManager] 开始数据库升级: 从版本 %1 升级到 %2").arg(dbVersion).arg(CURRENT_DB_VERSION));
+        m_logger->info(QString("数据库开始升级: 从 v%1 到 v%2").arg(dbVersion).arg(CURRENT_DB_VERSION));
         if (!upgradeDatabase(dbVersion, CURRENT_DB_VERSION)) {
-            m_logger->error("[DatabaseManager] 数据库升级失败");
+            m_logger->error("数据库升级失败");
             return false;
         }
-        m_logger->info("[DatabaseManager] 数据库升级完成");
+        m_logger->info("数据库升级完成");
     }
 
     m_initialized = true;
-    m_logger->info("[DatabaseManager] 数据库初始化完成");
+    m_logger->info("数据库管理器初始化完成");
     return true;
 }
 
@@ -99,7 +96,9 @@ bool DatabaseManager::createSettingsTable()
     );
     
     if (!success) {
-        m_logger->error(QString("[DatabaseManager] 创建settings表失败: %1").arg(query.lastError().text()));
+        m_logger->error(QString("创建settings表失败: %1").arg(query.lastError().text()));
+    } else {
+        m_logger->debug("创建settings表成功");
     }
     return success;
 }
@@ -119,7 +118,9 @@ bool DatabaseManager::createTagsTable()
     );
     
     if (!success) {
-        m_logger->error(QString("[DatabaseManager] 创建tags表失败: %1").arg(query.lastError().text()));
+        m_logger->error(QString("创建tags表失败: %1").arg(query.lastError().text()));
+    } else {
+        m_logger->debug("创建tags表成功");
     }
     return success;
 }
@@ -138,7 +139,9 @@ bool DatabaseManager::createFileTagsTable()
     );
     
     if (!success) {
-        m_logger->error(QString("[DatabaseManager] 创建file_tags表失败: %1").arg(query.lastError().text()));
+        m_logger->error(QString("创建file_tags表失败: %1").arg(query.lastError().text()));
+    } else {
+        m_logger->debug("创建file_tags表成功");
     }
     return success;
 }
@@ -242,17 +245,16 @@ bool DatabaseManager::execute(const QString& query, const QVariantList& params)
     QSqlQuery sqlQuery(m_db);
     
     if (!sqlQuery.prepare(query)) {
-        m_logger->error(QString("[DatabaseManager] SQL查询准备失败: %1\n查询: %2").arg(sqlQuery.lastError().text(), query));
+        m_logger->error(QString("系统|数据库|SQL准备失败|%1|%2").arg(sqlQuery.lastError().text(), query));
         return false;
     }
     
-    // 绑定参数
     for (const QVariant& param : params) {
         sqlQuery.addBindValue(param);
     }
     
     if (!sqlQuery.exec()) {
-        m_logger->error(QString("[DatabaseManager] SQL查询执行失败: %1\n查询: %2").arg(sqlQuery.lastError().text(), query));
+        m_logger->error(QString("系统|数据库|SQL执行失败|%1|%2").arg(sqlQuery.lastError().text(), query));
         return false;
     }
     
@@ -263,6 +265,6 @@ DatabaseManager::~DatabaseManager()
 {
     if (m_db.isOpen()) {
         m_db.close();
-        m_logger->info("[DatabaseManager] 数据库连接已关闭");
+        m_logger->info("系统|数据库|连接关闭");
     }
 } 

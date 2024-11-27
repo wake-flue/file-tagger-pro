@@ -1,14 +1,24 @@
 #include "tagmanager.h"
 #include "databasemanager.h"
-#include <QSqlQuery>
-#include <QSqlError>
-#include <QDebug>
+
+// Qt Core
 #include <QDateTime>
-#include <QCryptographicHash>
+#include <QDebug>
+#include <QDir>
 #include <QFile>
 #include <QFileInfo>
-#include <QDir>
+
+// Qt SQL
+#include <QSqlQuery>
+#include <QSqlError>
+
+// Qt Gui
+#include <QColor>
+
+// Windows API
+#ifdef Q_OS_WIN
 #include <windows.h>
+#endif
 
 TagManager::TagManager(QObject *parent)
     : QObject(parent)
@@ -33,11 +43,6 @@ void TagManager::loadTagsCache()
     
     if (query.exec("SELECT id, name, color, description, created_at, updated_at FROM tags")) {
         while (query.next()) {
-            int id = query.value(0).toInt();
-            QString name = query.value(1).toString();
-            QString color = query.value(2).toString();
-            QString desc = query.value(3).toString();
-
             auto tag = QSharedPointer<Tag>::create();
             tag->setId(query.value(0).toInt());
             tag->setName(query.value(1).toString());
@@ -49,7 +54,7 @@ void TagManager::loadTagsCache()
             m_tagsCache.insert(tag->id(), tag);
         }
     } else {
-        qWarning() << "查询标签失败:" << query.lastError().text();
+        emit tagError(QString("系统|标签|加载失败|%1").arg(query.lastError().text()));
     }
     
     m_cacheInitialized = true;
@@ -60,10 +65,8 @@ bool TagManager::addTag(const QString &name, const QColor &color, const QString 
     QSqlDatabase db = DatabaseManager::instance().database();
     QSqlQuery query(db);
     
-    // 准备SQL语句
     query.prepare("INSERT INTO tags (name, color, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?)");
     
-    // 绑定参数
     query.addBindValue(name);
     query.addBindValue(color.name(QColor::HexRgb));
     query.addBindValue(description);
@@ -71,17 +74,13 @@ bool TagManager::addTag(const QString &name, const QColor &color, const QString 
     query.addBindValue(now);
     query.addBindValue(now);
     
-    // 执行SQL
     if (!query.exec()) {
-        qWarning() << "添加标签失败:" << query.lastError().text();
-        emit tagError(QString("添加标签失败: %1").arg(query.lastError().text()));
+        emit tagError(QString("系统|标签|添加失败|%1").arg(query.lastError().text()));
         return false;
     }
     
-    // 获取新插入的标签ID
     int newTagId = query.lastInsertId().toInt();
     
-    // 创建新的Tag对象并添加到缓存
     auto tag = QSharedPointer<Tag>::create();
     tag->setId(newTagId);
     tag->setName(name);
@@ -92,7 +91,6 @@ bool TagManager::addTag(const QString &name, const QColor &color, const QString 
     
     m_tagsCache.insert(newTagId, tag);
     
-    // 发出信号通知标签列表已更新
     emit tagAdded(tag.data());
     emit tagsChanged();
     
@@ -108,13 +106,11 @@ bool TagManager::removeTag(int tagId)
     query.addBindValue(tagId);
     
     if (!query.exec()) {
-        qWarning() << "删除标签失败:" << query.lastError().text();
+        emit tagError(QString("系统|标签|删除失败|%1").arg(query.lastError().text()));
         return false;
     }
     
-    // 更新缓存
     m_tagsCache.remove(tagId);
-    
     emit tagRemoved(tagId);
     return true;
 }
@@ -132,11 +128,10 @@ bool TagManager::updateTag(int tagId, const QString &name, const QColor &color, 
     query.addBindValue(tagId);
     
     if (!query.exec()) {
-        qWarning() << "更新标签失败:" << query.lastError().text();
+        emit tagError(QString("系统|标签|更新失败|%1").arg(query.lastError().text()));
         return false;
     }
     
-    // 更新缓存
     if (m_tagsCache.contains(tagId)) {
         auto tag = m_tagsCache[tagId];
         tag->setName(name);
@@ -150,7 +145,6 @@ bool TagManager::updateTag(int tagId, const QString &name, const QColor &color, 
     return true;
 }
 
-// 文件标签操作
 bool TagManager::addFileTag(const QString &fileId, int tagId)
 {
     QSqlDatabase db = DatabaseManager::instance().database();
@@ -161,7 +155,7 @@ bool TagManager::addFileTag(const QString &fileId, int tagId)
     query.addBindValue(tagId);
     
     if (!query.exec()) {
-        qWarning() << "添加文件标签失败:" << query.lastError().text();
+        emit tagError(QString("系统|标签|添加文件标签失败|%1").arg(query.lastError().text()));
         return false;
     }
     
@@ -179,11 +173,78 @@ bool TagManager::removeFileTag(const QString &fileId, int tagId)
     query.addBindValue(tagId);
     
     if (!query.exec()) {
-        qWarning() << "移除文件标签失败:" << query.lastError().text();
+        emit tagError(QString("系统|标签|移除文件标签失败|%1").arg(query.lastError().text()));
         return false;
     }
     
     emit fileTagsChanged(fileId);
+    return true;
+}
+
+bool TagManager::clearFileTags(const QString &fileId)
+{
+    QSqlDatabase db = DatabaseManager::instance().database();
+    QSqlQuery query(db);
+    
+    query.prepare("DELETE FROM file_tags WHERE file_id = ?");
+    query.addBindValue(fileId);
+    
+    if (!query.exec()) {
+        emit tagError(QString("系统|标签|清除文件标签失败|%1").arg(query.lastError().text()));
+        return false;
+    }
+    
+    emit fileTagsChanged(fileId);
+    return true;
+}
+
+bool TagManager::addTagToFileById(const QString &fileId, int tagId)
+{
+    if (fileId.isEmpty()) {
+        emit tagError("系统|标签|添加失败|文件ID为空");
+        return false;
+    }
+    
+    if (tagId <= 0) {
+        emit tagError(QString("系统|标签|添加失败|无效的标签ID: %1").arg(tagId));
+        return false;
+    }
+    
+    if (!m_tagsCache.contains(tagId)) {
+        emit tagError(QString("系统|标签|添加失败|标签不存在: %1").arg(tagId));
+        return false;
+    }
+    
+    return addFileTag(fileId, tagId);
+}
+
+bool TagManager::deleteTag(int tagId)
+{
+    if (tagId <= 0) {
+        emit tagError("系统|标签|删除失败|无效的标签ID");
+        return false;
+    }
+    
+    DatabaseManager& db = DatabaseManager::instance();
+    
+    if (!db.execute("DELETE FROM file_tags WHERE tag_id = ?", {tagId})) {
+        emit tagError("系统|标签|删除失败|无法删除标签关联");
+        return false;
+    }
+    
+    if (!db.execute("DELETE FROM tags WHERE id = ?", {tagId})) {
+        emit tagError("系统|标签|删除失败|无法删除标签");
+        return false;
+    }
+    
+    if (m_tagsCache.contains(tagId)) {
+        m_tagsCache.remove(tagId);
+    }
+    
+    emit tagDeleted(tagId);
+    emit tagRemoved(tagId);
+    emit tagsChanged();
+    
     return true;
 }
 
@@ -235,23 +296,6 @@ QStringList TagManager::getFilesByTag(int tagId)
     }
     
     return fileIds;
-}
-
-bool TagManager::clearFileTags(const QString &fileId)
-{
-    QSqlDatabase db = DatabaseManager::instance().database();
-    QSqlQuery query(db);
-    
-    query.prepare("DELETE FROM file_tags WHERE file_id = ?");
-    query.addBindValue(fileId);
-    
-    if (!query.exec()) {
-        qWarning() << "清除文件标签失败:" << query.lastError().text();
-        return false;
-    }
-    
-    emit fileTagsChanged(fileId);
-    return true;
 }
 
 QVector<Tag*> TagManager::getAllTags()
@@ -352,68 +396,6 @@ bool TagManager::isTagNameExists(const QString &name) const {
     return false;
 }
 
-bool TagManager::deleteTag(int tagId)
-{
-    if (tagId <= 0) {
-        qWarning() << "Invalid tag ID:" << tagId;
-        emit tagError("无效的标签ID");
-        return false;
-    }
-    
-    DatabaseManager& db = DatabaseManager::instance();
-    
-    // 首先删除标签与文件的关联
-    if (!db.execute("DELETE FROM file_tags WHERE tag_id = ?", {tagId})) {
-        qWarning() << "Failed to delete tag associations";
-        emit tagError("删除标签关联失败");
-        return false;
-    }
-    
-    // 然后删除标签本身
-    if (!db.execute("DELETE FROM tags WHERE id = ?", {tagId})) {
-        qWarning() << "Failed to delete tag";
-        emit tagError("删除标签失败");
-        return false;
-    }
-    
-    // 从缓存移除
-    if (m_tagsCache.contains(tagId)) {
-        m_tagsCache.remove(tagId);
-    }
-    
-    emit tagDeleted(tagId);
-    emit tagRemoved(tagId);  // 为了向后兼容
-    emit tagsChanged();      // 通知所有监听者标签列表已更新
-    
-    return true;
-}
-
-bool TagManager::addTagToFileById(const QString &fileId, int tagId)
-{
-    if (fileId.isEmpty()) {
-        qWarning() << "添加文件标签失败: fileId 为空";
-        return false;
-    }
-    
-    if (tagId <= 0) {
-        qWarning() << "添加文件标签失败: 无效的 tagId:" << tagId;
-        return false;
-    }
-    
-    // 检查标签是否存在
-    if (!m_tagsCache.contains(tagId)) {
-        qWarning() << "添加文件标签失败: 标签不存在, tagId:" << tagId;
-        return false;
-    }
-    
-    return addFileTag(fileId, tagId);
-}
-
-bool TagManager::removeTagFromFileById(const QString &fileId, int tagId)
-{
-    return removeFileTag(fileId, tagId);
-}
-
 QVector<Tag*> TagManager::getFileTagsById(const QString &fileId)
 {
     QVector<Tag*> tags;
@@ -451,5 +433,25 @@ QVector<QString> TagManager::getFilesByTagId(int tagId)
 {
     // 直接复用现有的getFilesByTag函数
     return getFilesByTag(tagId);
+}
+
+bool TagManager::removeTagFromFileById(const QString &fileId, int tagId)
+{
+    if (fileId.isEmpty()) {
+        emit tagError("系统|标签|移除失败|文件ID为空");
+        return false;
+    }
+    
+    if (tagId <= 0) {
+        emit tagError(QString("系统|标签|移除失败|无效的标签ID: %1").arg(tagId));
+        return false;
+    }
+    
+    if (!m_tagsCache.contains(tagId)) {
+        emit tagError(QString("系统|标签|移除失败|标签不存在: %1").arg(tagId));
+        return false;
+    }
+    
+    return removeFileTag(fileId, tagId);
 }
   
