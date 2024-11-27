@@ -12,6 +12,9 @@ Rectangle {
     required property var logDialog
     required property var settingsWindow
     
+    // 添加属性验证
+    property bool isValid: fileManager && fileList && fileList.model
+    
     color: style.backgroundColor
     border.color: style.borderColor
     border.width: 1
@@ -36,7 +39,7 @@ Rectangle {
                 opacity: 0.7
             }
             Label {
-                text: "总文件数: " + (fileList.model ? fileList.model.count : 0)
+                text: "总文件数: " + (isValid ? fileList.model.count : 0)
                 font {
                     family: root.style ? root.style.fontFamily : "Microsoft YaHei"
                     pixelSize: root.style ? root.style.defaultFontSize - 1 : 11
@@ -67,6 +70,7 @@ Rectangle {
                 opacity: 0.7
             }
             Label {
+                id: lastMessageLabel
                 Layout.fillWidth: true
                 text: fileManager?.logger?.lastMessage ?? "就绪"
                 elide: Text.ElideRight
@@ -74,46 +78,70 @@ Rectangle {
                     family: root.style ? root.style.fontFamily : "Microsoft YaHei"
                     pixelSize: root.style ? root.style.defaultFontSize - 1 : 11
                 }
-                color: root.style ? root.style.secondaryTextColor : "#666666"
+                color: logMouseArea.containsMouse ? 
+                       (root.style ? root.style.accentColor : "#0078D4") : 
+                       (root.style ? root.style.secondaryTextColor : "#666666")
+
+                MouseArea {
+                    id: logMouseArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    
+                    onClicked: {
+                        if (root.settingsWindow) {
+                            root.settingsWindow.currentIndex = 5  // 切换到日志设置页面
+                            root.settingsWindow.show()
+                        }
+                    }
+                }
             }
         }
 
-        // 查看日志按钮
-        Button {
-            id: viewLogButton
-            icon.source: "qrc:/resources/images/logger.svg"
-            icon.width: 16
-            icon.height: 16
-            padding: 6
-            implicitWidth: 28
-            implicitHeight: 28
+        // 分隔符
+        Rectangle {
+            width: 1
+            height: 16
+            color: root.style ? Qt.alpha(root.style.borderColor, 0.8) : "#E5E5E5"
             Layout.alignment: Qt.AlignVCenter
-            
-            ToolTip {
-                visible: parent.hovered
-                text: "查看日志"
-                delay: 500
+        }
+
+        // 当前目录信息
+        RowLayout {
+            spacing: 6
+            Layout.alignment: Qt.AlignVCenter
+            Image {
+                source: "qrc:/resources/images/folder.svg"
+                sourceSize.width: 14
+                sourceSize.height: 14
+                width: 14
+                height: 14
+                opacity: 0.7
+            }
+            Label {
+                id: pathLabel
+                text: "当前目录: " + (isValid && fileManager.currentPath ? fileManager.currentPath : "未选择")
+                elide: Text.ElideMiddle
+                Layout.preferredWidth: Math.min(300, implicitWidth)  // 限制最大宽度
                 font {
                     family: root.style ? root.style.fontFamily : "Microsoft YaHei"
                     pixelSize: root.style ? root.style.defaultFontSize - 1 : 11
                 }
-            }
-            
-            background: Rectangle {
-                color: viewLogButton.down ? Qt.alpha(root.style ? root.style.accentColor : "#0078D4", 0.15) : 
-                       viewLogButton.hovered ? Qt.alpha(root.style ? root.style.accentColor : "#0078D4", 0.1) : 
-                       "transparent"
-                radius: 4
-                border.color: viewLogButton.down || viewLogButton.hovered ? 
-                            Qt.alpha(root.style ? root.style.accentColor : "#0078D4", 0.3) : 
-                            "transparent"
-                border.width: 1
-            }
-            
-            onClicked: {
-                if (root.settingsWindow) {
-                    root.settingsWindow.currentIndex = 5  // 切换到日志设置页面
-                    root.settingsWindow.show()
+                color: pathMouseArea.containsMouse ? 
+                       (root.style ? root.style.accentColor : "#0078D4") : 
+                       (root.style ? root.style.secondaryTextColor : "#666666")
+
+                MouseArea {
+                    id: pathMouseArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    
+                    onClicked: {
+                        if (isValid && fileManager.currentPath) {
+                            Qt.openUrlExternally("file:///" + fileManager.currentPath)
+                        }
+                    }
                 }
             }
         }

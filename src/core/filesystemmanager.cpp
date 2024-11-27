@@ -72,14 +72,15 @@ void FileSystemManager::setWatchPath(const QString &path)
     m_logger->info(QString("设置监控路径: %1").arg(path));
     
     if (m_currentPath != path) {
+        m_currentPath = path;
+        emit currentPathChanged(path);
+        
         if (!m_currentPath.isEmpty()) {
             // 移除旧路径的监控
             m_fileWatcher->removePaths(m_fileWatcher->files());
             m_fileWatcher->removePaths(m_fileWatcher->directories());
             m_logger->info(QString("停止监控路径: %1").arg(m_currentPath));
         }
-        
-        m_currentPath = path;
         
         if (!path.isEmpty()) {
             // 添加新路径的监控

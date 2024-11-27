@@ -34,7 +34,7 @@ public:
     void setCurrentPath(const QString &path) { 
         if (m_currentPath != path) {
             m_currentPath = path;
-            emit currentPathChanged();
+            emit currentPathChanged(path);
         }
     }
     QStringList logMessages() const { return m_messages; }
@@ -61,7 +61,7 @@ signals:
     void fileChanged(const QString &path);
     void directoryChanged(const QString &path);
     void fileListChanged();
-    void currentPathChanged();
+    void currentPathChanged(const QString &path);
     void logMessagesChanged();
     void error(const QString &errorMessage);
     void isScanningChanged();
