@@ -10,17 +10,17 @@ Dialog {
     height: 500
     modal: true
     
+    // 添加标签更新信号
+    signal tagsUpdated(string fileId)
+    
     // 在对话框打开时居中显示
     onOpened: {
         centerDialog()
-        console.log("对话框打开 - fileId:", fileId, "filePath:", filePath)
         if (!fileId) {
-            console.error("错误：未设置 fileId")
             close()
             return
         }
         selectedTags = TagManager.getFileTagsById(fileId)
-        console.log("当前已选标签:", JSON.stringify(selectedTags))
     }
     
     // 窗口大小改变时保持居中
@@ -186,7 +186,6 @@ Dialog {
                                 cursorShape: Qt.PointingHandCursor
                                 
                                 onClicked: {
-                                    console.log("添加标签 - fileId:", fileId, "tagId:", modelData.id)
                                     let success = false
                                     if (tagItem.selected) {
                                         success = TagManager.removeTagFromFileById(fileId, modelData.id)
@@ -201,6 +200,8 @@ Dialog {
                                     }
                                     // 更新选中状态
                                     root.selectedTags = TagManager.getFileTagsById(fileId)
+                                    // 发送标签更新信号
+                                    root.tagsUpdated(fileId)
                                 }
                             }
                         }

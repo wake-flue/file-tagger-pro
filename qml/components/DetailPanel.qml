@@ -13,7 +13,108 @@ Rectangle {
     required property var style
     required property var selectedItem
     required property var settings
-
+    
+    // 添加标签相关属性
+    property var fileTags: []
+    property string currentFileId: ""
+    
+    // 添加公开的更新函数
+    function refreshTags() {
+        if (currentFileId) {
+            updateTags()
+        }
+    }
+    
+    // 添加标签对话框更新处理
+    Connections {
+        target: fileTagDialog
+        
+        function onTagsUpdated(updatedFileId) {
+            if (updatedFileId === currentFileId) {
+                updateTags()
+            }
+        }
+    }
+    
+    // 监听组件创建完成
+    Component.onCompleted: {
+        console.debug("[DetailPanel] Component completed")
+        console.debug("[DetailPanel] Initial selectedItem:", selectedItem)
+        console.debug("[DetailPanel] Initial currentFileId:", currentFileId)
+        updateTags()
+    }
+    
+    // 监听组件销毁
+    Component.onDestruction: {
+        console.debug("[DetailPanel] Component being destroyed")
+    }
+    
+    // 监听 selectedItem 变化
+    onSelectedItemChanged: {
+        if (selectedItem) {
+            const props = {
+                fileId: selectedItem.fileId,
+                fileName: selectedItem.fileName,
+                filePath: selectedItem.filePath,
+                fileType: selectedItem.fileType,
+                displaySize: selectedItem.displaySize,
+                displayDate: selectedItem.displayDate
+            }
+            
+            if (selectedItem.fileId) {
+                currentFileId = String(selectedItem.fileId)
+            } else {
+                currentFileId = ""
+                fileTags = []
+            }
+        } else {
+            currentFileId = ""
+            fileTags = []
+        }
+    }
+    
+    // 监听 currentFileId 变化
+    onCurrentFileIdChanged: {
+        if (currentFileId) {
+            updateTags()
+        }
+    }
+    
+    // 更新标签的函数
+    function updateTags() {
+        if (!selectedItem || !currentFileId) {
+            fileTags = []
+            return
+        }
+        
+        try {
+            const tags = TagManager.getFileTagsById(currentFileId)
+            
+            if (!tags) {
+                fileTags = []
+                return
+            }
+            
+            // 确保 tags 是数组
+            if (!Array.isArray(tags)) {
+                fileTags = []
+                return
+            }
+            
+            // 转换标签数据格式
+            const processedTags = tags.map(tag => ({
+                id: tag.id,
+                name: tag.name,
+                color: tag.color,
+                description: tag.description
+            }))
+            
+            fileTags = processedTags
+        } catch (error) {
+            fileTags = []
+        }
+    }
+    
     // 计算预览区域的高度
     readonly property real previewHeight: Math.min(width * 0.75, height * 0.6)
     
@@ -266,6 +367,99 @@ Rectangle {
                                 color: root.style.textColor
                                 Layout.fillWidth: true
                                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                            }
+                        }
+                    }
+
+                    // 标签（占据两列）
+                    Rectangle {
+                        Layout.columnSpan: 2
+                        Layout.fillWidth: true
+                        implicitHeight: tagsColumn.implicitHeight + 24
+                        color: "#f8f9fa"
+                        radius: 8
+                        visible: true
+
+                        ColumnLayout {
+                            id: tagsColumn
+                            anchors {
+                                left: parent.left
+                                right: parent.right
+                                verticalCenter: parent.verticalCenter
+                                margins: 12
+                            }
+                            spacing: 6
+
+                            RowLayout {
+                                spacing: 8
+                                Layout.fillWidth: true
+                                
+                                Image {
+                                    source: "qrc:/resources/images/tag.svg"
+                                    sourceSize.width: 14
+                                    sourceSize.height: 14
+                                    opacity: 0.6
+                                }
+                                
+                                Label {
+                                    text: "标签"
+                                    font {
+                                        family: root.style.fontFamily
+                                        pixelSize: root.style.defaultFontSize - 1
+                                    }
+                                    color: root.style.secondaryTextColor
+                                }
+                                
+                                Item { Layout.fillWidth: true }
+                                
+                                Label {
+                                    text: root.fileTags.length > 0 ? root.fileTags.length + "个标签" : ""
+                                    font {
+                                        family: root.style.fontFamily
+                                        pixelSize: root.style.defaultFontSize - 1
+                                    }
+                                    color: root.style.secondaryTextColor
+                                    visible: root.fileTags.length > 0
+                                }
+                            }
+
+                            Flow {
+                                Layout.fillWidth: true
+                                spacing: 8
+                                visible: true
+
+                                Repeater {
+                                    model: root.fileTags
+                                    delegate: Rectangle {
+                                        width: tagText.width + 16
+                                        height: 24
+                                        radius: 12
+                                        color: modelData.color
+                                        opacity: 0.9
+
+                                        Label {
+                                            id: tagText
+                                            anchors.centerIn: parent
+                                            text: modelData.name || ""
+                                            color: "#ffffff"
+                                            font {
+                                                family: root.style.fontFamily
+                                                pixelSize: root.style.defaultFontSize - 1
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // 没有标签时显示的提示文本
+                                Label {
+                                    visible: root.fileTags.length === 0
+                                    text: "暂无标签"
+                                    font {
+                                        family: root.style.fontFamily
+                                        pixelSize: root.style.defaultFontSize
+                                    }
+                                    color: root.style.secondaryTextColor
+                                }
                             }
                         }
                     }

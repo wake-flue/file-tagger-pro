@@ -31,17 +31,13 @@ void TagManager::loadTagsCache()
     QSqlDatabase db = DatabaseManager::instance().database();
     QSqlQuery query(db);
     
-    qDebug() << "数据库路径:" << db.databaseName();
-    
     if (query.exec("SELECT id, name, color, description, created_at, updated_at FROM tags")) {
-        qDebug() << "当前标签列表:";
         while (query.next()) {
             int id = query.value(0).toInt();
             QString name = query.value(1).toString();
             QString color = query.value(2).toString();
             QString desc = query.value(3).toString();
-            qDebug() << "  标签:" << id << name << color << desc;
-            
+
             auto tag = QSharedPointer<Tag>::create();
             tag->setId(query.value(0).toInt());
             tag->setName(query.value(1).toString());
@@ -53,7 +49,7 @@ void TagManager::loadTagsCache()
             m_tagsCache.insert(tag->id(), tag);
         }
     } else {
-        qDebug() << "查询标签失败:" << query.lastError().text();
+        qWarning() << "查询标签失败:" << query.lastError().text();
     }
     
     m_cacheInitialized = true;
@@ -385,7 +381,6 @@ bool TagManager::deleteTag(int tagId)
         m_tagsCache.remove(tagId);
     }
     
-    qDebug() << "标签已删除:" << tagId;
     emit tagDeleted(tagId);
     emit tagRemoved(tagId);  // 为了向后兼容
     emit tagsChanged();      // 通知所有监听者标签列表已更新
@@ -411,7 +406,6 @@ bool TagManager::addTagToFileById(const QString &fileId, int tagId)
         return false;
     }
     
-    qDebug() << "正在添加文件标签 - fileId:" << fileId << "tagId:" << tagId;
     return addFileTag(fileId, tagId);
 }
 
@@ -426,8 +420,11 @@ QVector<Tag*> TagManager::getFileTagsById(const QString &fileId)
     QSqlDatabase db = DatabaseManager::instance().database();
     QSqlQuery query(db);
     
+    // 确保标签缓存已加载
+    loadTagsCache();
+    
     query.prepare(
-        "SELECT t.* FROM tags t "
+        "SELECT t.id FROM tags t "
         "INNER JOIN file_tags ft ON t.id = ft.tag_id "
         "WHERE ft.file_id = ?"
     );
@@ -435,13 +432,16 @@ QVector<Tag*> TagManager::getFileTagsById(const QString &fileId)
     
     if (query.exec()) {
         while (query.next()) {
-            Tag* tag = new Tag(this);
-            tag->setId(query.value("id").toInt());
-            tag->setName(query.value("name").toString());
-            tag->setColor(query.value("color").toString());
-            tag->setDescription(query.value("description").toString());
-            tags.append(tag);
+            int tagId = query.value("id").toInt();
+            
+            // 从缓存中获取标签对象
+            if (m_tagsCache.contains(tagId)) {
+                Tag* tag = m_tagsCache[tagId].data();
+                tags.append(tag);
+            }
         }
+    } else {
+        qWarning() << "Failed to execute query:" << query.lastError().text();
     }
     
     return tags;

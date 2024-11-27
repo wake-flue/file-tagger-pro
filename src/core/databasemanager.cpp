@@ -1,14 +1,25 @@
 #include "databasemanager.h"
-#include <QStandardPaths>
-#include <QDir>
-#include <QSqlQuery>
-#include <QSqlError>
-#include <QDebug>
+#include <QtCore/QStandardPaths>
+#include <QtCore/QDir>
+#include <QtCore/QDebug>
+#include <QtSql/QSqlQuery>
+#include <QtSql/QSqlError>
+#include <QtSql/QSqlDatabase>
+#include "../utils/logger.h"
 
 DatabaseManager::DatabaseManager(QObject *parent)
     : QObject(parent)
     , m_initialized(false)
+    , m_logger(new Logger(this))
 {
+    // 设置日志文件路径
+    QString logPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/logs";
+    QDir logDir(logPath);
+    if (!logDir.exists()) {
+        logDir.mkpath(".");
+    }
+    m_logger->setLogFilePath(logPath + "/database.log");
+    m_logger->setLogLevel(Logger::Info);  // 设置日志级别
 }
 
 DatabaseManager& DatabaseManager::instance()
@@ -35,7 +46,7 @@ bool DatabaseManager::initialize()
     m_db.setDatabaseName(dataPath + "/filetags.db");
 
     if (!m_db.open()) {
-        qWarning() << "无法打开数据库:" << m_db.lastError().text();
+        m_logger->error(QString("[DatabaseManager] 无法打开数据库: %1").arg(m_db.lastError().text()));
         return false;
     }
 
@@ -45,7 +56,7 @@ bool DatabaseManager::initialize()
 
     // 创建表结构
     if (!createTables()) {
-        qWarning() << "创建数据库表失败";
+        m_logger->error("[DatabaseManager] 创建数据库表失败");
         return false;
     }
 
@@ -56,13 +67,16 @@ bool DatabaseManager::initialize()
     // 检查并执行数据库升级
     int dbVersion = currentVersion();
     if (dbVersion < CURRENT_DB_VERSION) {
+        m_logger->info(QString("[DatabaseManager] 开始数据库升级: 从版本 %1 升级到 %2").arg(dbVersion).arg(CURRENT_DB_VERSION));
         if (!upgradeDatabase(dbVersion, CURRENT_DB_VERSION)) {
-            qWarning() << "数据库升级失败";
+            m_logger->error("[DatabaseManager] 数据库升级失败");
             return false;
         }
+        m_logger->info("[DatabaseManager] 数据库升级完成");
     }
 
     m_initialized = true;
+    m_logger->info("[DatabaseManager] 数据库初始化完成");
     return true;
 }
 
@@ -76,19 +90,24 @@ bool DatabaseManager::createTables()
 bool DatabaseManager::createSettingsTable()
 {
     QSqlQuery query;
-    return query.exec(
+    bool success = query.exec(
         "CREATE TABLE IF NOT EXISTS settings ("
         "    key TEXT PRIMARY KEY,"
         "    value TEXT,"
         "    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
         ")"
     );
+    
+    if (!success) {
+        m_logger->error(QString("[DatabaseManager] 创建settings表失败: %1").arg(query.lastError().text()));
+    }
+    return success;
 }
 
 bool DatabaseManager::createTagsTable()
 {
     QSqlQuery query;
-    return query.exec(
+    bool success = query.exec(
         "CREATE TABLE IF NOT EXISTS tags ("
         "    id INTEGER PRIMARY KEY AUTOINCREMENT,"
         "    name TEXT NOT NULL UNIQUE,"
@@ -98,20 +117,30 @@ bool DatabaseManager::createTagsTable()
         "    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
         ")"
     );
+    
+    if (!success) {
+        m_logger->error(QString("[DatabaseManager] 创建tags表失败: %1").arg(query.lastError().text()));
+    }
+    return success;
 }
 
 bool DatabaseManager::createFileTagsTable()
 {
     QSqlQuery query;
-    return query.exec(
+    bool success = query.exec(
         "CREATE TABLE IF NOT EXISTS file_tags ("
-        "    file_id TEXT NOT NULL,"  // 文件的唯一标识符
+        "    file_id TEXT NOT NULL,"
         "    tag_id INTEGER NOT NULL,"
         "    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
         "    PRIMARY KEY (file_id, tag_id),"
         "    FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE"
         ")"
     );
+    
+    if (!success) {
+        m_logger->error(QString("[DatabaseManager] 创建file_tags表失败: %1").arg(query.lastError().text()));
+    }
+    return success;
 }
 
 int DatabaseManager::currentVersion() const
@@ -129,7 +158,9 @@ bool DatabaseManager::upgradeDatabase(int fromVersion, int toVersion)
     m_db.transaction();
 
     for (int version = fromVersion + 1; version <= toVersion; ++version) {
+        m_logger->info(QString("[DatabaseManager] 正在应用数据库迁移: 版本 %1").arg(version));
         if (!applyMigration(version)) {
+            m_logger->error(QString("[DatabaseManager] 数据库迁移失败: 版本 %1").arg(version));
             m_db.rollback();
             return false;
         }
@@ -141,6 +172,7 @@ bool DatabaseManager::upgradeDatabase(int fromVersion, int toVersion)
     query.bindValue(":version", toVersion);
     
     if (!query.exec()) {
+        m_logger->error(QString("[DatabaseManager] 更新数据库版本失败: %1").arg(query.lastError().text()));
         m_db.rollback();
         return false;
     }
@@ -164,37 +196,43 @@ bool DatabaseManager::applyMigration(int version)
                           "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
                           "PRIMARY KEY (file_id, tag_id),"
                           "FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE)")) {
+                m_logger->error(QString("[DatabaseManager] 创建临时表失败: %1").arg(query.lastError().text()));
                 return false;
             }
             
             // 复制数据
             if (!query.exec("INSERT INTO file_tags_temp (file_id, tag_id, created_at) "
                           "SELECT file_id, tag_id, created_at FROM file_tags")) {
+                m_logger->error(QString("[DatabaseManager] 复制数据失败: %1").arg(query.lastError().text()));
                 return false;
             }
             
             // 删除旧表
             if (!query.exec("DROP TABLE file_tags")) {
+                m_logger->error(QString("[DatabaseManager] 删除旧表失败: %1").arg(query.lastError().text()));
                 return false;
             }
             
             // 重命名新表
             if (!query.exec("ALTER TABLE file_tags_temp RENAME TO file_tags")) {
+                m_logger->error(QString("[DatabaseManager] 重命名表失败: %1").arg(query.lastError().text()));
                 return false;
             }
             
             // 重新创建索引
             if (!query.exec("CREATE INDEX idx_file_tags_file_id ON file_tags(file_id)")) {
+                m_logger->error(QString("[DatabaseManager] 创建file_id索引失败: %1").arg(query.lastError().text()));
                 return false;
             }
             if (!query.exec("CREATE INDEX idx_file_tags_tag_id ON file_tags(tag_id)")) {
+                m_logger->error(QString("[DatabaseManager] 创建tag_id索引失败: %1").arg(query.lastError().text()));
                 return false;
             }
             
             return true;
             
         default:
-            qWarning() << "未知的数据库版本:" << version;
+            m_logger->error(QString("[DatabaseManager] 未知的数据库版本: %1").arg(version));
             return false;
     }
 }
@@ -204,8 +242,7 @@ bool DatabaseManager::execute(const QString& query, const QVariantList& params)
     QSqlQuery sqlQuery(m_db);
     
     if (!sqlQuery.prepare(query)) {
-        qWarning() << "Failed to prepare query:" << query;
-        qWarning() << "Error:" << sqlQuery.lastError().text();
+        m_logger->error(QString("[DatabaseManager] SQL查询准备失败: %1\n查询: %2").arg(sqlQuery.lastError().text(), query));
         return false;
     }
     
@@ -215,8 +252,7 @@ bool DatabaseManager::execute(const QString& query, const QVariantList& params)
     }
     
     if (!sqlQuery.exec()) {
-        qWarning() << "Failed to execute query:" << query;
-        qWarning() << "Error:" << sqlQuery.lastError().text();
+        m_logger->error(QString("[DatabaseManager] SQL查询执行失败: %1\n查询: %2").arg(sqlQuery.lastError().text(), query));
         return false;
     }
     
@@ -227,5 +263,6 @@ DatabaseManager::~DatabaseManager()
 {
     if (m_db.isOpen()) {
         m_db.close();
+        m_logger->info("[DatabaseManager] 数据库连接已关闭");
     }
 } 

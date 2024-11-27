@@ -209,6 +209,7 @@ Item {
                 onClicked: function(mouse) {
                     gridView.currentIndex = index
                     root.selectedItem = {
+                        fileId: fileId,
                         fileName: fileName,
                         fileType: fileType,
                         filePath: filePath,
@@ -221,6 +222,7 @@ Item {
                 onPressAndHold: function(mouse) {
                     gridView.currentIndex = index
                     root.selectedItem = {
+                        fileId: fileId,
                         fileName: fileName,
                         fileType: fileType,
                         filePath: filePath,
@@ -236,6 +238,7 @@ Item {
                     onTapped: {
                         gridView.currentIndex = index
                         root.selectedItem = {
+                            fileId: fileId,
                             fileName: fileName,
                             fileType: fileType,
                             filePath: filePath,

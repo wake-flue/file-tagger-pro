@@ -1,9 +1,10 @@
 #ifndef DATABASEMANAGER_H
 #define DATABASEMANAGER_H
 
-#include <QObject>
-#include <QSqlDatabase>
-#include <QString>
+#include <QtCore/QObject>
+#include <QtSql/QSqlDatabase>
+#include <QtCore/QString>
+#include "../utils/logger.h"
 
 class DatabaseManager : public QObject
 {
@@ -36,13 +37,13 @@ private:
     bool createTagsTable();
     bool createFileTagsTable();
     bool createSettingsTable();
-    bool createFileIdentifiersTable();
     
     // 数据库升级相关
     bool applyMigration(int version);
     
     QSqlDatabase m_db;
     bool m_initialized;
+    Logger* m_logger;
     static const int CURRENT_DB_VERSION = 1;
 };
 
