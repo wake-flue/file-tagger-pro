@@ -311,11 +311,16 @@ ColumnLayout {
         property int tagId: -1
         property string tagName: ""
         
-        x: (parent.width - width) / 2
-        y: (parent.height - height) / 2
+        // 设置固定宽度和高度
+        width: 400
+        height: 200
+        
+        // 使用anchors进行居中定位
+        anchors.centerIn: parent
         
         contentItem: ColumnLayout {
             spacing: 16
+            width: parent.width
             
             Label {
                 text: qsTr("确定要删除标签吗？")

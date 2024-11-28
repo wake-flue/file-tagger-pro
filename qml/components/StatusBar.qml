@@ -9,7 +9,7 @@ Rectangle {
     // 必要的属性声明
     required property var fileManager
     required property var fileList
-    required property var logDialog
+    property var logDialog: null  // 改为可选属性
     required property var settingsWindow
     
     // 添加属性验证
@@ -87,9 +87,8 @@ Rectangle {
                     cursorShape: Qt.PointingHandCursor
                     
                     onDoubleClicked: {
-                        if (root.settingsWindow) {
-                            root.settingsWindow.currentIndex = 5  // 切换到日志设置页面
-                            root.settingsWindow.show()
+                        if (root.logDialog) {
+                            root.showLogDialog()
                         }
                     }
                 }
@@ -140,6 +139,13 @@ Rectangle {
                     }
                 }
             }
+        }
+    }
+
+    // 添加显示日志对话框的函数
+    function showLogDialog() {
+        if (logDialog) {
+            logDialog.open()
         }
     }
 } 
