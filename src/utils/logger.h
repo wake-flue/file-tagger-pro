@@ -56,21 +56,17 @@ public:
     Q_INVOKABLE void fatal(const QString &message);
     
     void clear();
-    QStringList getFilteredMessages(int level) const;
-    
+
     // 日志文件读取方法
-    Q_INVOKABLE QStringList readLogFile(int maxLines = 1000) const;
+    Q_INVOKABLE
     Q_INVOKABLE QStringList readLogFileFiltered(int level, int maxLines = 1000) const;
-    
-    Q_INVOKABLE void refreshFileMessages();  // 添加这个公共方法
     
     QString searchPattern() const { return m_searchPattern; }
     void setSearchPattern(const QString &pattern);
     QVariantMap logStats() const;
     
     Q_INVOKABLE QStringList searchLogs(const QString &pattern, int maxResults = 1000) const;
-    Q_INVOKABLE QVariantMap getLogStatsByTimeRange(const QDateTime &start, const QDateTime &end) const;
-    
+
     QString lastMessage() const { return m_lastMessage; }
     
     // 日志路径管理

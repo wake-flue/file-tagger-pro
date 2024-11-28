@@ -4,12 +4,12 @@ import QtQuick.Layouts
 import QtQuick.Effects
 import FileManager 1.0
 import "." as Components
+import ".." 1.0
 
 Item {
     id: root
     
     // 必要的属性声明
-    required property QtObject style
     required property QtObject settings
     required property QtObject fileManager
     
@@ -27,21 +27,19 @@ Item {
     
     ColumnLayout {
         anchors.fill: parent
-        spacing: 8
+        spacing: Style.spacingSmall
 
         // 主内容区域
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            color: style.backgroundColor
-            border.color: "transparent"
-            border.width: 0
-            radius: 0
+            color: Style.backgroundColor
+            border.width: Style.noneBorderWidth
 
             // 使用 Item 替代 Row
             Item {
                 anchors.fill: parent
-                anchors.margins: 4
+                anchors.margins: Style.spacingSmall
 
                 // 左侧文件表
                 Components.FileList {
@@ -53,7 +51,6 @@ Item {
                     
                     model: fileManager.fileModel
                     fileManager: root.fileManager
-                    style: root.style
                     
                     onSelectedItemChanged: {
                         root.selectedItem = selectedItem
@@ -88,7 +85,6 @@ Item {
                     visible: root.showDetailPanel
                     clip: true
                     
-                    style: root.style
                     settings: root.settings
                     selectedItem: root.selectedItem
                     isVisible: root.showDetailPanel
@@ -110,8 +106,8 @@ Item {
                     width: 32
                     height: 32
                     radius: width / 2
-                    color: rightTriggerArea.containsMouse ? style.hoverColor : style.backgroundColor
-                    border.color: style.borderColor
+                    color: rightTriggerArea.containsMouse ? Style.hoverColor : Style.backgroundColor
+                    border.color: Style.borderColor
                     border.width: 1
                     z: 1
                     

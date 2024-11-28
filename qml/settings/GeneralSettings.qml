@@ -9,7 +9,6 @@ ColumnLayout {
     spacing: settingsStyle.defaultSpacing
     
     required property QtObject settings
-    required property QtObject style
     required property var fileManager
     
     // 使用统一的样式对象
@@ -22,7 +21,6 @@ ColumnLayout {
         repeat: false
         onTriggered: {
             if (settings) {
-                console.log("保存新的图标大小:", iconSizeSlider.value)
                 settings.iconSize = iconSizeSlider.value
                 settings.setValue("iconSize", iconSizeSlider.value)
                 if (fileManager && fileManager.fileModel) {
@@ -40,20 +38,20 @@ ColumnLayout {
         Label {
             text: qsTr("常规设置")
             font {
-                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                family: settingsStyle.defaultFontFamily
                 pixelSize: settingsStyle.titleFontSize
                 bold: true
             }
-            color: style?.textColor ?? settingsStyle.defaultTextColor
+            color: settingsStyle.defaultTextColor
         }
         
         Label {
             text: qsTr("调整应用程序的基本显示和行为")
             font {
-                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                family: settingsStyle.defaultFontFamily
                 pixelSize: settingsStyle.descriptionFontSize
             }
-            color: style?.secondaryTextColor ?? settingsStyle.defaultSecondaryTextColor
+            color: settingsStyle.defaultSecondaryTextColor
             opacity: settingsStyle.defaultOpacity
             Layout.fillWidth: true
             wrapMode: Text.Wrap
@@ -69,11 +67,11 @@ ColumnLayout {
         Label {
             text: qsTr("大图标视图设置")
             font {
-                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                family: settingsStyle.defaultFontFamily
                 pixelSize: settingsStyle.defaultFontSize
                 bold: true
             }
-            color: style?.textColor ?? settingsStyle.defaultTextColor
+            color: settingsStyle.defaultTextColor
         }
         
         // 图标大小滑块
@@ -83,9 +81,9 @@ ColumnLayout {
             
             Label {
                 text: qsTr("图标大小")
-                font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                font.family: settingsStyle.defaultFontFamily
                 font.pixelSize: settingsStyle.defaultFontSize
-                color: style?.textColor ?? settingsStyle.defaultTextColor
+                color: settingsStyle.defaultTextColor
             }
             
             Slider {
@@ -139,7 +137,7 @@ ColumnLayout {
             Label {
                 id: restartHint
                 text: qsTr("修改图标大小需要重启应用后生效")
-                font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                font.family: settingsStyle.defaultFontFamily
                 font.pixelSize: settingsStyle.descriptionFontSize
                 color: "#FF6B6B"
                 opacity: 0
@@ -152,9 +150,9 @@ ColumnLayout {
             // 显示当前值
             Label {
                 text: Math.round(iconSizeSlider.value) + " px"
-                font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                font.family: settingsStyle.defaultFontFamily
                 font.pixelSize: settingsStyle.defaultFontSize
-                color: style?.secondaryTextColor ?? settingsStyle.defaultSecondaryTextColor
+                color: settingsStyle.defaultSecondaryTextColor
                 Layout.minimumWidth: 50
             }
         }
@@ -179,9 +177,9 @@ ColumnLayout {
             
             contentItem: Text {
                 text: parent.text
-                font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                font.family: settingsStyle.defaultFontFamily
                 font.pixelSize: settingsStyle.defaultFontSize
-                color: style?.textColor ?? settingsStyle.defaultTextColor
+                color: settingsStyle.defaultTextColor
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }

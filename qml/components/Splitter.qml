@@ -1,4 +1,5 @@
 import QtQuick
+import ".." 1.0
 
 Rectangle {
     id: splitter
@@ -9,10 +10,11 @@ Rectangle {
     property bool dragging: mouseArea.drag.active
     property bool panelVisible: false  // 添加面板可见性属性
     
-    width: 4
+    width: Style.borderWidth * 4
     height: parent.height
     visible: panelVisible  // 根据面板可见性控制分割线显示
     opacity: 0
+    color: Style.borderColor
     
     MouseArea {
         id: mouseArea

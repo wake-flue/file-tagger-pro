@@ -1,12 +1,12 @@
 import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
+import ".." 1.0
 
 Rectangle {
     id: root
     
     // 必要的属性声明
-    required property QtObject style
     required property var fileManager
     required property var fileList
     required property var logDialog
@@ -15,8 +15,8 @@ Rectangle {
     // 添加属性验证
     property bool isValid: fileManager && fileList && fileList.model
     
-    color: style.backgroundColor
-    border.color: style.borderColor
+    color: Style.backgroundColor
+    border.color: Style.borderColor
     border.width: 1
     height: 32
 
@@ -41,10 +41,10 @@ Rectangle {
             Label {
                 text: "总文件数: " + (isValid ? fileList.model.count : 0)
                 font {
-                    family: root.style ? root.style.fontFamily : "Microsoft YaHei"
-                    pixelSize: root.style ? root.style.defaultFontSize - 1 : 11
+                    family: Style.fontFamily
+                    pixelSize: Style.fontSizeNormal - 1
                 }
-                color: root.style ? root.style.secondaryTextColor : "#666666"
+                color: Style.lightTextColor
             }
         }
 
@@ -52,7 +52,7 @@ Rectangle {
         Rectangle {
             width: 1
             height: 16
-            color: root.style ? Qt.alpha(root.style.borderColor, 0.8) : "#E5E5E5"
+            color: Qt.alpha(Style.borderColor, 0.8)
             Layout.alignment: Qt.AlignVCenter
         }
 
@@ -75,12 +75,10 @@ Rectangle {
                 text: fileManager?.logger?.lastMessage ?? "就绪"
                 elide: Text.ElideRight
                 font {
-                    family: root.style ? root.style.fontFamily : "Microsoft YaHei"
-                    pixelSize: root.style ? root.style.defaultFontSize - 1 : 11
+                    family: Style.fontFamily
+                    pixelSize: Style.fontSizeNormal - 1
                 }
-                color: logMouseArea.containsMouse ? 
-                       (root.style ? root.style.accentColor : "#0078D4") : 
-                       (root.style ? root.style.secondaryTextColor : "#666666")
+                color: logMouseArea.containsMouse ? Style.accentColor : Style.lightTextColor
 
                 MouseArea {
                     id: logMouseArea
@@ -102,7 +100,7 @@ Rectangle {
         Rectangle {
             width: 1
             height: 16
-            color: root.style ? Qt.alpha(root.style.borderColor, 0.8) : "#E5E5E5"
+            color: Qt.alpha(Style.borderColor, 0.8)
             Layout.alignment: Qt.AlignVCenter
         }
 
@@ -124,12 +122,10 @@ Rectangle {
                 elide: Text.ElideMiddle
                 Layout.preferredWidth: Math.min(300, implicitWidth)  // 限制最大宽度
                 font {
-                    family: root.style ? root.style.fontFamily : "Microsoft YaHei"
-                    pixelSize: root.style ? root.style.defaultFontSize - 1 : 11
+                    family: Style.fontFamily
+                    pixelSize: Style.fontSizeNormal - 1
                 }
-                color: pathMouseArea.containsMouse ? 
-                       (root.style ? root.style.accentColor : "#0078D4") : 
-                       (root.style ? root.style.secondaryTextColor : "#666666")
+                color: pathMouseArea.containsMouse ? Style.accentColor : Style.lightTextColor
 
                 MouseArea {
                     id: pathMouseArea

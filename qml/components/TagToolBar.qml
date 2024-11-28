@@ -2,17 +2,17 @@ import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import FileManager 1.0
+import ".." 1.0
 
 Rectangle {
     id: root
-    color: style.backgroundColor
-    border.color: style.borderColor
+    color: Style.backgroundColor
+    border.color: Style.borderColor
     border.width: 1
     radius: 4
     height: 36
 
     // 必要的属性声明
-    required property QtObject style
     required property QtObject settings
     required property QtObject fileManager
     required property QtObject settingsWindow
@@ -116,8 +116,8 @@ Rectangle {
                                 Label {
                                     id: tagLabel
                                     text: tagCheckBox.text
-                                    font.family: root.style.fontFamily
-                                    font.pixelSize: root.style.defaultFontSize - 1
+                                    font.family: Style.fontFamily
+                                    font.pixelSize: Style.fontSizeNormal - 1
                                     color: "white"
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
@@ -175,10 +175,10 @@ Rectangle {
                 background: Rectangle {
                     implicitWidth: 32
                     implicitHeight: 28
-                    color: clearFilterButton.down ? Qt.darker(root.style.backgroundColor, 1.1) : 
-                           clearFilterButton.hovered ? root.style.hoverColor : root.style.backgroundColor
-                    border.color: clearFilterButton.down ? root.style.accentColor : 
-                                clearFilterButton.hovered ? root.style.accentColor : root.style.borderColor
+                    color: clearFilterButton.down ? Qt.darker(Style.backgroundColor, 1.1) : 
+                           clearFilterButton.hovered ? Style.hoverColor : Style.backgroundColor
+                    border.color: clearFilterButton.down ? Style.accentColor : 
+                                clearFilterButton.hovered ? Style.accentColor : Style.borderColor
                     border.width: 1
                     radius: 3
                 }
@@ -201,10 +201,10 @@ Rectangle {
                 background: Rectangle {
                     implicitWidth: 90
                     implicitHeight: 28
-                    color: tagManageButton.down ? Qt.darker(root.style.backgroundColor, 1.1) : 
-                           tagManageButton.hovered ? root.style.hoverColor : root.style.backgroundColor
-                    border.color: tagManageButton.down ? root.style.accentColor : 
-                                tagManageButton.hovered ? root.style.accentColor : root.style.borderColor
+                    color: tagManageButton.down ? Qt.darker(Style.backgroundColor, 1.1) : 
+                           tagManageButton.hovered ? Style.hoverColor : Style.backgroundColor
+                    border.color: tagManageButton.down ? Style.accentColor : 
+                                tagManageButton.hovered ? Style.accentColor : Style.borderColor
                     border.width: 1
                     radius: 3
                 }
@@ -219,9 +219,9 @@ Rectangle {
                     }
                     Text {
                         text: tagManageButton.text
-                        color: root.style.textColor
-                        font.family: root.style.fontFamily
-                        font.pixelSize: root.style.defaultFontSize - 1
+                        color: Style.textColor
+                        font.family: Style.fontFamily
+                        font.pixelSize: Style.fontSizeNormal - 1
                         Layout.alignment: Qt.AlignVCenter
                     }
                 }
@@ -249,7 +249,7 @@ Rectangle {
         for (let tagId of root.selectedTagIds) {
             let fileIds = TagManager.getFilesByTagId(tagId)
             if (!fileIds) {
-                console.error("错误：无法获取标签关联的文件ID", tagId)
+                // 无法获取标签关联的文件ID
                 continue
             }
             
@@ -268,7 +268,7 @@ Rectangle {
         }
         
         if (filteredFiles.size === 0) {
-            console.log("没有找到匹配的文件")
+            // 没有找到匹配的文件
         }
         
         root.fileList.setFilterByFileIds(Array.from(filteredFiles))
@@ -279,7 +279,6 @@ Rectangle {
         target: TagManager
         
         function onTagsChanged() {
-            console.log("标签列表已更新")
             // 刷新标签列表
             root.refreshTagList()
             // 清除已失效的选中标签
@@ -290,17 +289,14 @@ Rectangle {
         }
         
         function onTagAdded(tag) {
-            console.log("新标签已添加:", tag.name)
             root.refreshTagList()
         }
         
         function onTagRemoved(tagId) {
-            console.log("标签已删除:", tagId)
             root.refreshTagList()
         }
         
         function onTagUpdated(tag) {
-            console.log("标签已更新:", tag.name)
             root.refreshTagList()
         }
     }

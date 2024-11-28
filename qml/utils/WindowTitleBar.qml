@@ -1,20 +1,20 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Window
+import ".." 1.0
 
 Rectangle {
     id: root
-    height: 32
+    height: Style.titleBarHeight
     width: parent.width
     anchors {
         top: parent.top
         left: parent.left
         right: parent.right
     }
-    color: style ? style.backgroundColor : "#FFFFFF"
+    color: Style.titleBarColor
     
     property var window
-    property var style
     property string title
     property point startMousePos: Qt.point(0, 0)
     property bool isDragging: false
@@ -25,17 +25,13 @@ Rectangle {
     // 缩放限制
     readonly property real maxScaleFactor: 1.1
     readonly property real minScaleFactor: 0.9
-    readonly property real defaultWidth: 960
-    readonly property real defaultHeight: 680
+    readonly property real defaultWidth: Style.defaultWindowWidth
+    readonly property real defaultHeight: Style.defaultWindowHeight
     
     Component.onCompleted: {
         initialWindowWidth = window.width
         initialWindowHeight = window.height
     }
-    
-    property color defaultTextColor: "#202020"
-    property string defaultFontFamily: "Microsoft YaHei"
-    property int defaultFontSize: 12
     
     // 左侧图标和标题
     RowLayout {
@@ -44,20 +40,20 @@ Rectangle {
             left: parent.left
             right: windowControls.left
         }
-        spacing: 8
+        spacing: Style.spacingSmall
 
         Image {
-            Layout.leftMargin: 8
-            Layout.preferredWidth: 18
-            Layout.preferredHeight: 18
+            Layout.leftMargin: Style.spacingSmall
+            Layout.preferredWidth: Style.iconSizeSmall + 2
+            Layout.preferredHeight: Style.iconSizeSmall + 2
             source: "qrc:/resources/icons/app_icon.svg"
         }
 
         Text {
             text: root.title
-            color: style ? style.textColor : root.defaultTextColor
-            font.family: style ? style.fontFamily : root.defaultFontFamily
-            font.pixelSize: style ? style.defaultFontSize : root.defaultFontSize
+            color: Style.titleBarTextColor
+            font.family: Style.fontFamily
+            font.pixelSize: Style.fontSizeSmall
         }
 
         Item { 
@@ -92,8 +88,8 @@ Rectangle {
 
         WindowControlButton {
             iconSource: "qrc:/resources/images/window-close.svg"
-            hoverColor: "#E81123"
-            hoverTextColor: "#FFFFFF"
+            hoverColor: Style.controlButtonCloseHoverColor
+            hoverTextColor: Style.controlButtonCloseHoverTextColor
             onClicked: window.close()
         }
     }

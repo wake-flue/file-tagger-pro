@@ -3,17 +3,17 @@ import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import FileManager 1.0
 import "../utils" as Utils
+import ".." 1.0
 
 Rectangle {
     id: root
-    color: style.backgroundColor
-    border.color: style.borderColor
+    color: Style.backgroundColor
+    border.color: Style.borderColor
     border.width: 1
     radius: 4
-    height: 40  // 减小高度
+    height: 40
 
     // 必要的属性声明
-    required property QtObject style
     required property QtObject settings
     required property QtObject fileManager
     required property QtObject folderDialog
@@ -22,33 +22,33 @@ Rectangle {
     RowLayout {
         anchors {
             fill: parent
-            leftMargin: 8  // 减小边距
+            leftMargin: 8
             rightMargin: 8
-            topMargin: 4   // 减小边距
+            topMargin: 4
             bottomMargin: 4
         }
-        spacing: 8  // 减小间距
+        spacing: 8
 
         // 左侧按钮组
         Row {
-            spacing: 4  // 减小按钮间距
+            spacing: 4
             Layout.alignment: Qt.AlignVCenter
 
             Button {
                 id: selectFolderButton
                 text: "选择目录"
                 icon.source: "qrc:/resources/images/folder.svg"
-                icon.width: 14  // 减小图标
+                icon.width: 14
                 icon.height: 14
-                padding: 6     // 减小内边距
+                padding: 6
                 
                 background: Rectangle {
-                    implicitWidth: 90  // 减小按钮宽度
-                    implicitHeight: 28 // 减小按钮高度
-                    color: selectFolderButton.down ? Qt.darker(root.style.backgroundColor, 1.1) : 
-                           selectFolderButton.hovered ? root.style.hoverColor : root.style.backgroundColor
-                    border.color: selectFolderButton.down ? root.style.accentColor : 
-                                selectFolderButton.hovered ? root.style.accentColor : root.style.borderColor
+                    implicitWidth: 90
+                    implicitHeight: 28
+                    color: selectFolderButton.down ? Qt.darker(Style.backgroundColor, 1.1) : 
+                           selectFolderButton.hovered ? Style.hoverColor : Style.backgroundColor
+                    border.color: selectFolderButton.down ? Style.accentColor : 
+                                selectFolderButton.hovered ? Style.accentColor : Style.borderColor
                     border.width: 1
                     radius: 3
                     
@@ -58,7 +58,7 @@ Rectangle {
                 }
                 
                 contentItem: RowLayout {
-                    spacing: 4  // 减小图标和文字间距
+                    spacing: 4
                     Image {
                         source: selectFolderButton.icon.source
                         sourceSize.width: 14
@@ -69,9 +69,9 @@ Rectangle {
                     }
                     Text {
                         text: selectFolderButton.text
-                        color: root.style.textColor
-                        font.family: root.style.fontFamily
-                        font.pixelSize: root.style.defaultFontSize - 1  // 减小字体
+                        color: Style.textColor
+                        font.family: Style.fontFamily
+                        font.pixelSize: Style.fontSizeNormal - 1
                         Layout.alignment: Qt.AlignVCenter
                     }
                 }
@@ -89,10 +89,10 @@ Rectangle {
                 background: Rectangle {
                     implicitWidth: 24
                     implicitHeight: 28
-                    color: refreshButton.down ? Qt.darker(root.style.backgroundColor, 1.1) : 
-                           refreshButton.hovered ? root.style.hoverColor : root.style.backgroundColor
-                    border.color: refreshButton.down ? root.style.accentColor : 
-                                refreshButton.hovered ? root.style.accentColor : root.style.borderColor
+                    color: refreshButton.down ? Qt.darker(Style.backgroundColor, 1.1) : 
+                           refreshButton.hovered ? Style.hoverColor : Style.backgroundColor
+                    border.color: refreshButton.down ? Style.accentColor : 
+                                refreshButton.hovered ? Style.accentColor : Style.borderColor
                     border.width: 1
                     radius: 3
                     
@@ -134,7 +134,7 @@ Rectangle {
             Layout.alignment: Qt.AlignVCenter
             color: "#f5f5f5"
             radius: 3
-            border.color: searchInput.activeFocus ? root.style.accentColor : root.style.borderColor
+            border.color: searchInput.activeFocus ? Style.accentColor : Style.borderColor
             border.width: 1
 
             RowLayout {
@@ -155,9 +155,9 @@ Rectangle {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignVCenter
                     placeholderText: "搜索文件..."
-                    font.family: root.style.fontFamily
-                    font.pixelSize: root.style.defaultFontSize - 1
-                    color: root.style.textColor
+                    font.family: Style.fontFamily
+                    font.pixelSize: Style.fontSizeNormal - 1
+                    color: Style.textColor
                     selectByMouse: true
                     background: null
 
@@ -216,10 +216,10 @@ Rectangle {
                 background: Rectangle {
                     implicitWidth: 32
                     implicitHeight: 28
-                    color: settingsButton.down ? Qt.darker(root.style.backgroundColor, 1.1) : 
-                           settingsButton.hovered ? root.style.hoverColor : root.style.backgroundColor
-                    border.color: settingsButton.down ? root.style.accentColor : 
-                                settingsButton.hovered ? root.style.accentColor : root.style.borderColor
+                    color: settingsButton.down ? Qt.darker(Style.backgroundColor, 1.1) : 
+                           settingsButton.hovered ? Style.hoverColor : Style.backgroundColor
+                    border.color: settingsButton.down ? Style.accentColor : 
+                                settingsButton.hovered ? Style.accentColor : Style.borderColor
                     border.width: 1
                     radius: 3
                 }
@@ -246,8 +246,8 @@ Rectangle {
                     visible: settingsButton.hovered
                     text: "设置"
                     delay: 500
-                    font.family: root.style.fontFamily
-                    font.pixelSize: root.style.defaultFontSize - 1
+                    font.family: Style.fontFamily
+                    font.pixelSize: Style.fontSizeNormal - 1
                 }
                 
                 onClicked: root.settingsWindow.show()
@@ -265,11 +265,11 @@ Rectangle {
                     implicitWidth: 32
                     implicitHeight: 28
                     color: root.fileManager.fileModel.viewMode === FileListModel.ListView ? 
-                           Qt.darker(root.style.backgroundColor, 1.1) : 
-                           (listViewButton.hovered ? root.style.hoverColor : root.style.backgroundColor)
+                           Qt.darker(Style.backgroundColor, 1.1) : 
+                           (listViewButton.hovered ? Style.hoverColor : Style.backgroundColor)
                     border.color: root.fileManager.fileModel.viewMode === FileListModel.ListView ? 
-                                 root.style.accentColor : 
-                                 (listViewButton.hovered ? root.style.accentColor : root.style.borderColor)
+                                 Style.accentColor : 
+                                 (listViewButton.hovered ? Style.accentColor : Style.borderColor)
                     border.width: 1
                     radius: 3
                 }
@@ -295,11 +295,11 @@ Rectangle {
                     implicitWidth: 32
                     implicitHeight: 28
                     color: root.fileManager.fileModel.viewMode === FileListModel.LargeIconView ? 
-                           Qt.darker(root.style.backgroundColor, 1.1) : 
-                           (largeIconViewButton.hovered ? root.style.hoverColor : root.style.backgroundColor)
+                           Qt.darker(Style.backgroundColor, 1.1) : 
+                           (largeIconViewButton.hovered ? Style.hoverColor : Style.backgroundColor)
                     border.color: root.fileManager.fileModel.viewMode === FileListModel.LargeIconView ? 
-                                 root.style.accentColor : 
-                                 (largeIconViewButton.hovered ? root.style.accentColor : root.style.borderColor)
+                                 Style.accentColor : 
+                                 (largeIconViewButton.hovered ? Style.accentColor : Style.borderColor)
                     border.width: 1
                     radius: 3
                 }

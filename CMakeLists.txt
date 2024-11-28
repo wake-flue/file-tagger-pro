@@ -70,6 +70,7 @@ set(HEADERS
 # QML文件和资源文件分开定义
 set(QML_FILES
         qml/main.qml
+        qml/Style.qml
         qml/components/FileList.qml
         qml/components/TopToolBar.qml
         qml/components/Splitter.qml
@@ -98,6 +99,7 @@ set(QML_FILES
 
 # 添加 qmldir 文件到资源列表
 set(RESOURCE_FILES
+        qml/qmldir
         qml/components/qmldir
         qml/dialogs/qmldir
         qml/settings/qmldir

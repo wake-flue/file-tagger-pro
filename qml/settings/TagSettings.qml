@@ -10,7 +10,6 @@ ColumnLayout {
     spacing: settingsStyle.defaultSpacing
     
     required property QtObject settings
-    required property QtObject style
     
     // 使用统一的样式对象
     property SettingsStyle settingsStyle: SettingsStyle {}
@@ -34,20 +33,20 @@ ColumnLayout {
         Label {
             text: qsTr("标签管理")
             font {
-                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                family: settingsStyle.defaultFontFamily
                 pixelSize: settingsStyle.titleFontSize
                 bold: true
             }
-            color: style?.textColor ?? settingsStyle.defaultTextColor
+            color: settingsStyle.defaultTextColor
         }
         
         Label {
             text: qsTr("管理文件标签，包括创建、编辑和删除标签")
             font {
-                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                family: settingsStyle.defaultFontFamily
                 pixelSize: settingsStyle.descriptionFontSize
             }
-            color: style?.secondaryTextColor ?? settingsStyle.defaultSecondaryTextColor
+            color: settingsStyle.defaultSecondaryTextColor
             opacity: settingsStyle.defaultOpacity
             Layout.fillWidth: true
             wrapMode: Text.Wrap
@@ -85,7 +84,7 @@ ColumnLayout {
                 Label {
                     text: parent.parent.text
                     color: "white"
-                    font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                    font.family: settingsStyle.defaultFontFamily
                     font.pixelSize: settingsStyle.defaultFontSize
                 }
             }
@@ -123,7 +122,7 @@ ColumnLayout {
                 visible: parent.hovered
                 text: qsTr("刷新列表")
                 delay: 500
-                font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                font.family: settingsStyle.defaultFontFamily
                 font.pixelSize: settingsStyle.defaultFontSize
             }
             
@@ -154,7 +153,7 @@ ColumnLayout {
             }
             
             font {
-                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                family: settingsStyle.defaultFontFamily
                 pixelSize: settingsStyle.defaultFontSize
             }
             
@@ -213,19 +212,19 @@ ColumnLayout {
                     Label {
                         text: tagDelegate.modelData?.name ?? ""
                         font {
-                            family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                            family: settingsStyle.defaultFontFamily
                             pixelSize: settingsStyle.defaultFontSize
                         }
-                        color: style?.textColor ?? settingsStyle.defaultTextColor
+                        color: settingsStyle.defaultTextColor
                     }
                     
                     Label {
                         text: tagDelegate.modelData?.description ?? ""
                         font {
-                            family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                            family: settingsStyle.defaultFontFamily
                             pixelSize: settingsStyle.descriptionFontSize
                         }
-                        color: style?.secondaryTextColor ?? settingsStyle.defaultSecondaryTextColor
+                        color: settingsStyle.defaultSecondaryTextColor
                         opacity: settingsStyle.defaultOpacity
                         elide: Text.ElideRight
                         Layout.fillWidth: true
@@ -291,7 +290,6 @@ ColumnLayout {
     // 标签编辑对话框
     Dialogs.TagEditDialog {
         id: editDialog
-        style: root.style
         
         onClosed: {
             if (result === Dialog.Accepted) {
@@ -322,10 +320,10 @@ ColumnLayout {
             Label {
                 text: qsTr("确定要删除标签吗？")
                 font {
-                    family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                    family: settingsStyle.defaultFontFamily
                     pixelSize: settingsStyle.defaultFontSize
                 }
-                color: style?.textColor ?? settingsStyle.defaultTextColor
+                color: settingsStyle.defaultTextColor
                 wrapMode: Text.Wrap
                 Layout.fillWidth: true
             }
@@ -333,10 +331,10 @@ ColumnLayout {
             Label {
                 text: qsTr("此操作不可撤销。")
                 font {
-                    family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                    family: settingsStyle.defaultFontFamily
                     pixelSize: settingsStyle.descriptionFontSize
                 }
-                color: style?.secondaryTextColor ?? settingsStyle.defaultSecondaryTextColor
+                color: settingsStyle.defaultSecondaryTextColor
                 opacity: settingsStyle.defaultOpacity
             }
         }
@@ -379,7 +377,7 @@ ColumnLayout {
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     font {
-                        family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                        family: settingsStyle.defaultFontFamily
                         pixelSize: settingsStyle.defaultFontSize
                     }
                 }
@@ -432,9 +430,9 @@ ColumnLayout {
             id: messageLabel
             width: parent.width
             wrapMode: Text.Wrap
-            font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+            font.family: settingsStyle.defaultFontFamily
             font.pixelSize: settingsStyle.defaultFontSize
-            color: style?.textColor ?? settingsStyle.defaultTextColor
+            color: settingsStyle.defaultTextColor
         }
         
         standardButtons: Dialog.Ok

@@ -8,6 +8,7 @@ import "./components" as Components
 import "./dialogs" as Dialogs
 import "./settings" as Settings
 import "./utils" as Utils
+import "." 1.0
 
 Window {
     id: mainWindow
@@ -17,29 +18,6 @@ Window {
     title: qsTr("FileTaggerPro")
     flags: Qt.Window | Qt.FramelessWindowHint
     color: "transparent"
-
-    // 添加全局字体和颜色定义
-    QtObject {
-        id: style
-        readonly property color accentColor: "#0078D4"
-        readonly property color backgroundColor: "#FFFFFF"
-        readonly property color borderColor: "#E5E5E5"
-        readonly property color textColor: "#202020"
-        readonly property color secondaryTextColor: "#666666"
-        readonly property color hoverColor: "#F0F0F0"
-        readonly property color selectedColor: "#E5F3FF"
-        readonly property int defaultFontSize: 12
-        readonly property string fontFamily: {
-            switch (Qt.platform.os) {
-                case "windows":
-                    return "Microsoft YaHei"
-                case "osx":
-                    return "PingFang SC"
-                default:
-                    return "Sans-serif"
-            }
-        }
-    }
 
     // 添加属性来存储窗口状态
     property rect previousWindowState: Qt.rect(0, 0, 960, 680)
@@ -71,8 +49,8 @@ Window {
     Rectangle {
         id: rootContainer
         anchors.fill: parent
-        color: style.backgroundColor
-        border.color: style.borderColor
+        color: Style.backgroundColor
+        border.color: Style.borderColor
         border.width: 1
 
         layer.enabled: true
@@ -88,7 +66,6 @@ Window {
         Utils.WindowTitleBar {
             id: titleBar
             window: mainWindow
-            style: style
             title: mainWindow.title
         }
 
@@ -106,7 +83,6 @@ Window {
             // TopToolBar
             Components.TopToolBar {
                 Layout.fillWidth: true
-                style: style
                 settings: settings
                 fileManager: fileManager
                 folderDialog: folderDialog
@@ -116,7 +92,6 @@ Window {
             // TagToolBar
             Components.TagToolBar {
                 Layout.fillWidth: true
-                style: style
                 settings: settings
                 fileManager: fileManager
                 settingsWindow: settingsWindow
@@ -129,23 +104,13 @@ Window {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 
-                style: style
                 settings: settings
                 fileManager: fileManager
-                
-                onFileListVisibilityChanged: function(visible) {
-                    console.log("文件列表可见性改变:", visible)
-                }
-                
-                onDetailPanelVisibilityChanged: function(visible) {
-                    console.log("详情面板可见性改变:", visible)
-                }
             }
             
             // 底部状态栏
             Components.StatusBar {
                 Layout.fillWidth: true
-                style: style
                 fileManager: fileManager
                 fileList: mainContainer.fileList
                 logDialog: logDialog
@@ -217,12 +182,10 @@ Window {
 
     Dialogs.FileTagDialog {
         id: fileTagDialog
-        style: style
     }
 
     Dialogs.SettingsWindow {
         id: settingsWindow
-        style: style
         settings: settings
         fileManager: fileManager
     }

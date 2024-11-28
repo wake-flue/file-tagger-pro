@@ -8,7 +8,6 @@ ColumnLayout {
     spacing: settingsStyle.defaultSpacing
     
     required property QtObject settings
-    required property QtObject style
     
     // 使用统一的样式对象
     property SettingsStyle settingsStyle: SettingsStyle {}
@@ -21,20 +20,20 @@ ColumnLayout {
         Label {
             text: qsTr("数据库管理")
             font {
-                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                family: settingsStyle.defaultFontFamily
                 pixelSize: settingsStyle.titleFontSize
                 bold: true
             }
-            color: style?.textColor ?? settingsStyle.defaultTextColor
+            color: settingsStyle.defaultTextColor
         }
         
         Label {
             text: qsTr("查看和管理数据库中的标签、统计信息和最近文件")
             font {
-                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                family: settingsStyle.defaultFontFamily
                 pixelSize: settingsStyle.descriptionFontSize
             }
-            color: style?.secondaryTextColor ?? settingsStyle.defaultSecondaryTextColor
+            color: settingsStyle.defaultSecondaryTextColor
             opacity: settingsStyle.defaultOpacity
             Layout.fillWidth: true
             wrapMode: Text.Wrap
@@ -75,9 +74,9 @@ ColumnLayout {
                 }
                 Label {
                     text: parent.parent.text
-                    font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                    font.family: settingsStyle.defaultFontFamily
                     font.pixelSize: settingsStyle.defaultFontSize
-                    color: style?.textColor ?? settingsStyle.defaultTextColor
+                    color: settingsStyle.defaultTextColor
                 }
             }
         }
@@ -110,9 +109,9 @@ ColumnLayout {
                 }
                 Label {
                     text: parent.parent.text
-                    font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                    font.family: settingsStyle.defaultFontFamily
                     font.pixelSize: settingsStyle.defaultFontSize
-                    color: style?.textColor ?? settingsStyle.defaultTextColor
+                    color: settingsStyle.defaultTextColor
                 }
             }
         }
@@ -133,7 +132,7 @@ ColumnLayout {
         
         TabButton {
             text: qsTr("标签")
-            font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+            font.family: settingsStyle.defaultFontFamily
             font.pixelSize: settingsStyle.defaultFontSize
             
             background: Rectangle {
@@ -145,7 +144,7 @@ ColumnLayout {
         
         TabButton {
             text: qsTr("统计")
-            font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+            font.family: settingsStyle.defaultFontFamily
             font.pixelSize: settingsStyle.defaultFontSize
             
             background: Rectangle {
@@ -157,7 +156,7 @@ ColumnLayout {
         
         TabButton {
             text: qsTr("最近文件")
-            font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+            font.family: settingsStyle.defaultFontFamily
             font.pixelSize: settingsStyle.defaultFontSize
             
             background: Rectangle {
@@ -202,14 +201,14 @@ ColumnLayout {
                     
                     Label {
                         text: modelData.name
-                        font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                        font.family: settingsStyle.defaultFontFamily
                         font.pixelSize: settingsStyle.defaultFontSize
                         Layout.fillWidth: true
                     }
                     
                     Label {
                         text: modelData.description || "-"
-                        font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                        font.family: settingsStyle.defaultFontFamily
                         font.pixelSize: settingsStyle.defaultFontSize
                         opacity: settingsStyle.defaultOpacity
                     }
@@ -243,7 +242,7 @@ ColumnLayout {
                     Label {
                         text: Array.isArray(modelData) && modelData.length > 0 ? 
                               String(modelData[0] || "") : ""
-                        font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                        font.family: settingsStyle.defaultFontFamily
                         font.pixelSize: settingsStyle.defaultFontSize
                         Layout.fillWidth: true
                     }
@@ -251,7 +250,7 @@ ColumnLayout {
                     Label {
                         text: Array.isArray(modelData) && modelData.length > 1 ? 
                               String(modelData[1] || "") : ""
-                        font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                        font.family: settingsStyle.defaultFontFamily
                         font.pixelSize: settingsStyle.defaultFontSize
                         opacity: settingsStyle.defaultOpacity
                     }
@@ -282,7 +281,7 @@ ColumnLayout {
                     anchors.margins: 8
                     text: modelData
                     elide: Text.ElideMiddle
-                    font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                    font.family: settingsStyle.defaultFontFamily
                     font.pixelSize: settingsStyle.defaultFontSize
                     verticalAlignment: Text.AlignVCenter
                 }

@@ -6,6 +6,7 @@ import FileManager 1.0
 import "." as Components
 import "../dialogs" as Dialogs
 import "../utils" as Utils
+import ".." 1.0
 
 Item {
     id: root
@@ -13,7 +14,6 @@ Item {
     property alias model: gridView.model
     property var selectedItem: null
     property QtObject fileManager: null
-    required property var style
     
     Components.Settings {
         id: settings
@@ -31,12 +31,14 @@ Item {
     
     Rectangle {
         anchors.fill: parent
-        color: "transparent"
+        color: Style.backgroundColor
+        border.width: Style.noneBorderWidth
         
         GridView {
             id: gridView
             anchors.fill: parent
-            anchors.rightMargin: verticalScrollBar.visible ? verticalScrollBar.width : 0
+            anchors.margins: Style.spacingSmall
+            anchors.rightMargin: verticalScrollBar.visible ? verticalScrollBar.width + Style.spacingSmall : Style.spacingSmall
             clip: true
             
             cellWidth: {
@@ -80,16 +82,16 @@ Item {
                 Component {
                     id: listLayout
                     RowLayout {
-                        spacing: 12
+                        spacing: Style.spacingSmall
                         width: delegateItem.width
                         height: delegateItem.height
                         
-                        Item { width: 8; height: 1 }
+                        Item { width: Style.spacingSmall; height: 1 }
                         
                         Image {
                             source: getFileIcon(delegateItem)
-                            sourceSize.width: 20
-                            sourceSize.height: 20
+                            sourceSize.width: Style.iconSizeSmall
+                            sourceSize.height: Style.iconSizeSmall
                             Layout.alignment: Qt.AlignVCenter
                         }
                         
@@ -98,33 +100,34 @@ Item {
                             elide: Text.ElideRight
                             Layout.fillWidth: true
                             Layout.alignment: Qt.AlignVCenter
-                            font.pixelSize: 12
+                            font.pixelSize: Style.fontSizeNormal
+                            color: Style.textColor
                         }
                         
                         Label {
                             text: delegateItem.displaySize
                             Layout.alignment: Qt.AlignVCenter
                             Layout.preferredWidth: 80
-                            font.pixelSize: 12
-                            color: "#666666"
+                            font.pixelSize: Style.fontSizeNormal
+                            color: Style.lightTextColor
                         }
                         
                         Label {
                             text: delegateItem.displayDate
                             Layout.alignment: Qt.AlignVCenter
                             Layout.preferredWidth: 150
-                            font.pixelSize: 12
-                            color: "#666666"
+                            font.pixelSize: Style.fontSizeNormal
+                            color: Style.lightTextColor
                         }
                         
-                        Item { width: 8; height: 1 }
+                        Item { width: Style.spacingSmall; height: 1 }
                     }
                 }
                 
                 Component {
                     id: largeIconLayout
                     ColumnLayout {
-                        spacing: 8
+                        spacing: Style.spacingSmall
                         width: delegateItem.width
                         height: delegateItem.height
                         
@@ -651,7 +654,6 @@ Item {
     
     Dialogs.SpriteDialog {
         id: spriteDialog
-        style: root.style
         fileManager: root.fileManager
         filePath: ""
     }

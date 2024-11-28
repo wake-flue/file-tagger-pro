@@ -1,9 +1,10 @@
 import QtQuick
+import ".." 1.0
 
 MouseArea {
     id: root
-    width: 8
-    height: 8
+    width: Style.windowResizerSize
+    height: Style.windowResizerSize
     cursorShape: Qt.SizeFDiagCursor
     
     property var window

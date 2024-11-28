@@ -3,6 +3,7 @@ import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import FileManager 1.0
 import "../settings" as Settings
+import ".." 1.0
 
 Window {
     id: root
@@ -12,11 +13,10 @@ Window {
     minimumWidth: 600
     minimumHeight: 400
     
-    required property QtObject style
     required property QtObject settings
     required property var fileManager
     
-    color: style.backgroundColor
+    color: Style.backgroundColor
     
     // 添加当前页面索引属性
     property alias currentIndex: settingsList.currentIndex
@@ -31,7 +31,7 @@ Window {
             Layout.fillHeight: true
             color: "#f5f5f5"
             border.width: 0
-            border.color: style.borderColor
+            border.color: Style.borderColor
             
             ListView {
                 id: settingsList
@@ -52,21 +52,21 @@ Window {
                     
                     background: Rectangle {
                         color: settingsList.currentIndex === index ? 
-                               (style?.selectedColor || "#E5F3FF") : "transparent"
+                               (Style.selectedColor || "#E5F3FF") : "transparent"
                         
                         Rectangle {
                             width: 3
                             height: parent.height
-                            color: style?.accentColor || "#0078D4"
+                            color: Style.accentColor
                             visible: settingsList.currentIndex === index
                         }
                     }
                     
                     contentItem: Label {
                         text: name
-                        font.family: style?.fontFamily || "Microsoft YaHei"
-                        font.pixelSize: style?.defaultFontSize || 12
-                        color: style?.textColor || "#202020"
+                        font.family: Style.fontFamily
+                        font.pixelSize: Style.fontSizeNormal
+                        color: Style.textColor
                         verticalAlignment: Text.AlignVCenter
                         leftPadding: 16
                     }
@@ -80,7 +80,7 @@ Window {
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            color: style?.backgroundColor || "#ffffff"
+            color: Style.backgroundColor
             
             StackLayout {
                 anchors {
@@ -94,7 +94,6 @@ Window {
                     Settings.GeneralSettings {
                         anchors.fill: parent
                         settings: root.settings
-                        style: root.style
                         fileManager: root.fileManager
                     }
                 }
@@ -106,7 +105,6 @@ Window {
                     Settings.PlayerSettings {
                         anchors.fill: parent
                         settings: root.settings
-                        style: root.style
                     }
                 }
                 
@@ -115,7 +113,6 @@ Window {
                     Settings.FileTypeSettings {
                         anchors.fill: parent
                         settings: root.settings
-                        style: root.style
                         fileManager: root.fileManager
                     }
                 }
@@ -125,7 +122,6 @@ Window {
                     Settings.TagSettings {
                         anchors.fill: parent
                         settings: root.settings
-                        style: root.style
                     }
                 }
                 
@@ -134,7 +130,6 @@ Window {
                     Settings.DatabaseSettings {
                         anchors.fill: parent
                         settings: root.settings
-                        style: root.style
                     }
                 }
                 
@@ -143,7 +138,6 @@ Window {
                     Settings.LogSettings {
                         anchors.fill: parent
                         settings: root.settings
-                        style: root.style
                         fileManager: root.fileManager
                     }
                 }

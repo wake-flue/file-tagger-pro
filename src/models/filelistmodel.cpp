@@ -322,14 +322,12 @@ void FileListModel::setFilterByFileIds(const QStringList &fileIds, bool showAllI
 {
     if (fileIds.isEmpty()) {
         if (showAllIfEmpty) {
-            qDebug() << "提示：清除过滤器，显示所有文件";
             beginResetModel();
             m_filteredFiles = m_allFiles;
             m_files = m_filteredFiles;
             endResetModel();
             emit countChanged();
         } else {
-            qDebug() << "提示：没有找到匹配的文件，显示空列表";
             beginResetModel();
             m_filteredFiles.clear();
             m_files = m_filteredFiles;

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import FileManager 1.0
+import ".." 1.0
 
 Dialog {
     id: root
@@ -48,15 +49,14 @@ Dialog {
     }
     
     // 必要的属性声明
-    required property QtObject style
     property string fileId: ""
     property string filePath: ""
     property var selectedTags: []
     
     // 背景设置
     background: Rectangle {
-        color: root.style.backgroundColor
-        border.color: root.style.borderColor
+        color: Style.backgroundColor
+        border.color: Style.borderColor
         border.width: 1
         radius: 6
     }
@@ -74,18 +74,18 @@ Dialog {
             Label {
                 text: qsTr("文件路径")
                 font {
-                    family: root.style.fontFamily
-                    pixelSize: root.style.defaultFontSize
+                    family: Style.fontFamily
+                    pixelSize: Style.fontSizeNormal
                     bold: true
                 }
-                color: root.style.textColor
+                color: Style.textColor
             }
             
             Label {
                 text: root.filePath
-                font.family: root.style.fontFamily
-                font.pixelSize: root.style.defaultFontSize
-                color: root.style.secondaryTextColor
+                font.family: Style.fontFamily
+                font.pixelSize: Style.fontSizeNormal
+                color: Style.lightTextColor
                 elide: Text.ElideMiddle
                 Layout.fillWidth: true
             }
@@ -95,7 +95,7 @@ Dialog {
         Rectangle {
             Layout.fillWidth: true
             height: 1
-            color: root.style.borderColor
+            color: Style.borderColor
         }
         
         // 标签列表区域
@@ -107,11 +107,11 @@ Dialog {
             Label {
                 text: qsTr("可用标签")
                 font {
-                    family: root.style.fontFamily
-                    pixelSize: root.style.defaultFontSize
+                    family: Style.fontFamily
+                    pixelSize: Style.fontSizeNormal
                     bold: true
                 }
-                color: root.style.textColor
+                color: Style.textColor
             }
             
             ScrollView {
@@ -171,8 +171,8 @@ Dialog {
                                     text: modelData.name
                                     color: "white"
                                     font {
-                                        family: root.style.fontFamily
-                                        pixelSize: root.style.defaultFontSize
+                                        family: Style.fontFamily
+                                        pixelSize: Style.fontSizeNormal
                                         bold: tagItem.selected
                                     }
                                     anchors.verticalCenter: parent.verticalCenter
@@ -225,12 +225,12 @@ Dialog {
                 background: Rectangle {
                     implicitWidth: 120
                     implicitHeight: 32
-                    color: parent.down ? Qt.darker(root.style.backgroundColor, 1.1) :
-                           parent.hovered ? root.style.hoverColor : root.style.backgroundColor
-                    border.color: parent.down ? root.style.accentColor :
-                                parent.hovered ? root.style.accentColor : root.style.borderColor
+                    color: parent.down ? Qt.darker(Style.backgroundColor, 1.1) :
+                           parent.hovered ? Style.hoverColor : Style.backgroundColor
+                    border.color: parent.down ? Style.accentColor :
+                                parent.hovered ? Style.accentColor : Style.borderColor
                     border.width: 1
-                    radius: 4
+                    radius: Style.radiusSmall
                 }
                 
                 contentItem: RowLayout {
@@ -242,9 +242,9 @@ Dialog {
                     }
                     Label {
                         text: parent.parent.text
-                        font.family: root.style.fontFamily
-                        font.pixelSize: root.style.defaultFontSize
-                        color: root.style.textColor
+                        font.family: Style.fontFamily
+                        font.pixelSize: Style.fontSizeNormal
+                        color: Style.textColor
                     }
                 }
                 
@@ -263,19 +263,19 @@ Dialog {
                 background: Rectangle {
                     implicitWidth: 80
                     implicitHeight: 32
-                    color: parent.down ? Qt.darker(root.style.backgroundColor, 1.1) :
-                           parent.hovered ? root.style.hoverColor : root.style.backgroundColor
-                    border.color: parent.down ? root.style.accentColor :
-                                parent.hovered ? root.style.accentColor : root.style.borderColor
+                    color: parent.down ? Qt.darker(Style.backgroundColor, 1.1) :
+                           parent.hovered ? Style.hoverColor : Style.backgroundColor
+                    border.color: parent.down ? Style.accentColor :
+                                parent.hovered ? Style.accentColor : Style.borderColor
                     border.width: 1
-                    radius: 4
+                    radius: Style.radiusSmall
                 }
                 
                 contentItem: Label {
                     text: parent.text
-                    font.family: root.style.fontFamily
-                    font.pixelSize: root.style.defaultFontSize
-                    color: root.style.textColor
+                    font.family: Style.fontFamily
+                    font.pixelSize: Style.fontSizeNormal
+                    color: Style.textColor
                     horizontalAlignment: Text.AlignHCenter
                 }
                 
@@ -287,7 +287,6 @@ Dialog {
     // 标签编辑对话框
     TagEditDialog {
         id: tagEditDialog
-        style: root.style
         
         onAccepted: {
             // 刷新标签列表

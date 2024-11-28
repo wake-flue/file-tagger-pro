@@ -1,27 +1,28 @@
 import QtQuick
 import QtQuick.Effects
 import QtQuick.Window
+import ".." 1.0
 
 Rectangle {
     id: root
     
     property string buttonText: ""
     property string iconSource: ""
-    property color hoverColor: "#F0F0F0"
-    property color hoverTextColor: "#202020"
-    property color normalColor: "transparent"
-    property color normalTextColor: "#202020"
+    property color hoverColor: Style.controlButtonHoverColor
+    property color hoverTextColor: Style.controlButtonTextColor
+    property color normalColor: Style.controlButtonNormalColor
+    property color normalTextColor: Style.controlButtonTextColor
     
-    width: 46
-    height: 32
+    width: Style.controlButtonWidth
+    height: Style.controlButtonHeight
     color: mouseArea.containsMouse ? hoverColor : normalColor
     
     Image {
         id: buttonIcon
         anchors.centerIn: parent
         source: parent.iconSource
-        sourceSize.width: 10
-        sourceSize.height: 10
+        sourceSize.width: Style.controlButtonIconSize
+        sourceSize.height: Style.controlButtonIconSize
         visible: parent.iconSource !== ""
     }
     

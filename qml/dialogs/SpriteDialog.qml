@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
 import QtQuick.Window
+import ".." 1.0
 
 Window {
     id: root
@@ -17,7 +18,6 @@ Window {
     modality: Qt.ApplicationModal
     color: "#ffffff"
     
-    required property var style
     required property string filePath
     required property var fileManager
     
@@ -109,7 +109,7 @@ Window {
             Layout.preferredHeight: 48
             color: "#ffffff"
             radius: 4
-            border.color: root.style.borderColor
+            border.color: Style.borderColor
             border.width: 1
             
             RowLayout {
@@ -120,11 +120,11 @@ Window {
                 Label {
                     text: qsTr("截图数量:")
                     font {
-                        family: root.style.fontFamily
-                        pixelSize: root.style.defaultFontSize
+                        family: Style.fontFamily
+                        pixelSize: Style.fontSizeNormal
                         bold: true
                     }
-                    color: root.style.textColor
+                    color: Style.textColor
                 }
                 
                 ComboBox {
@@ -137,13 +137,13 @@ Window {
                     background: Rectangle {
                         implicitWidth: 100
                         implicitHeight: 32
-                        border.color: countComboBox.pressed ? root.style.accentColor : 
-                                    countComboBox.hovered ? root.style.accentColor : 
-                                    root.style.borderColor
+                        border.color: countComboBox.pressed ? Style.accentColor : 
+                                    countComboBox.hovered ? Style.accentColor : 
+                                    Style.borderColor
                         border.width: countComboBox.pressed || countComboBox.hovered ? 2 : 1
                         radius: 4
-                        color: countComboBox.pressed ? Qt.lighter(root.style.accentColor, 1.9) :
-                               countComboBox.hovered ? Qt.lighter(root.style.accentColor, 1.95) :
+                        color: countComboBox.pressed ? Qt.lighter(Style.accentColor, 1.9) :
+                               countComboBox.hovered ? Qt.lighter(Style.accentColor, 1.95) :
                                "#ffffff"
                         
                         Behavior on color {
@@ -154,7 +154,7 @@ Window {
                     contentItem: Text {
                         text: countComboBox.displayText
                         font: countComboBox.font
-                        color: root.style.textColor
+                        color: Style.textColor
                         verticalAlignment: Text.AlignVCenter
                         horizontalAlignment: Text.AlignHCenter
                         elide: Text.ElideRight
@@ -170,10 +170,10 @@ Window {
                     background: Rectangle {
                         implicitWidth: 80
                         implicitHeight: 32
-                        color: parent.enabled ? (parent.pressed ? Qt.darker(root.style.accentColor, 1.1) :
-                               parent.hovered ? root.style.accentColor :
-                               Qt.lighter(root.style.accentColor, 1.1)) :
-                               Qt.lighter(root.style.accentColor, 1.5)
+                        color: parent.enabled ? (parent.pressed ? Qt.darker(Style.accentColor, 1.1) :
+                               parent.hovered ? Style.accentColor :
+                               Qt.lighter(Style.accentColor, 1.1)) :
+                               Qt.lighter(Style.accentColor, 1.5)
                         radius: 4
                         
                         Behavior on color {
@@ -184,8 +184,8 @@ Window {
                     contentItem: Text {
                         text: parent.text
                         font {
-                            family: root.style.fontFamily
-                            pixelSize: root.style.defaultFontSize
+                            family: Style.fontFamily
+                            pixelSize: Style.fontSizeNormal
                             bold: true
                         }
                         color: "#ffffff"
@@ -206,9 +206,9 @@ Window {
                         implicitHeight: 32
                         color: parent.pressed ? Qt.darker("#f0f0f0", 1.1) :
                                parent.hovered ? "#f0f0f0" : "#ffffff"
-                        border.color: parent.pressed ? root.style.accentColor :
-                                    parent.hovered ? root.style.accentColor :
-                                    root.style.borderColor
+                        border.color: parent.pressed ? Style.accentColor :
+                                    parent.hovered ? Style.accentColor :
+                                    Style.borderColor
                         border.width: parent.pressed || parent.hovered ? 2 : 1
                         radius: 4
                         
@@ -220,10 +220,10 @@ Window {
                     contentItem: Text {
                         text: parent.text
                         font {
-                            family: root.style.fontFamily
-                            pixelSize: root.style.defaultFontSize
+                            family: Style.fontFamily
+                            pixelSize: Style.fontSizeNormal
                         }
-                        color: root.style.textColor
+                        color: Style.textColor
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -245,7 +245,7 @@ Window {
             background: Rectangle {
                 color: "#f8f9fa"
                 radius: 4
-                border.color: root.style.borderColor
+                border.color: Style.borderColor
                 border.width: 1
             }
             
@@ -353,7 +353,7 @@ Window {
         background: Rectangle {
             color: "#ffffff"
             radius: 8
-            border.color: root.style.borderColor
+            border.color: Style.borderColor
             border.width: 1
         }
         
@@ -377,7 +377,7 @@ Window {
             Label {
                 Layout.alignment: Qt.AlignHCenter
                 text: qsTr("正在生成预览图...")
-                font.pixelSize: root.style.defaultFontSize
+                font.pixelSize: Style.fontSizeNormal
             }
         }
     }

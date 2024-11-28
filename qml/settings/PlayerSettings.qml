@@ -10,7 +10,6 @@ ColumnLayout {
     spacing: settingsStyle.defaultSpacing
     
     required property QtObject settings
-    required property QtObject style
     
     // 使用统一的样式对象
     property SettingsStyle settingsStyle: SettingsStyle {}
@@ -23,20 +22,20 @@ ColumnLayout {
         Label {
             text: qsTr("播放器设置")
             font {
-                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                family: settingsStyle.defaultFontFamily
                 pixelSize: settingsStyle.titleFontSize
                 bold: true
             }
-            color: style?.textColor ?? settingsStyle.defaultTextColor
+            color: settingsStyle.defaultTextColor
         }
         
         Label {
             text: qsTr("设置图片查看器和视频播放器的路径")
             font {
-                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                family: settingsStyle.defaultFontFamily
                 pixelSize: settingsStyle.descriptionFontSize
             }
-            color: style?.secondaryTextColor ?? settingsStyle.defaultSecondaryTextColor
+            color: settingsStyle.defaultSecondaryTextColor
             opacity: settingsStyle.defaultOpacity
             Layout.fillWidth: true
             wrapMode: Text.Wrap
@@ -52,20 +51,20 @@ ColumnLayout {
         Label {
             text: qsTr("图片查看器")
             font {
-                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                family: settingsStyle.defaultFontFamily
                 pixelSize: settingsStyle.defaultFontSize
                 bold: true
             }
-            color: style?.textColor ?? settingsStyle.defaultTextColor
+            color: settingsStyle.defaultTextColor
         }
         
         Label {
             text: qsTr("选择或输入图片查看器路径")
             font {
-                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                family: settingsStyle.defaultFontFamily
                 pixelSize: settingsStyle.descriptionFontSize
             }
-            color: style?.secondaryTextColor ?? settingsStyle.defaultSecondaryTextColor
+            color: settingsStyle.defaultSecondaryTextColor
             opacity: settingsStyle.defaultOpacity
         }
         
@@ -81,7 +80,7 @@ ColumnLayout {
                 selectByMouse: true
                 
                 font {
-                    family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                    family: settingsStyle.defaultFontFamily
                     pixelSize: settingsStyle.defaultFontSize
                 }
                 
@@ -130,9 +129,9 @@ ColumnLayout {
                     }
                     Label {
                         text: parent.parent.text
-                        font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                        font.family: settingsStyle.defaultFontFamily
                         font.pixelSize: settingsStyle.defaultFontSize
-                        color: style?.textColor ?? settingsStyle.defaultTextColor
+                        color: settingsStyle.defaultTextColor
                     }
                 }
                 
@@ -153,20 +152,20 @@ ColumnLayout {
         Label {
             text: qsTr("视频播放器")
             font {
-                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                family: settingsStyle.defaultFontFamily
                 pixelSize: settingsStyle.defaultFontSize
                 bold: true
             }
-            color: style?.textColor ?? settingsStyle.defaultTextColor
+            color: settingsStyle.defaultTextColor
         }
         
         Label {
             text: qsTr("选择或输入视频播放器路径")
             font {
-                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                family: settingsStyle.defaultFontFamily
                 pixelSize: settingsStyle.descriptionFontSize
             }
-            color: style?.secondaryTextColor ?? settingsStyle.defaultSecondaryTextColor
+            color: settingsStyle.defaultSecondaryTextColor
             opacity: settingsStyle.defaultOpacity
         }
         
@@ -182,7 +181,7 @@ ColumnLayout {
                 selectByMouse: true
                 
                 font {
-                    family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                    family: settingsStyle.defaultFontFamily
                     pixelSize: settingsStyle.defaultFontSize
                 }
                 
@@ -231,9 +230,9 @@ ColumnLayout {
                     }
                     Label {
                         text: parent.parent.text
-                        font.family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                        font.family: settingsStyle.defaultFontFamily
                         font.pixelSize: settingsStyle.defaultFontSize
-                        color: style?.textColor ?? settingsStyle.defaultTextColor
+                        color: settingsStyle.defaultTextColor
                     }
                 }
                 

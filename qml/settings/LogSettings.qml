@@ -7,7 +7,6 @@ ColumnLayout {
     spacing: settingsStyle.defaultSpacing
     
     required property QtObject settings
-    required property QtObject style
     required property var fileManager
     
     // 使用统一的样式对象
@@ -21,20 +20,20 @@ ColumnLayout {
         Label {
             text: qsTr("日志设置")
             font {
-                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                family: settingsStyle.defaultFontFamily
                 pixelSize: settingsStyle.titleFontSize
                 bold: true
             }
-            color: style?.textColor ?? settingsStyle.defaultTextColor
+            color: settingsStyle.defaultTextColor
         }
         
         Label {
             text: qsTr("查看和管理应用程序运行日志")
             font {
-                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
+                family: settingsStyle.defaultFontFamily
                 pixelSize: settingsStyle.descriptionFontSize
             }
-            color: style?.secondaryTextColor ?? settingsStyle.defaultSecondaryTextColor
+            color: settingsStyle.defaultSecondaryTextColor
             opacity: settingsStyle.defaultOpacity
             Layout.fillWidth: true
             wrapMode: Text.Wrap
@@ -56,10 +55,10 @@ ColumnLayout {
             Label {
                 text: qsTr("日志级别:")
                 font {
-                    family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                    pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
+                    family: settingsStyle.defaultFontFamily
+                    pixelSize: settingsStyle.defaultFontSize
                 }
-                color: style?.textColor ?? settingsStyle.defaultTextColor
+                color: settingsStyle.defaultTextColor
             }
             
             ComboBox {
@@ -102,10 +101,10 @@ ColumnLayout {
                     leftPadding: 4
                     text: logLevelFilter.displayText
                     font {
-                        family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                        pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
+                        family: settingsStyle.defaultFontFamily
+                        pixelSize: settingsStyle.defaultFontSize
                     }
-                    color: style?.textColor ?? settingsStyle.defaultTextColor
+                    color: settingsStyle.defaultTextColor
                     verticalAlignment: Text.AlignVCenter
                     elide: Text.ElideRight
                 }
@@ -128,10 +127,10 @@ ColumnLayout {
                 }
                 
                 font {
-                    family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                    pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
+                    family: settingsStyle.defaultFontFamily
+                    pixelSize: settingsStyle.defaultFontSize
                 }
-                color: style?.textColor ?? settingsStyle.defaultTextColor
+                color: settingsStyle.defaultTextColor
                 
                 onTextChanged: {
                     updateLogList()
@@ -175,10 +174,10 @@ ColumnLayout {
                     Label {
                         text: parent.parent.text
                         font {
-                            family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                            pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
+                            family: settingsStyle.defaultFontFamily
+                            pixelSize: settingsStyle.defaultFontSize
                         }
-                        color: style?.textColor ?? settingsStyle.defaultTextColor
+                        color: settingsStyle.defaultTextColor
                     }
                 }
             }
@@ -219,8 +218,8 @@ ColumnLayout {
                     text: modelData
                     wrapMode: Text.Wrap
                     font {
-                        family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                        pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
+                        family: settingsStyle.defaultFontFamily
+                        pixelSize: settingsStyle.defaultFontSize
                     }
                     color: {
                         if (modelData.includes("[ERROR]") || modelData.includes("[FATAL]"))
@@ -280,11 +279,6 @@ ColumnLayout {
     // 在组件完成加载时初始化日志列表
     Component.onCompleted: {
         updateLogList()
-        
-        // 调试信息
-        console.log("LogSettings 初始化")
-        console.log("fileManager:", fileManager)
-        console.log("logger:", fileManager?.logger)
     }
     
     // 监听原始日志列表变化
@@ -308,20 +302,20 @@ ColumnLayout {
             Label {
                 text: qsTr("当前日志文件:")
                 font {
-                    family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                    pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
+                    family: settingsStyle.defaultFontFamily
+                    pixelSize: settingsStyle.defaultFontSize
                     bold: true
                 }
-                color: style?.textColor ?? settingsStyle.defaultTextColor
+                color: settingsStyle.defaultTextColor
             }
             
             Label {
                 text: fileManager?.logger?.getCurrentLogFile() ?? ""
                 font {
-                    family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                    pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
+                    family: settingsStyle.defaultFontFamily
+                    pixelSize: settingsStyle.defaultFontSize
                 }
-                color: style?.secondaryTextColor ?? settingsStyle.defaultSecondaryTextColor
+                color: settingsStyle.defaultSecondaryTextColor
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                 Layout.fillWidth: true
                 
@@ -346,11 +340,11 @@ ColumnLayout {
             Label {
                 text: qsTr("全部日志文件:")
                 font {
-                    family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                    pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
+                    family: settingsStyle.defaultFontFamily
+                    pixelSize: settingsStyle.defaultFontSize
                     bold: true
                 }
-                color: style?.textColor ?? settingsStyle.defaultTextColor
+                color: settingsStyle.defaultTextColor
             }
             
             // 使用 ScrollView 替换 Flow
@@ -381,10 +375,10 @@ ColumnLayout {
                                 return logDir + modelData
                             }
                             font {
-                                family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                                pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
+                                family: settingsStyle.defaultFontFamily
+                                pixelSize: settingsStyle.defaultFontSize
                             }
-                            color: style?.linkColor ?? "#0366d6"
+                            color: settingsStyle.defaultAccentColor
                             wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                             
                             MouseArea {
@@ -414,8 +408,8 @@ ColumnLayout {
             NumberAnimation { duration: 200 }
         }
         
-        color: style?.backgroundColor ?? settingsStyle.defaultBackgroundColor
-        border.color: style?.borderColor ?? settingsStyle.defaultBorderColor
+        color: settingsStyle.defaultBackgroundColor
+        border.color: settingsStyle.defaultBorderColor
         border.width: 1
         radius: settingsStyle.defaultRadius
         
@@ -429,11 +423,11 @@ ColumnLayout {
             Label {
                 text: qsTr("日志统计信息")
                 font {
-                    family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                    pixelSize: style?.defaultFontSize ?? settingsStyle.defaultFontSize
+                    family: settingsStyle.defaultFontFamily
+                    pixelSize: settingsStyle.defaultFontSize
                     bold: true
                 }
-                color: style?.textColor ?? settingsStyle.defaultTextColor
+                color: settingsStyle.defaultTextColor
             }
             
             // 统计数据网格
@@ -451,7 +445,7 @@ ColumnLayout {
                         { label: "警告", key: "warn", color: "#ffc107", icon: "qrc:/resources/images/warning.svg" },
                         { label: "错误", key: "error", color: "#dc3545", icon: "qrc:/resources/images/error.svg" },
                         { label: "致命", key: "fatal", color: "#721c24", icon: "qrc:/resources/images/error.svg" },
-                        { label: "总计", key: "total", color: style?.accentColor ?? "#0078D4", icon: "qrc:/resources/images/chart.svg" }
+                        { label: "总计", key: "total", color: settingsStyle.defaultAccentColor, icon: "qrc:/resources/images/chart.svg" }
                     ]
                     
                     delegate: Rectangle {
@@ -497,17 +491,17 @@ ColumnLayout {
                                 Label {
                                     text: modelData.label
                                     font {
-                                        family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                                        pixelSize: style?.defaultFontSize - 1 ?? settingsStyle.defaultFontSize - 1
+                                        family: settingsStyle.defaultFontFamily
+                                        pixelSize: settingsStyle.defaultFontSize - 1
                                     }
-                                    color: style?.secondaryTextColor ?? settingsStyle.defaultSecondaryTextColor
+                                    color: settingsStyle.defaultSecondaryTextColor
                                 }
                                 
                                 Label {
                                     text: (fileManager?.logger?.logStats?.[modelData.key] ?? 0).toString()
                                     font {
-                                        family: style?.fontFamily ?? settingsStyle.defaultFontFamily
-                                        pixelSize: style?.defaultFontSize + 4 ?? settingsStyle.defaultFontSize + 4
+                                        family: settingsStyle.defaultFontFamily
+                                        pixelSize: settingsStyle.defaultFontSize + 4
                                         bold: true
                                     }
                                     color: modelData.color

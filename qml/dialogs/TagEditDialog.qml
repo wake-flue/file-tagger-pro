@@ -3,6 +3,7 @@ import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import QtQuick.Dialogs
 import FileManager 1.0
+import ".." 1.0
 
 Dialog {
     id: root
@@ -40,8 +41,6 @@ Dialog {
         y = newY
     }
     
-    required property QtObject style
-    
     property bool editMode: false
     property int tagId: -1
     property string tagName: ""
@@ -56,8 +55,8 @@ Dialog {
     
     // 背景设置
     background: Rectangle {
-        color: root.style.backgroundColor
-        border.color: root.style.borderColor
+        color: Style.backgroundColor
+        border.color: Style.borderColor
         border.width: 1
         radius: 6
     }
@@ -75,11 +74,11 @@ Dialog {
             Label {
                 text: qsTr("标签名称")
                 font {
-                    family: root.style.fontFamily
-                    pixelSize: root.style.defaultFontSize
+                    family: Style.fontFamily
+                    pixelSize: Style.fontSizeNormal
                     bold: true
                 }
-                color: root.style.textColor
+                color: Style.textColor
             }
             
             TextField {
@@ -90,15 +89,15 @@ Dialog {
                 
                 background: Rectangle {
                     implicitHeight: 32
-                    color: root.style.backgroundColor
-                    border.color: nameField.activeFocus ? root.style.accentColor : root.style.borderColor
+                    color: Style.backgroundColor
+                    border.color: nameField.activeFocus ? Style.accentColor : Style.borderColor
                     border.width: nameField.activeFocus ? 2 : 1
                     radius: 4
                 }
                 
-                font.family: root.style.fontFamily
-                font.pixelSize: root.style.defaultFontSize
-                color: root.style.textColor
+                font.family: Style.fontFamily
+                font.pixelSize: Style.fontSizeNormal
+                color: Style.textColor
                 
                 selectByMouse: true
             }
@@ -112,11 +111,11 @@ Dialog {
             Label {
                 text: qsTr("标签颜色")
                 font {
-                    family: root.style.fontFamily
-                    pixelSize: root.style.defaultFontSize
+                    family: Style.fontFamily
+                    pixelSize: Style.fontSizeNormal
                     bold: true
                 }
-                color: root.style.textColor
+                color: Style.textColor
             }
             
             Button {
@@ -125,9 +124,9 @@ Dialog {
                 
                 background: Rectangle {
                     implicitHeight: 32
-                    color: root.style.backgroundColor
-                    border.color: parent.down ? root.style.accentColor :
-                                parent.hovered ? root.style.accentColor : root.style.borderColor
+                    color: Style.backgroundColor
+                    border.color: parent.down ? Style.accentColor :
+                                parent.hovered ? Style.accentColor : Style.borderColor
                     border.width: 1
                     radius: 4
                 }
@@ -137,9 +136,9 @@ Dialog {
                     
                     Label {
                         text: qsTr("选择颜色")
-                        font.family: root.style.fontFamily
-                        font.pixelSize: root.style.defaultFontSize
-                        color: root.style.textColor
+                        font.family: Style.fontFamily
+                        font.pixelSize: Style.fontSizeNormal
+                        color: Style.textColor
                         Layout.fillWidth: true
                     }
                     
@@ -166,11 +165,11 @@ Dialog {
             Label {
                 text: qsTr("描述")
                 font {
-                    family: root.style.fontFamily
-                    pixelSize: root.style.defaultFontSize
+                    family: Style.fontFamily
+                    pixelSize: Style.fontSizeNormal
                     bold: true
                 }
-                color: root.style.textColor
+                color: Style.textColor
             }
             
             ScrollView {
@@ -184,15 +183,15 @@ Dialog {
                     wrapMode: TextArea.Wrap
                     
                     background: Rectangle {
-                        color: root.style.backgroundColor
-                        border.color: descriptionField.activeFocus ? root.style.accentColor : root.style.borderColor
+                        color: Style.backgroundColor
+                        border.color: descriptionField.activeFocus ? Style.accentColor : Style.borderColor
                         border.width: descriptionField.activeFocus ? 2 : 1
                         radius: 4
                     }
                     
-                    font.family: root.style.fontFamily
-                    font.pixelSize: root.style.defaultFontSize
-                    color: root.style.textColor
+                    font.family: Style.fontFamily
+                    font.pixelSize: Style.fontSizeNormal
+                    color: Style.textColor
                     
                     selectByMouse: true
                 }
@@ -204,7 +203,7 @@ Dialog {
             id: errorLabel
             visible: false
             color: "#dc3545"
-            font.pixelSize: root.style.defaultFontSize - 1
+            font.pixelSize: Style.fontSizeNormal - 1
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
         }
@@ -223,19 +222,19 @@ Dialog {
                 background: Rectangle {
                     implicitWidth: 80
                     implicitHeight: 32
-                    color: parent.down ? Qt.darker(root.style.backgroundColor, 1.1) :
-                           parent.hovered ? root.style.hoverColor : root.style.backgroundColor
-                    border.color: parent.down ? root.style.accentColor :
-                                parent.hovered ? root.style.accentColor : root.style.borderColor
+                    color: parent.down ? Qt.darker(Style.backgroundColor, 1.1) :
+                           parent.hovered ? Style.hoverColor : Style.backgroundColor
+                    border.color: parent.down ? Style.accentColor :
+                                parent.hovered ? Style.accentColor : Style.borderColor
                     border.width: 1
                     radius: 4
                 }
                 
                 contentItem: Label {
                     text: parent.text
-                    font.family: root.style.fontFamily
-                    font.pixelSize: root.style.defaultFontSize
-                    color: root.style.textColor
+                    font.family: Style.fontFamily
+                    font.pixelSize: Style.fontSizeNormal
+                    color: Style.textColor
                     horizontalAlignment: Text.AlignHCenter
                 }
                 
@@ -249,16 +248,16 @@ Dialog {
                 background: Rectangle {
                     implicitWidth: 80
                     implicitHeight: 32
-                    color: parent.down ? Qt.darker(root.style.accentColor, 1.1) :
-                           parent.hovered ? Qt.lighter(root.style.accentColor, 1.1) : root.style.accentColor
+                    color: parent.down ? Qt.darker(Style.accentColor, 1.1) :
+                           parent.hovered ? Qt.lighter(Style.accentColor, 1.1) : Style.accentColor
                     border.width: 0
                     radius: 4
                 }
                 
                 contentItem: Label {
                     text: parent.text
-                    font.family: root.style.fontFamily
-                    font.pixelSize: root.style.defaultFontSize
+                    font.family: Style.fontFamily
+                    font.pixelSize: Style.fontSizeNormal
                     color: "white"
                     horizontalAlignment: Text.AlignHCenter
                 }

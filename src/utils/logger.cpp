@@ -151,8 +151,6 @@ QStringList Logger::getLogFiles() const
     QStringList filters;
     filters << QString("%1*.%2").arg(baseName, suffix);
     QStringList files = logDir.entryList(filters, QDir::Files, QDir::Time);
-    
-    qDebug() << "找到日志文件:" << files;
     return files;
 }
 
@@ -226,50 +224,10 @@ void Logger::warning(const QString &message) { addMessage(Warning, message); }
 void Logger::error(const QString &message) { addMessage(Error, message); }
 void Logger::fatal(const QString &message) { addMessage(Fatal, message); }
 
-QStringList Logger::getFilteredMessages(int level) const
-{
-    QStringList result;
-    for (const auto &msg : m_messages) {
-        if (msg.level >= level) {
-            result.append(msg.formatted());
-        }
-    }
-    return result;
-}
-
 void Logger::clear()
 {
     m_messages.clear();
     emit messagesChanged();
-}
-
-QStringList Logger::readLogFile(int maxLines) const
-{
-    QFile file(m_logFilePath);
-    if (!file.exists()) {
-        qWarning() << "日志文件不存在:" << m_logFilePath;
-        return QStringList();
-    }
-    
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qWarning() << "无法打开日志文件:" << m_logFilePath << ", 错误:" << file.errorString();
-        return QStringList();
-    }
-
-    QStringList lines;
-    QTextStream in(&file);
-    
-    // 先读取所有行
-    QStringList allLines;
-    while (!in.atEnd()) {
-        QString line = in.readLine();
-        if (!line.isEmpty()) {
-            allLines.prepend(line);  // 倒序存储，最新的在前面
-        }
-    }
-    
-    qDebug() << "读取日志文件，总行数:" << allLines.size();
-    return allLines.mid(0, maxLines);
 }
 
 QStringList Logger::readLogFileFiltered(int level, int maxLines) const
@@ -317,11 +275,6 @@ void Logger::updateFileMessages()
         emit fileMessagesChanged();
         emit logStatsChanged();
     }
-}
-
-void Logger::refreshFileMessages()
-{
-    updateFileMessages();
 }
 
 void Logger::setSearchPattern(const QString &pattern)
@@ -373,39 +326,6 @@ QStringList Logger::searchLogs(const QString &pattern, int maxResults) const
     }
     
     return results;
-}
-
-QVariantMap Logger::getLogStatsByTimeRange(const QDateTime &start, const QDateTime &end) const
-{
-    QVariantMap stats;
-    int debugCount = 0, infoCount = 0, warnCount = 0, errorCount = 0, fatalCount = 0;
-    
-    for (const QString &msg : m_fileMessages) {
-        // 解析日志消息中的时间戳
-        // 假设时间戳格式为 "yyyy-MM-dd hh:mm:ss"
-        QDateTime msgTime = QDateTime::fromString(msg.mid(1, 19), "yyyy-MM-dd hh:mm:ss");
-        
-        if (msgTime >= start && msgTime <= end) {
-            if (msg.contains("[DEBUG]")) debugCount++;
-            else if (msg.contains("[INFO]")) infoCount++;
-            else if (msg.contains("[WARN]")) warnCount++;
-            else if (msg.contains("[ERROR]")) errorCount++;
-            else if (msg.contains("[FATAL]")) fatalCount++;
-        }
-    }
-    
-    stats["debug"] = debugCount;
-    stats["info"] = infoCount;
-    stats["warn"] = warnCount;
-    stats["error"] = errorCount;
-    stats["fatal"] = fatalCount;
-    stats["total"] = debugCount + infoCount + warnCount + errorCount + fatalCount;
-    
-    // 添加时间范围信息
-    stats["startTime"] = start.toString("yyyy-MM-dd hh:mm:ss");
-    stats["endTime"] = end.toString("yyyy-MM-dd hh:mm:ss");
-    
-    return stats;
 }
 
 QString Logger::getLogBasePath()

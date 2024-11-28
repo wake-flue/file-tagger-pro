@@ -3,14 +3,16 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import FileManager 1.0
 import "../dialogs" as Dialogs
+import ".." 1.0
 
 Rectangle {
     id: root
-    color: "#ffffff"
-    radius: 8
+    color: Style.backgroundColor
+    radius: Style.radiusNormal
+    border.color: Style.borderColor
+    border.width: Style.borderWidth
 
     // 必要的属性声明
-    required property var style
     required property var selectedItem
     required property var settings
     
@@ -125,8 +127,8 @@ Rectangle {
     ColumnLayout {
         id: mainLayout
         anchors.fill: parent
-        anchors.margins: 16
-        spacing: 16
+        anchors.margins: Style.contentMargin
+        spacing: Style.spacingLarge
 
         // 预览区域
         Item {
@@ -245,8 +247,8 @@ Rectangle {
                         Text {
                             text: "图片加载失败"
                             color: "#ff4d4f"
-                            font.pixelSize: root.style.defaultFontSize
-                            font.family: root.style.fontFamily
+                            font.pixelSize: Style.fontSizeNormal
+                            font.family: Style.fontFamily
                         }
                     }
                 }
@@ -288,17 +290,17 @@ Rectangle {
                     Label {
                         text: "文件详情"
                         font {
-                            family: root.style.fontFamily
+                            family: Style.fontFamily
                             bold: true
-                            pixelSize: root.style.defaultFontSize + 2
+                            pixelSize: Style.fontSizeNormal
                         }
-                        color: root.style.textColor
+                        color: Style.textColor
                     }
 
                     Rectangle {
                         Layout.fillWidth: true
                         height: 1
-                        color: root.style.borderColor
+                        color: Style.borderColor
                         opacity: 0.3
                         Layout.alignment: Qt.AlignVCenter
                     }
@@ -334,29 +336,29 @@ Rectangle {
                                 
                                 Image {
                                     source: "qrc:/resources/images/file.svg"
-                                    sourceSize.width: 14
-                                    sourceSize.height: 14
+                                    sourceSize.width: Style.iconSizeMini
+                                    sourceSize.height: Style.iconSizeMini
                                     opacity: 0.6
                                 }
                                 
                                 Label {
                                     text: "文件名"
                                     font {
-                                        family: root.style.fontFamily
-                                        pixelSize: root.style.defaultFontSize - 1
+                                        family: Style.fontFamily
+                                        pixelSize: Style.fontSizeSmall
                                     }
-                                    color: root.style.secondaryTextColor
+                                    color: Style.lightTextColor
                                 }
                             }
                             
                             Label {
                                 text: root.selectedItem ? (root.selectedItem.fileName || "-") : "-"
                                 font {
-                                    family: root.style.fontFamily
-                                    pixelSize: root.style.defaultFontSize
+                                    family: Style.fontFamily
+                                    pixelSize: Style.fontSizeSmall
                                     weight: Font.Medium
                                 }
-                                color: root.style.textColor
+                                color: Style.textColor
                                 Layout.fillWidth: true
                                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                             }
@@ -388,18 +390,18 @@ Rectangle {
                                 
                                 Image {
                                     source: "qrc:/resources/images/tag.svg"
-                                    sourceSize.width: 14
-                                    sourceSize.height: 14
+                                    sourceSize.width: Style.iconSizeMini
+                                    sourceSize.height: Style.iconSizeMini
                                     opacity: 0.6
                                 }
                                 
                                 Label {
                                     text: "标签"
                                     font {
-                                        family: root.style.fontFamily
-                                        pixelSize: root.style.defaultFontSize - 1
+                                        family: Style.fontFamily
+                                        pixelSize: Style.fontSizeSmall
                                     }
-                                    color: root.style.secondaryTextColor
+                                    color: Style.lightTextColor
                                 }
                                 
                                 Item { Layout.fillWidth: true }
@@ -407,10 +409,10 @@ Rectangle {
                                 Label {
                                     text: root.fileTags.length > 0 ? root.fileTags.length + "个标签" : ""
                                     font {
-                                        family: root.style.fontFamily
-                                        pixelSize: root.style.defaultFontSize - 1
+                                        family: Style.fontFamily
+                                        pixelSize: Style.fontSizeSmall
                                     }
-                                    color: root.style.secondaryTextColor
+                                    color: Style.lightTextColor
                                     visible: root.fileTags.length > 0
                                 }
                             }
@@ -435,8 +437,8 @@ Rectangle {
                                             text: modelData.name || ""
                                             color: "#ffffff"
                                             font {
-                                                family: root.style.fontFamily
-                                                pixelSize: root.style.defaultFontSize - 1
+                                                family: Style.fontFamily
+                                                pixelSize: Style.fontSizeSmall
                                             }
                                         }
                                     }
@@ -447,10 +449,10 @@ Rectangle {
                                     visible: root.fileTags.length === 0
                                     text: "暂无标签"
                                     font {
-                                        family: root.style.fontFamily
-                                        pixelSize: root.style.defaultFontSize
+                                        family: Style.fontFamily
+                                        pixelSize: Style.fontSizeSmall
                                     }
-                                    color: root.style.secondaryTextColor
+                                    color: Style.lightTextColor
                                 }
                             }
                         }
@@ -478,29 +480,29 @@ Rectangle {
                                 
                                 Image {
                                     source: "qrc:/resources/images/type.svg"
-                                    sourceSize.width: 14
-                                    sourceSize.height: 14
+                                    sourceSize.width: Style.iconSizeMini
+                                    sourceSize.height: Style.iconSizeMini
                                     opacity: 0.6
                                 }
                                 
                                 Label {
                                     text: "类型"
                                     font {
-                                        family: root.style.fontFamily
-                                        pixelSize: root.style.defaultFontSize - 1
+                                        family: Style.fontFamily
+                                        pixelSize: Style.fontSizeSmall
                                     }
-                                    color: root.style.secondaryTextColor
+                                    color: Style.lightTextColor
                                 }
                             }
                             
                             Label {
                                 text: root.selectedItem ? (root.selectedItem.fileType || "-") : "-"
                                 font {
-                                    family: root.style.fontFamily
-                                    pixelSize: root.style.defaultFontSize
+                                    family: Style.fontFamily
+                                    pixelSize: Style.fontSizeSmall
                                     weight: Font.Medium
                                 }
-                                color: root.style.textColor
+                                color: Style.textColor
                                 Layout.fillWidth: true
                                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                             }
@@ -529,29 +531,29 @@ Rectangle {
                                 
                                 Image {
                                     source: "qrc:/resources/images/size.svg"
-                                    sourceSize.width: 14
-                                    sourceSize.height: 14
+                                    sourceSize.width: Style.iconSizeMini
+                                    sourceSize.height: Style.iconSizeMini
                                     opacity: 0.6
                                 }
                                 
                                 Label {
                                     text: "大小"
                                     font {
-                                        family: root.style.fontFamily
-                                        pixelSize: root.style.defaultFontSize - 1
+                                        family: Style.fontFamily
+                                        pixelSize: Style.fontSizeSmall
                                     }
-                                    color: root.style.secondaryTextColor
+                                    color: Style.lightTextColor
                                 }
                             }
                             
                             Label {
                                 text: root.selectedItem ? (root.selectedItem.displaySize || "-") : "-"
                                 font {
-                                    family: root.style.fontFamily
-                                    pixelSize: root.style.defaultFontSize
+                                    family: Style.fontFamily
+                                    pixelSize: Style.fontSizeSmall
                                     weight: Font.Medium
                                 }
-                                color: root.style.textColor
+                                color: Style.textColor
                                 Layout.fillWidth: true
                                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                             }
@@ -581,29 +583,29 @@ Rectangle {
                                 
                                 Image {
                                     source: "qrc:/resources/images/time.svg"
-                                    sourceSize.width: 14
-                                    sourceSize.height: 14
+                                    sourceSize.width: Style.iconSizeMini
+                                    sourceSize.height: Style.iconSizeMini
                                     opacity: 0.6
                                 }
                                 
                                 Label {
                                     text: "修改时间"
                                     font {
-                                        family: root.style.fontFamily
-                                        pixelSize: root.style.defaultFontSize - 1
+                                        family: Style.fontFamily
+                                        pixelSize: Style.fontSizeSmall
                                     }
-                                    color: root.style.secondaryTextColor
+                                    color: Style.lightTextColor
                                 }
                             }
                             
                             Label {
                                 text: root.selectedItem ? (root.selectedItem.displayDate || "-") : "-"
                                 font {
-                                    family: root.style.fontFamily
-                                    pixelSize: root.style.defaultFontSize
+                                    family: Style.fontFamily
+                                    pixelSize: Style.fontSizeSmall
                                     weight: Font.Medium
                                 }
-                                color: root.style.textColor
+                                color: Style.textColor
                                 Layout.fillWidth: true
                                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                             }
@@ -633,18 +635,18 @@ Rectangle {
                             
                             Image {
                                 source: "qrc:/resources/images/path.svg"
-                                sourceSize.width: 14
-                                sourceSize.height: 14
+                                sourceSize.width: Style.iconSizeMini
+                                sourceSize.height: Style.iconSizeMini
                                 opacity: 0.6
                             }
                             
                             Label {
                                 text: "路径"
                                 font {
-                                    family: root.style.fontFamily
-                                    pixelSize: root.style.defaultFontSize - 1
+                                    family: Style.fontFamily
+                                    pixelSize: Style.fontSizeSmall
                                 }
-                                color: root.style.secondaryTextColor
+                                color: Style.lightTextColor
                             }
                         }
 
@@ -652,11 +654,11 @@ Rectangle {
                             id: pathLabel
                             text: root.selectedItem ? (root.selectedItem.filePath || "-") : "-"
                             font {
-                                family: root.style.fontFamily
-                                pixelSize: root.style.defaultFontSize
+                                family: Style.fontFamily
+                                pixelSize: Style.fontSizeSmall
                                 weight: Font.Medium
                             }
-                            color: root.style.textColor
+                            color: Style.textColor
                             Layout.fillWidth: true
                             wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                             elide: Text.ElideMiddle
