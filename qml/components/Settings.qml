@@ -1,84 +1,98 @@
 import QtQuick
-import QtCore
+import Qt.labs.settings
 import Qt.labs.platform as Platform
 
-Item {
+Settings {
     id: settings
-
-    // 内部使用 Settings 对象
-    QtObject {
-        id: internal
-        property Settings settings: Settings {
-            id: settingsBackend
-            location: Settings.UserScope
-        }
+    
+    // 使用标准路径和统一的文件名
+    fileName: {
+        const dataPath = Platform.StandardPaths.writableLocation(Platform.StandardPaths.AppDataLocation)
+        // 将 URL 转换为本地路径
+        const url = Qt.resolvedUrl(dataPath)
+        const localPath = url.toString().replace(/^file:\/\/\//, "")
+        // 在 Windows 上确保使用反斜杠
+        const normalizedPath = Qt.platform.os === "windows" ? 
+            localPath.split("/").join("\\") : 
+            localPath
+        const path = normalizedPath + (Qt.platform.os === "windows" ? "\\" : "/") + "FileTaggingPro.ini"
+        console.log("Settings file path (normalized):", path)
+        return path
     }
     
-    // 属性定义
-    property string imagePlayer: internal.settings.value("imagePlayer", "")
-    property string videoPlayer: internal.settings.value("videoPlayer", "")
-    property string fileFilter: internal.settings.value("fileFilter", "")
-    property string ffmpegPath: internal.settings.value("ffmpegPath", "D:/Environment/ffmpeg")
+    category: "General"
     
+    property string imagePlayer: ""  // 图片查看器路径
+    property string videoPlayer: ""  // 视频播放器路径
+    property string fileFilter: ""   // 文件筛选器设置
+
     // 设置文件格式
-    property var imageFilter: ["jpg", "jpeg", "png", "gif", "bmp", "webp", "tiff", "svg", "ico"]
-    property var videoFilter: ["mp4", "avi", "mkv", "mov", "wmv", "flv", "webm", "m4v", "mpg", "mpeg"]
-    property var audioFilter: ["mp3", "wav", "flac", "m4a", "aac", "ogg", "wma"]
-    property var documentFilter: ["txt", "doc", "docx", "pdf", "xls", "xlsx", "ppt", "pptx", "md"]
-    property var archiveFilter: ["zip", "rar", "7z", "tar", "gz", "bz2"]
-    property var devFilter: ["cpp", "h", "hpp", "c", "py", "js", "html", "css", "java", "json", "xml", "yml", "qml"]
+    property var imageFilter: ["jpg", "jpeg", "png", "gif", "bmp", "webp", "tiff", "svg", "ico"]  // 图片文件格式
+    property var videoFilter: ["mp4", "avi", "mkv", "mov", "wmv", "flv", "webm", "m4v", "mpg", "mpeg"]  // 视频文件格式
+    property var audioFilter: ["mp3", "wav", "flac", "m4a", "aac", "ogg", "wma"]  // 音频文件格式
+    property var documentFilter: ["txt", "doc", "docx", "pdf", "xls", "xlsx", "ppt", "pptx", "md"]  // 文档文件格式
+    property var archiveFilter: ["zip", "rar", "7z", "tar", "gz", "bz2"]  // 压缩文件格式
+    property var devFilter: ["cpp", "h", "hpp", "c", "py", "js", "html", "css", "java", "json", "xml", "yml", "qml"]  // 开发文件格式
     
-    property int iconSize: internal.settings.value("iconSize", 128)
-    property string previewQuality: internal.settings.value("previewQuality", "medium")
+    property int iconSize: 128  // 默认图标大小
+    property string previewQuality: "medium"  // 默认预览质量
     
-    // 同步方法
+    // 添加同步方法
     function sync() {
-        internal.settings.sync()
+        // 输出完整的设置信息
         console.log("Settings 完整信息:", JSON.stringify({
+            category: category,
+            fileName: fileName,
             imagePlayer: imagePlayer,
             videoPlayer: videoPlayer,
-            fileFilter: fileFilter,
-            ffmpegPath: ffmpegPath,
-            iconSize: iconSize,
-            previewQuality: previewQuality
-        }, null, 2))
+            fileFilter: fileFilter
+        }, null, 2));
     }
     
     function setValue(key: string, value: any) {
-        console.log("Settings setValue - key:", key, "value:", value)
+        console.log("Settings setValue - key:", key, "value:", value);
         
-        internal.settings.setValue(key, value)
-        
-        // 更新对应的属性
         if (key === "imagePlayer") {
-            imagePlayer = value
+            imagePlayer = value;
         } else if (key === "videoPlayer") {
-            videoPlayer = value
+            videoPlayer = value;
         } else if (key === "fileFilter") {
-            fileFilter = value
-        } else if (key === "ffmpegPath") {
-            ffmpegPath = value
+            fileFilter = value;
         } else if (key === "iconSize") {
-            iconSize = value
+            iconSize = value;
         } else if (key === "previewQuality") {
-            previewQuality = value
+            previewQuality = value;
         }
         
-        // 输出当前状态
-        console.log("Settings 当前状态:")
-        console.log("- imagePlayer:", imagePlayer)
-        console.log("- videoPlayer:", videoPlayer)
-        console.log("- fileFilter:", fileFilter)
-        console.log("- ffmpegPath:", ffmpegPath)
-        console.log("- iconSize:", iconSize)
-        console.log("- previewQuality:", previewQuality)
+        // 每次设置值后输出当前状态
+        console.log("Settings 当前状态:");
+        console.log("Settings 文件路径:", fileName);
+        console.log("- imagePlayer:", imagePlayer);
+        console.log("- videoPlayer:", videoPlayer);
+        console.log("- fileFilter:", fileFilter);
+        console.log("- iconSize:", iconSize);
+        console.log("- previewQuality:", previewQuality);
     }
     
     function value(key: string, defaultValue: any): any {
-        return internal.settings.value(key, defaultValue)
+        let result;
+        if (key === "imagePlayer") {
+            result = imagePlayer || defaultValue;
+        } else if (key === "videoPlayer") {
+            result = videoPlayer || defaultValue;
+        } else if (key === "fileFilter") {
+            result = fileFilter || defaultValue;
+        } else {
+            result = defaultValue;
+        }
+        
+        console.log("Settings value - key:", key, "defaultValue:", defaultValue, "result:", result);
+        return result;
     }
     
+    // 修改组件完成时的处理
     Component.onCompleted: {
+        // 强制同步一次设置
         sync()
     }
 }
