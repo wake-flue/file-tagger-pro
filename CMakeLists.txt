@@ -91,6 +91,9 @@ set(QML_FILES
         qml/settings/TagSettings.qml
         qml/settings/GeneralSettings.qml
         qml/utils/Logger.qml
+        qml/utils/WindowControlButton.qml
+        qml/utils/WindowTitleBar.qml
+        qml/utils/WindowResizer.qml
 )
 
 # 添加 qmldir 文件到资源列表

@@ -44,7 +44,7 @@ Rectangle {
                 
                 background: Rectangle {
                     implicitWidth: 90  // 减小按钮宽度
-                    implicitHeight: 28 // 减���按钮高度
+                    implicitHeight: 28 // 减小按钮高度
                     color: selectFolderButton.down ? Qt.darker(root.style.backgroundColor, 1.1) : 
                            selectFolderButton.hovered ? root.style.hoverColor : root.style.backgroundColor
                     border.color: selectFolderButton.down ? root.style.accentColor : 
@@ -122,36 +122,16 @@ Rectangle {
             }
         }
 
-        // 中间路径显示
-        Rectangle {
+        // 添加弹性空间
+        Item {
             Layout.fillWidth: true
-            Layout.preferredHeight: 28
-            Layout.rightMargin: 8  // 添加右边距
-            color: "#f5f5f5"
-            radius: 3
-            border.color: root.style.borderColor
-            border.width: 1
-            
-            Text {
-                anchors {
-                    fill: parent
-                    leftMargin: 8
-                    rightMargin: 8
-                }
-                text: root.fileManager.currentPath || "未选择目录"
-                elide: Text.ElideMiddle
-                font.family: root.style.fontFamily
-                font.pixelSize: root.style.defaultFontSize - 1
-                color: root.style.textColor
-                verticalAlignment: Text.AlignVCenter
-            }
         }
 
         // 添加搜索框
         Rectangle {
             Layout.preferredWidth: 200
             Layout.preferredHeight: 28
-            Layout.rightMargin: 8
+            Layout.alignment: Qt.AlignVCenter
             color: "#f5f5f5"
             radius: 3
             border.color: searchInput.activeFocus ? root.style.accentColor : root.style.borderColor
@@ -223,7 +203,7 @@ Rectangle {
         // 右侧按钮组
         Row {
             spacing: 4
-            Layout.alignment: Qt.AlignVCenter
+            Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
 
             // 添加设置按钮
             Button {

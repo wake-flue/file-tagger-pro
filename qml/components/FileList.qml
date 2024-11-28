@@ -17,12 +17,6 @@ Item {
     
     Components.Settings {
         id: settings
-        
-        // 添加调试输出
-        Component.onCompleted: {
-            console.log("FileList Settings 初始化完成")
-            console.log("当前图标大小:", iconSize)
-        }
     }
     
     // 添加监听
@@ -30,7 +24,6 @@ Item {
         target: settings
         
         function onIconSizeChanged() {
-            console.log("图标大小已更改为:", settings.iconSize)
             // 强制重新布局
             gridView.forceLayout()
         }

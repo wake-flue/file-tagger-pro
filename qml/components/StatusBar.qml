@@ -88,7 +88,7 @@ Rectangle {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     
-                    onClicked: {
+                    onDoubleClicked: {
                         if (root.settingsWindow) {
                             root.settingsWindow.currentIndex = 5  // 切换到日志设置页面
                             root.settingsWindow.show()
@@ -137,7 +137,7 @@ Rectangle {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     
-                    onClicked: {
+                    onDoubleClicked: {
                         if (isValid && fileManager.currentPath) {
                             Qt.openUrlExternally("file:///" + fileManager.currentPath)
                         }

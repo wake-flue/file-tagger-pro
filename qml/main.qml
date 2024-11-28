@@ -7,6 +7,7 @@ import FileManager 1.0
 import "./components" as Components
 import "./dialogs" as Dialogs
 import "./settings" as Settings
+import "./utils" as Utils
 
 Window {
     id: mainWindow
@@ -84,202 +85,11 @@ Window {
         }
 
         // 标题栏
-        Rectangle {
+        Utils.WindowTitleBar {
             id: titleBar
-            height: 32
-            color: style.backgroundColor
-            radius: 0
-            anchors {
-                top: parent.top
-                left: parent.left
-                right: parent.right
-            }
-
-            // 标题栏内容
-            RowLayout {
-                anchors.fill: parent
-                spacing: 0
-
-                // 应用图标
-                Image {
-                    Layout.leftMargin: 8
-                    Layout.preferredWidth: 18
-                    Layout.preferredHeight: 18
-                    source: "qrc:/resources/icons/app_icon.svg"
-                }
-
-                // 标题文本
-                Text {
-                    Layout.leftMargin: 8
-                    text: mainWindow.title
-                    color: style.textColor
-                    font.family: style.fontFamily
-                    font.pixelSize: style.defaultFontSize
-                }
-
-                // 弹性空间
-                Item {
-                    Layout.fillWidth: true
-                }
-
-                // 窗口控制按钮
-                Row {
-                    Layout.alignment: Qt.AlignRight
-                    spacing: 0
-
-                    // 最小化按钮
-                    Loader {
-                        sourceComponent: titleBarButtonComponent
-                        onLoaded: {
-                            item.iconSource = "qrc:/resources/images/window-minimize.svg"
-                            item.clicked.connect(function() { mainWindow.showMinimized() })
-                        }
-                    }
-
-                    // 最大化/还原按钮
-                    Loader {
-                        id: maximizeButton
-                        sourceComponent: titleBarButtonComponent
-                        property bool isMaximized: mainWindow.visibility === Window.Maximized
-
-                        Component.onCompleted: {
-                            item.iconSource = isMaximized ? "qrc:/resources/images/window-restore.svg" : "qrc:/resources/images/window-maximize.svg"
-                        }
-
-                        Connections {
-                            target: mainWindow
-                            function onVisibilityChanged() {
-                                if (maximizeButton.item) {
-                                    maximizeButton.item.iconSource = mainWindow.visibility === Window.Maximized ? 
-                                        "qrc:/resources/images/window-restore.svg" : "qrc:/resources/images/window-maximize.svg"
-                                }
-                            }
-                        }
-
-                        onLoaded: {
-                            item.clicked.connect(function() {
-                                if (mainWindow.visibility === Window.Maximized) {
-                                    mainWindow.showNormal()
-                                } else {
-                                    mainWindow.showMaximized()
-                                }
-                            })
-                        }
-                    }
-
-                    // 关闭按钮
-                    Loader {
-                        sourceComponent: titleBarButtonComponent
-                        onLoaded: {
-                            item.iconSource = "qrc:/resources/images/window-close.svg"
-                            item.hoverColor = "#E81123"
-                            item.hoverTextColor = "#FFFFFF"
-                            item.clicked.connect(function() { mainWindow.close() })
-                        }
-                    }
-                }
-            }
-
-            // 标题栏拖动区域
-            MouseArea {
-                id: titleBarMouseArea
-                anchors.fill: parent
-                anchors.rightMargin: 138
-                property point clickPos: Qt.point(0, 0)
-                property bool isDragging: false
-                property point startWindowPos: Qt.point(0, 0)
-                property point startMousePos: Qt.point(0, 0)
-                property bool needsSizeCheck: false
-
-                function handlePressed(mouseX, mouseY) {
-                    clickPos = Qt.point(mouseX, mouseY)
-                    startWindowPos = Qt.point(mainWindow.x, mainWindow.y)
-                    startMousePos = mapToGlobal(mouseX, mouseY)
-                    mainWindow.dragStartSize = Qt.size(mainWindow.width, mainWindow.height)
-                    isDragging = false
-                    needsSizeCheck = false
-                }
-
-                function handlePositionChanged(mouseX, mouseY) {
-                    if (!isDragging) {
-                        var currentGlobalPos = mapToGlobal(mouseX, mouseY)
-                        var deltaX = Math.abs(currentGlobalPos.x - startMousePos.x)
-                        var deltaY = Math.abs(currentGlobalPos.y - startMousePos.y)
-                        
-                        if (deltaX > 5 || deltaY > 5) {
-                            isDragging = true
-                            if (mainWindow.visibility === Window.Maximized) {
-                                mainWindow.showNormal()
-                                var relativeX = mouseX / titleBar.width
-                                mainWindow.width = previousWindowState.width
-                                mainWindow.height = previousWindowState.height
-                                mainWindow.dragStartSize = Qt.size(previousWindowState.width, previousWindowState.height)
-                                
-                                var newX = currentGlobalPos.x - (mainWindow.width * relativeX)
-                                var newY = currentGlobalPos.y - (clickPos.y)
-                                mainWindow.x = newX
-                                mainWindow.y = newY
-                                startWindowPos = Qt.point(newX, newY)
-                                startMousePos = currentGlobalPos
-                            }
-                            needsSizeCheck = true
-                        }
-                    }
-                    
-                    if (isDragging && mainWindow.visibility !== Window.Maximized) {
-                        mainWindow.width = mainWindow.dragStartSize.width
-                        mainWindow.height = mainWindow.dragStartSize.height
-                        
-                        var currentPos = mapToGlobal(mouseX, mouseY)
-                        var totalDeltaX = currentPos.x - startMousePos.x
-                        var totalDeltaY = currentPos.y - startMousePos.y
-                        
-                        mainWindow.x = startWindowPos.x + totalDeltaX
-                        mainWindow.y = startWindowPos.y + totalDeltaY
-                    }
-                }
-
-                function checkAndAdjustSize() {
-                    if (!needsSizeCheck) return
-                    
-                    var targetWidth = Math.max(mainWindow.width, minimumWidth)
-                    var targetHeight = Math.max(mainWindow.height, minimumHeight)
-                    
-                    if (mainWindow.width < mainWindow.dragStartSize.width * 0.8) {
-                        targetWidth = mainWindow.dragStartSize.width
-                    }
-                    if (mainWindow.height < mainWindow.dragStartSize.height * 0.8) {
-                        targetHeight = mainWindow.dragStartSize.height
-                    }
-                    
-                    if (targetWidth !== mainWindow.width || targetHeight !== mainWindow.height) {
-                        mainWindow.width = targetWidth
-                        mainWindow.height = targetHeight
-                    }
-                    
-                    needsSizeCheck = false
-                }
-
-                function handleDoubleClicked() {
-                    if (mainWindow.visibility === Window.Maximized) {
-                        mainWindow.showNormal()
-                    } else {
-                        previousWindowState = Qt.rect(mainWindow.x, mainWindow.y, mainWindow.width, mainWindow.height)
-                        mainWindow.showMaximized()
-                    }
-                }
-
-                onPressed: function(event) { handlePressed(event.x, event.y) }
-                onPositionChanged: function(event) { handlePositionChanged(event.x, event.y) }
-                onDoubleClicked: handleDoubleClicked()
-                onReleased: {
-                    if (isDragging) {
-                        checkAndAdjustSize()
-                    }
-                    isDragging = false
-                    startWindowPos = Qt.point(mainWindow.x, mainWindow.y)
-                }
-            }
+            window: mainWindow
+            style: style
+            title: mainWindow.title
         }
 
         // 原有内容容器
@@ -344,72 +154,11 @@ Window {
         }
 
         // 窗口缩放区域
-        MouseArea {
+        Utils.WindowResizer {
             id: resizeArea
-            width: 8
-            height: 8
+            window: mainWindow
             anchors.right: parent.right
             anchors.bottom: parent.bottom
-            cursorShape: Qt.SizeFDiagCursor
-
-            property point clickPos: Qt.point(0, 0)
-
-            function handlePressed(mouseX, mouseY) {
-                clickPos = Qt.point(mouseX, mouseY)
-            }
-
-            function handlePositionChanged(mouseX, mouseY) {
-                if (pressed && mainWindow.visibility !== Window.Maximized) {
-                    var delta = Qt.point(mouseX - clickPos.x, mouseY - clickPos.y)
-                    mainWindow.width = Math.max(mainWindow.width + delta.x, mainWindow.minimumWidth)
-                    mainWindow.height = Math.max(mainWindow.height + delta.y, mainWindow.minimumHeight)
-                }
-            }
-
-            onPressed: function(event) { handlePressed(event.x, event.y) }
-            onPositionChanged: function(event) { handlePositionChanged(event.x, event.y) }
-        }
-    }
-
-    // 标题栏按钮组件
-    Component {
-        id: titleBarButtonComponent
-        Rectangle {
-            property string buttonText: ""
-            property string iconSource: ""
-            property color hoverColor: style.hoverColor
-            property color hoverTextColor: style.textColor
-            property color normalColor: "transparent"
-            property color normalTextColor: style.textColor
-            
-            width: 46
-            height: 32
-            color: mouseArea.containsMouse ? hoverColor : normalColor
-            
-            Image {
-                id: buttonIcon
-                anchors.centerIn: parent
-                source: parent.iconSource
-                sourceSize.width: 10
-                sourceSize.height: 10
-                visible: parent.iconSource !== ""
-            }
-            
-            MultiEffect {
-                source: buttonIcon
-                anchors.fill: buttonIcon
-                colorization: 1.0
-                colorizationColor: mouseArea.containsMouse ? parent.hoverTextColor : parent.normalTextColor
-            }
-            
-            MouseArea {
-                id: mouseArea
-                anchors.fill: parent
-                hoverEnabled: true
-                onClicked: parent.clicked()
-            }
-            
-            signal clicked()
         }
     }
 
@@ -485,7 +234,6 @@ Window {
     Component.onCompleted: {
         if (settings && settings.fileFilter) {
             fileManager.fileModel.filterPattern = settings.fileFilter
-            console.log("应用文件过滤器:", settings.fileFilter)
         }
     }
 }

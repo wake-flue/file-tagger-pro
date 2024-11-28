@@ -99,16 +99,6 @@ Settings {
     
     // 修改组件完成时的处理
     Component.onCompleted: {
-        console.log("Settings 组件初始化完成")
-        console.log("Settings 文件路径:", fileName)
-        console.log("初始设置值:")
-        console.log("- imagePlayer:", imagePlayer)
-        console.log("- videoPlayer:", videoPlayer)
-        console.log("- fileFilter:", fileFilter)
-        console.log("- ffmpegPath:", ffmpegPath)
-        console.log("- iconSize:", iconSize)
-        console.log("- previewQuality:", previewQuality)
-        
         // 强制同步一次设置
         sync()
     }

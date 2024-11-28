@@ -38,15 +38,7 @@ Rectangle {
     
     // 监听组件创建完成
     Component.onCompleted: {
-        console.debug("[DetailPanel] Component completed")
-        console.debug("[DetailPanel] Initial selectedItem:", selectedItem)
-        console.debug("[DetailPanel] Initial currentFileId:", currentFileId)
         updateTags()
-    }
-    
-    // 监听组件销毁
-    Component.onDestruction: {
-        console.debug("[DetailPanel] Component being destroyed")
     }
     
     // 监听 selectedItem 变化

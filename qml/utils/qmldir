@@ -1,2 +1,5 @@
 module Utils
-singleton Logger 1.0 Logger.qml 
+singleton Logger 1.0 Logger.qml
+WindowControlButton 1.0 WindowControlButton.qml
+WindowTitleBar 1.0 WindowTitleBar.qml
+WindowResizer 1.0 WindowResizer.qml
