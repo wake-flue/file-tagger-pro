@@ -29,9 +29,11 @@ ColumnLayout {
             }
         })
         
-        filterInput.isInternalUpdate = true
-        filterInput.text = filters.join(";")
-        filterInput.isInternalUpdate = false
+        // 只有当新的过滤器文本与当前文本不同时才更新
+        let newText = filters.join(";")
+        if (newText !== filterInput.text) {
+            filterInput.text = newText
+        }
     }
     
     // 标题和说明
@@ -76,37 +78,34 @@ ColumnLayout {
             color: settingsStyle.defaultSecondaryTextColor
         }
         
-        TextArea {
-            id: filterInput
-            text: settings?.fileFilter ?? ""
-            placeholderText: qsTr("例如: *.jpg;*.png;*.gif")
+        ScrollView {
             Layout.fillWidth: true
             Layout.preferredHeight: 80
-            selectByMouse: true
-            wrapMode: TextArea.Wrap
             
-            font {
-                family: settingsStyle.defaultFontFamily
-                pixelSize: settingsStyle.defaultFontSize
+            TextArea {
+                id: filterInput
+                placeholderText: qsTr("例如: *.jpg;*.png;*.gif")
+                selectByMouse: true
+                wrapMode: TextArea.Wrap
+                
+                font {
+                    family: settingsStyle.defaultFontFamily
+                    pixelSize: settingsStyle.defaultFontSize
+                }
+                
+                background: Rectangle {
+                    implicitHeight: 80
+                    color: filterInput.enabled ? settingsStyle.defaultInputBackgroundColor : "#F0F0F0"
+                    border.color: filterInput.focus ? 
+                        settingsStyle.defaultInputFocusBorderColor : 
+                        filterInput.hovered ? settingsStyle.defaultButtonHoverBorderColor :
+                        settingsStyle.defaultInputBorderColor
+                    border.width: filterInput.focus ? 2 : 1
+                    radius: settingsStyle.defaultRadius
+                }
+                
+                property bool isInternalUpdate: false
             }
-            
-            background: Rectangle {
-                implicitHeight: 80
-                color: filterInput.enabled ? settingsStyle.defaultInputBackgroundColor : "#F0F0F0"
-                border.color: filterInput.focus ? 
-                    settingsStyle.defaultInputFocusBorderColor : 
-                    filterInput.hovered ? settingsStyle.defaultButtonHoverBorderColor :
-                    settingsStyle.defaultInputBorderColor
-                border.width: filterInput.focus ? 2 : 1
-                radius: settingsStyle.defaultRadius
-            }
-            
-            ScrollBar.vertical: ScrollBar {
-                policy: ScrollBar.AsNeeded
-                visible: filterInput.contentHeight > filterInput.height
-            }
-            
-            property bool isInternalUpdate: false
         }
     }
     
@@ -223,7 +222,9 @@ ColumnLayout {
                                         }
                                     }
                                 }
-                                selectedTypes.push(modelData.type)
+                                if (!selectedTypes.includes(modelData.type)) {
+                                    selectedTypes.push(modelData.type)
+                                }
                             }
                         } else {
                             let index = selectedTypes.indexOf(modelData.type)
@@ -231,6 +232,7 @@ ColumnLayout {
                                 selectedTypes.splice(index, 1)
                             }
                         }
+                        selectedTypes = [...new Set(selectedTypes)]
                         updateFilterText()
                     }
                 }
@@ -295,6 +297,7 @@ ColumnLayout {
         
         let currentFilters = (settings.fileFilter || "").split(";").map(f => f.trim().toLowerCase())
         
+        // 设置初始选中状态
         if (currentFilters.length === 1 && currentFilters[0] === "*.*") {
             selectedTypes = ["all"]
         } else {
@@ -310,7 +313,7 @@ ColumnLayout {
             Object.entries(typeMap).forEach(([type, extensions]) => {
                 if (!extensions) return;
                 let typeFilters = extensions.map(ext => "*." + ext.toLowerCase())
-                let hasAllExtensions = typeFilters.some(filter => 
+                let hasAllExtensions = typeFilters.every(filter => 
                     currentFilters.includes(filter)
                 )
                 if (hasAllExtensions) {
@@ -319,6 +322,7 @@ ColumnLayout {
             })
         }
         
+        // 设置复选框状态
         Qt.callLater(() => {
             for (let i = 0; i < typeRepeater.count; i++) {
                 let checkbox = typeRepeater.itemAt(i)
@@ -334,6 +338,9 @@ ColumnLayout {
                     checkbox.checked = selectedTypes.includes(type)
                 }
             }
+            
+            // 最后设置文本
+            filterInput.text = settings.fileFilter || ""
         })
     }
     

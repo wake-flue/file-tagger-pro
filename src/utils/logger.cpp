@@ -29,6 +29,11 @@ Logger::~Logger()
 void Logger::setLogFilePath(const QString &path)
 {
     if (m_logFilePath != path) {
+        // 如果当前文件已打开，先关闭它
+        if (m_logFile.isOpen()) {
+            m_logFile.close();
+        }
+        
         m_logFilePath = path;
         initializeLogFile();
         emit logFilePathChanged();
@@ -41,6 +46,11 @@ void Logger::initializeLogFile()
     Logger::ensureLogDirectories();
     
     if (!m_logFilePath.isEmpty()) {
+        // 如果文件已经打开，先关闭它
+        if (m_logFile.isOpen()) {
+            m_logFile.close();
+        }
+        
         m_logFile.setFileName(m_logFilePath);
         if (!m_logFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
             qWarning() << "Failed to open log file:" << m_logFilePath;

@@ -75,11 +75,18 @@ void FileSystemManager::setWatchPath(const QString &path)
         m_currentPath = path;
         emit currentPathChanged(path);
         
-        if (!m_currentPath.isEmpty()) {
-            // 移除旧路径的监控
-            m_fileWatcher->removePaths(m_fileWatcher->files());
-            m_fileWatcher->removePaths(m_fileWatcher->directories());
-            m_logger->info(QString("停止监控路径: %1").arg(m_currentPath));
+        // 检查是否有文件被监视
+        QStringList watchedFiles = m_fileWatcher->files();
+        if (!watchedFiles.isEmpty()) {
+            m_fileWatcher->removePaths(watchedFiles);
+            m_logger->info(QString("停止监控文件: %1").arg(watchedFiles.join(", ")));
+        }
+        
+        // 检查是否有目录被监视
+        QStringList watchedDirs = m_fileWatcher->directories();
+        if (!watchedDirs.isEmpty()) {
+            m_fileWatcher->removePaths(watchedDirs);
+            m_logger->info(QString("停止监控目录: %1").arg(watchedDirs.join(", ")));
         }
         
         if (!path.isEmpty()) {

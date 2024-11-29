@@ -16,7 +16,6 @@ Settings {
             localPath.split("/").join("\\") : 
             localPath
         const path = normalizedPath + (Qt.platform.os === "windows" ? "\\" : "/") + "FileTaggingPro.ini"
-        console.log("Settings file path (normalized):", path)
         return path
     }
     
@@ -40,13 +39,13 @@ Settings {
     // 添加同步方法
     function sync() {
         // 输出完整的设置信息
-        console.log("Settings 完整信息:", JSON.stringify({
-            category: category,
-            fileName: fileName,
-            imagePlayer: imagePlayer,
-            videoPlayer: videoPlayer,
-            fileFilter: fileFilter
-        }, null, 2));
+        // console.log("Settings 完整信息:", JSON.stringify({
+        //     category: category,
+        //     fileName: fileName,
+        //     imagePlayer: imagePlayer,
+        //     videoPlayer: videoPlayer,
+        //     fileFilter: fileFilter
+        // }, null, 2));
     }
     
     function setValue(key: string, value: any) {

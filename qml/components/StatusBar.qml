@@ -9,11 +9,13 @@ Rectangle {
     // 必要的属性声明
     required property var fileManager
     required property var fileList
-    property var logDialog: null  // 改为可选属性
     required property var settingsWindow
     
     // 添加属性验证
     property bool isValid: fileManager && fileList && fileList.model
+    
+    // 添加信号
+    signal requestShowLog()
     
     color: Style.backgroundColor
     border.color: Style.borderColor
@@ -87,8 +89,9 @@ Rectangle {
                     cursorShape: Qt.PointingHandCursor
                     
                     onDoubleClicked: {
-                        if (root.logDialog) {
-                            root.showLogDialog()
+                        if (settingsWindow) {
+                            settingsWindow.currentIndex = 5  // 日志设置在第6个位置（索引为5）
+                            settingsWindow.show()
                         }
                     }
                 }
@@ -139,13 +142,6 @@ Rectangle {
                     }
                 }
             }
-        }
-    }
-
-    // 添加显示日志对话框的函数
-    function showLogDialog() {
-        if (logDialog) {
-            logDialog.open()
         }
     }
 } 

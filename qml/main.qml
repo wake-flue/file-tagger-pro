@@ -113,7 +113,6 @@ Window {
                 Layout.fillWidth: true
                 fileManager: fileManager
                 fileList: mainContainer.fileList
-                logDialog: logDialog
                 settingsWindow: settingsWindow
             }
         }

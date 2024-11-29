@@ -23,6 +23,9 @@ int main(int argc, char *argv[])
     app.setOrganizationName("Wake");
     app.setOrganizationDomain("wake.com");
     app.setApplicationName("FileTaggingPro");
+
+    // 屏蔽设置模块的日志
+    // qputenv("QT_LOGGING_RULES", "qt.labs.settings=false");
     
     // 初始化日志系统
     Logger::ensureLogDirectories();

@@ -47,7 +47,7 @@ Window {
                 }
                 
                 delegate: ItemDelegate {
-                    width: parent.width
+                    width: 200
                     height: 40
                     
                     background: Rectangle {
