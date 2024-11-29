@@ -10,6 +10,7 @@
 #include <QSettings>
 #include <QStandardPaths>
 #include "tagmanager.h"
+#include <QtConcurrent>
 
 FileSystemManager::FileSystemManager(QObject *parent)
     : QObject(parent)
@@ -17,6 +18,7 @@ FileSystemManager::FileSystemManager(QObject *parent)
     , m_logger(new Logger(this))
     , m_fileModel(new FileListModel(this))
     , m_previewGenerator(new PreviewGenerator(this))
+    , m_scanWatcher(new QFutureWatcher<QVector<QSharedPointer<FileData>>>(this))
 {
     m_logger->setLogFilePath(Logger::getLogFilePath(Logger::FileSystem));
     m_logger->setLogLevel(Logger::Info);
@@ -37,6 +39,34 @@ FileSystemManager::FileSystemManager(QObject *parent)
             this, &FileSystemManager::spritesGenerated);
     connect(m_previewGenerator, &PreviewGenerator::spriteProgress,
             this, &FileSystemManager::spriteProgress);
+            
+    // 连接扫描完成信号
+    connect(m_scanWatcher, &QFutureWatcher<QVector<QSharedPointer<FileData>>>::finished,
+            this, [this]() {
+                QVector<QSharedPointer<FileData>> files = m_scanWatcher->result();
+                
+                // 在主线程中更新数据
+                if (m_fileModel) {
+                    m_fileModel->setFiles(files);
+                }
+                
+                m_fileList = files;
+                
+                // 在主线程中更新文件树
+                if (!m_isUpdatingTree) {
+                    updateFileTree(m_currentPath);
+                }
+                
+                // 生成预览（如果需要）
+                if (m_fileModel && m_fileModel->viewMode() == FileListModel::LargeIconView) {
+                    generatePreviews();
+                }
+                
+                m_isScanning = false;
+                emit scanCompleted(files);
+                
+                m_logger->info(QString("扫描完成，共发现 %1 个文件").arg(files.size()));
+            });
             
     m_logger->info("文件系统管理器初始化完成");
 }
@@ -66,6 +96,13 @@ FileSystemManager::~FileSystemManager()
     if (m_previewGenerator) {
         m_previewGenerator->deleteLater();
     }
+    if (m_scanWatcher) {
+        if (m_scanWatcher->isRunning()) {
+            m_scanWatcher->cancel();
+            m_scanWatcher->waitForFinished();
+        }
+        m_scanWatcher->deleteLater();
+    }
 }
 
 void FileSystemManager::addLogMessage(const QString &message)
@@ -89,7 +126,7 @@ void FileSystemManager::clearLogs()
 
 void FileSystemManager::setWatchPath(const QString &path)
 {
-    m_logger->info(QString("置监控路径: %1").arg(path));
+    m_logger->info(QString("设置监控路径: %1").arg(path));
     
     if (m_currentPath != path) {
         m_currentPath = path;
@@ -163,30 +200,45 @@ void FileSystemManager::updateFileTree(const QString &path)
     if (!m_fileTree || m_isUpdatingTree) return;
     
     m_isUpdatingTree = true;
+    m_logger->info(QString("开始更新文件树: %1").arg(path));
+    
+    // 确保在主线程中更新UI
     QMetaObject::invokeMethod(m_fileTree, "loadDirectory",
+                             Qt::QueuedConnection,
                              Q_ARG(QVariant, path),
                              Q_ARG(QVariant, true));
-    m_logger->info(QString("已更新文件树视图: %1").arg(path));
+    
+    m_logger->info(QString("文件树更新请求已发送: %1").arg(path));
     m_isUpdatingTree = false;
 }
 
 QVector<QSharedPointer<FileData>> FileSystemManager::scanDirectory(const QString &path, const QStringList &filters)
 {
-    if (m_isScanning) return QVector<QSharedPointer<FileData>>();
+    if (m_isScanning) {
+        m_logger->warning("已有扫描任务正在进行中");
+        return QVector<QSharedPointer<FileData>>();
+    }
     
     m_isScanning = true;
-    m_logger->info(QString("开始扫描目录: %1").arg(path));
+    m_logger->info(QString("开始异步扫描目录: %1").arg(path));
     
     // 设置监控路径
     setWatchPath(path);
     
-    // 更新文件树
-    if (!m_isUpdatingTree) {
-        updateFileTree(path);
-    }
+    // 使用 lambda 表达式来启动异步扫描
+    QFuture<QVector<QSharedPointer<FileData>>> future = 
+        QtConcurrent::run([this, path, filters]() {
+            return this->scanDirectoryInternal(path, filters);
+        });
     
-    m_logger->debug(QString("使用过滤器: %1").arg(filters.join(", ")));
+    m_scanWatcher->setFuture(future);
     
+    // 返回空向量，实际结果将通过信号通知
+    return QVector<QSharedPointer<FileData>>();
+}
+
+QVector<QSharedPointer<FileData>> FileSystemManager::scanDirectoryInternal(const QString &path, const QStringList &filters)
+{
     QStringList actualFilters = filters;
     if (actualFilters.isEmpty()) {
         actualFilters = FileTypes::getAllFilters();
@@ -213,15 +265,23 @@ QVector<QSharedPointer<FileData>> FileSystemManager::scanDirectory(const QString
     previousFiles.reserve(qMin(m_fileList.size(), 10000));
     
     // 将之前的文件列表转换为哈希表
-    for (const auto &file : m_fileList) {
-        previousFiles.insert(file->filePath(), *file);
+    {
+        QMutexLocker locker(&m_mutex); // 保护 m_fileList 的访问
+        for (const auto &file : m_fileList) {
+            previousFiles.insert(file->filePath(), *file);
+        }
+    }
+
+    // 首先计算总文件数
+    int totalFiles = 0;
+    QDirIterator countIt(path, filters, QDir::Files | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+    while (countIt.hasNext()) {
+        countIt.next();
+        totalFiles++;
     }
 
     // 递归扫描
-    QDirIterator it(path, 
-                   filters, 
-                   QDir::Files | QDir::NoDotAndDotDot,
-                   QDirIterator::Subdirectories);
+    QDirIterator it(path, filters, QDir::Files | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
     int fileCount = 0;
     int changedCount = 0;
@@ -230,17 +290,16 @@ QVector<QSharedPointer<FileData>> FileSystemManager::scanDirectory(const QString
     
     while (it.hasNext()) {
         QString filePath = it.next();
-        m_logger->debug(QString("系统|扫描|处理文件|%1").arg(filePath));
         
-        // 每处理1000个文件输出一次进度
-        if (fileCount % 1000 == 0) {
-            m_logger->info(QString("系统|扫描|进度|已处理 %1 个文件").arg(fileCount));
+        // 每处理100个文件发送一次进度信号
+        if (fileCount % 100 == 0) {
+            emit scanProgressChanged(fileCount, totalFiles);
+            m_logger->debug(QString("扫描进度: %1/%2").arg(fileCount).arg(totalFiles));
         }
         
         QFileInfo fileInfo = it.fileInfo();
         
         FileData data;
-        // 使用 setter 方法来设置属性
         data.setFilePath(fileInfo.absoluteFilePath());
         data.setFileName(fileInfo.fileName());
         data.setFileType(fileInfo.suffix().toLower());
@@ -252,26 +311,19 @@ QVector<QSharedPointer<FileData>> FileSystemManager::scanDirectory(const QString
         if (previousFile == previousFiles.end() || 
             previousFile->fileSize() != data.fileSize() ||    
             previousFile->modifiedDate() != data.modifiedDate()) {  
-        
             data.setFileId(getFileId(data.filePath()));
             changedCount++;
         } else {
             data.setFileId(previousFile->fileId()); 
         }
         
-        // 使用 make_shared 创建对象
         batch.append(QSharedPointer<FileData>::create(data));
         fileCount++;
         
-        // 批量处理
         if (batch.size() >= BATCH_SIZE) {
             files.append(batch);
             batch.clear();
             batch.reserve(BATCH_SIZE);
-            
-            // 输出进度
-            addLogMessage(QString("正在扫描...已处理 %1 个文件").arg(fileCount));
-            QCoreApplication::processEvents();  // 让UI保持响应
         }
     }
     
@@ -280,35 +332,13 @@ QVector<QSharedPointer<FileData>> FileSystemManager::scanDirectory(const QString
         files.append(batch);
     }
 
-    m_logger->info(QString("系统|扫描|完成|共处理 %1 个文件|新增修改 %2 个")
+    // 发送最终进度
+    emit scanProgressChanged(totalFiles, totalFiles);
+    
+    m_logger->info(QString("扫描完成: 共处理 %1 个文件，新增/修改 %2 个")
                   .arg(fileCount)
                   .arg(changedCount));
 
-    // 检查文件变化
-    bool hasChanges = (m_fileList.size() != files.size()) || (changedCount > 0);
-    
-    if (hasChanges) {
-        m_logger->info("正在更新文件列表...");
-        m_fileList = files;
-        
-        if (m_fileModel) {
-            m_fileModel->updateFiles(m_fileList);
-        }
-        
-        // 更新文件树
-        updateFileTree(path);
-    }
-    
-    if (m_fileModel && m_fileModel->viewMode() == FileListModel::LargeIconView) {
-        for (const auto &fileData : m_fileList) {
-            QString type = fileData->fileType().toLower();
-            if (FileTypes::isImageFile(type) || FileTypes::isVideoFile(type)) {
-                m_previewGenerator->generatePreview(fileData);
-            }
-        }
-    }
-    
-    m_isScanning = false;
     return files;
 }
 
@@ -363,7 +393,7 @@ void FileSystemManager::openFile(const QString &filePath, const QString &fileTyp
     
     QSettings settings(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) 
                       + "/FileTaggingPro.ini", QSettings::IniFormat);
-    settings.beginGroup("Players");
+    settings.beginGroup("General");
     
     QString program;
     if (FileTypes::isImageFile(fileType)) {
@@ -419,7 +449,7 @@ void FileSystemManager::openVideoAtTime(const QString &filePath, double timestam
 {
     QSettings settings(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) 
                       + "/FileTaggingPro.ini", QSettings::IniFormat);
-    settings.beginGroup("Players");
+    settings.beginGroup("General");
     QString program = settings.value("videoPlayer").toString();
     settings.endGroup();
     
@@ -482,7 +512,7 @@ double FileSystemManager::getSpriteTimestamp(const QString &spritePath) const
 void FileSystemManager::onFileRenamed(const QString &oldPath, const QString &newPath)
 {
     // 由我们使用 fileId 系统，文件重命名不需要更新数据库
-    // 只需要更新界面显示
+    // 只需要更新界面��示
     emit fileRenamed(oldPath, newPath);
 }
 

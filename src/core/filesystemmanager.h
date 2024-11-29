@@ -10,6 +10,10 @@
 #include <QProcess>
 #include <QSettings>
 #include <windows.h>
+#include <QFuture>
+#include <QFutureWatcher>
+#include <QtConcurrent>
+#include <QMutex>
 #include "models/filedata.h"
 #include "utils/logger.h"
 #include "models/filelistmodel.h"
@@ -73,6 +77,8 @@ signals:
     void fileRenamed(const QString &oldPath, const QString &newPath);
     void loggerChanged();
     void fileTreeChanged();
+    void scanProgressChanged(int current, int total);
+    void scanCompleted(const QVector<QSharedPointer<FileData>>& files);
 
 private:
     void addLogMessage(const QString &message);
@@ -91,6 +97,9 @@ private:
     bool m_isUpdatingTree = false;
     QObject* m_fileTree = nullptr;
     void updateFileTree(const QString &path);
+    QFutureWatcher<QVector<QSharedPointer<FileData>>> *m_scanWatcher;
+    QVector<QSharedPointer<FileData>> scanDirectoryInternal(const QString &path, const QStringList &filters);
+    QMutex m_mutex;
 
 private slots:
     void onFileChanged(const QString &path);
