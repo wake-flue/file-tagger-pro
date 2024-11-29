@@ -14,22 +14,35 @@ Item {
     property alias model: gridView.model
     property var selectedItem: null
     property QtObject fileManager: null
+    property bool isScanning: false
+    
+    // 监听 fileManager 的变化
+    onFileManagerChanged: {
+        if (fileManager) {
+            Utils.Logger.logDebug(fileManager, "FileManager绑定状态", "已绑定")
+        }
+    }
+    
+    // 监听扫描进度
+    Connections {
+        target: root.fileManager
+        
+        function onScanProgressChanged(current, total) {
+            if (current === 0 && total > 0) {
+                root.isScanning = true
+            } else if (current === total) {
+                root.isScanning = false
+            }
+            progressText.text = `${current}/${total}`
+        }
+    }
     
     Components.Settings {
         id: settings
     }
     
-    // 添加监听
-    Connections {
-        target: settings
-        
-        function onIconSizeChanged() {
-            // 强制重新布局
-            gridView.forceLayout()
-        }
-    }
-    
     Rectangle {
+        id: mainContainer
         anchors.fill: parent
         color: Style.backgroundColor
         border.width: Style.noneBorderWidth
@@ -597,6 +610,170 @@ Item {
             background: Rectangle {
                 color: "transparent"
                 border.color: "transparent"
+            }
+        }
+    }
+    
+    // 加载动画覆盖层
+    Rectangle {
+        id: loadingOverlay
+        anchors.fill: parent
+        color: "#c5787878"
+        opacity: root.isScanning ? 1 : 0
+        visible: opacity > 0
+        z: 999999
+        
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 300
+                easing.type: Easing.InOutQuad
+            }
+        }
+        
+        // 使用 MultiEffect 实现毛玻璃效果
+        Rectangle {
+            id: blurBackground
+            anchors.fill: parent
+            color: "#80bdbdbd"
+
+            MultiEffect {
+                source: mainContainer
+                anchors.fill: parent
+                blur: 1.0
+                blurMax: 32
+                blurMultiplier: 0.5
+                brightness: 0.1
+                saturation: 1.2
+            }
+        }
+        
+        Item {
+            id: loadingContainer
+            anchors.centerIn: parent
+            width: 160
+            height: 160
+            scale: root.isScanning ? 1 : 0.8
+            opacity: root.isScanning ? 1 : 0
+            
+            Behavior on scale {
+                NumberAnimation {
+                    duration: 300
+                    easing.type: Easing.OutBack
+                }
+            }
+            
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 300
+                    easing.type: Easing.InOutQuad
+                }
+            }
+            
+            // 外圈动画
+            Rectangle {
+                id: spinnerOuter
+                anchors.fill: parent
+                radius: width / 2
+                color: "transparent"
+                border.width: 4
+                border.color: "#FFFFFF"
+                opacity: 0.6
+                
+                RotationAnimation on rotation {
+                    from: 0
+                    to: 360
+                    duration: 2000
+                    loops: Animation.Infinite
+                    running: root.isScanning
+                }
+                
+                // 外圈装饰点
+                Rectangle {
+                    width: 8
+                    height: 8
+                    radius: 4
+                    color: "#FFFFFF"
+                    anchors {
+                        top: parent.top
+                        horizontalCenter: parent.horizontalCenter
+                        topMargin: -4
+                    }
+                }
+            }
+            
+            // 内圈动画
+            Rectangle {
+                id: spinnerInner
+                anchors.centerIn: parent
+                width: parent.width * 0.7
+                height: width
+                radius: width / 2
+                color: "transparent"
+                border.width: 4
+                border.color: "#FFFFFF"
+                opacity: 0.4
+                
+                RotationAnimation on rotation {
+                    from: 360
+                    to: 0
+                    duration: 3000
+                    loops: Animation.Infinite
+                    running: root.isScanning
+                }
+            }
+            
+            // 中心内容容器
+            Rectangle {
+                anchors.centerIn: parent
+                width: 100
+                height: 100
+                radius: width / 2
+                color: "#FFFFFF"
+                opacity: 0.95
+                
+                MultiEffect {
+                    anchors.fill: parent
+                    source: parent
+                    shadowEnabled: true
+                    shadowHorizontalOffset: 0
+                    shadowVerticalOffset: 2
+                    shadowBlur: 0.6
+                    shadowOpacity: 0.3
+                }
+                
+                Column {
+                    anchors.centerIn: parent
+                    spacing: 8
+                    
+                    Label {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: "扫描中..."
+                        color: "#333333"
+                        font {
+                            family: "Microsoft YaHei"
+                            pixelSize: 16
+                            bold: true
+                        }
+                        
+                        SequentialAnimation on opacity {
+                            loops: Animation.Infinite
+                            running: root.isScanning
+                            NumberAnimation { to: 0.6; duration: 1000; easing.type: Easing.InOutQuad }
+                            NumberAnimation { to: 1.0; duration: 1000; easing.type: Easing.InOutQuad }
+                        }
+                    }
+                    
+                    Label {
+                        id: progressText
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: "0/0"
+                        color: "#666666"
+                        font {
+                            family: "Microsoft YaHei"
+                            pixelSize: 14
+                        }
+                    }
+                }
             }
         }
     }
