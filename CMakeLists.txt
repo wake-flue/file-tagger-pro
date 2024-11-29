@@ -79,6 +79,7 @@ set(QML_FILES
         qml/components/Settings.qml
         qml/components/TagToolBar.qml
         qml/components/MainContainer.qml
+        qml/components/FileTree.qml
         qml/dialogs/FolderPickerDialog.qml
         qml/dialogs/SpriteDialog.qml
         qml/dialogs/TagEditDialog.qml

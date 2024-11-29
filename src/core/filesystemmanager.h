@@ -25,22 +25,25 @@ class FileSystemManager : public QObject
     Q_PROPERTY(QStringList logMessages READ logMessages NOTIFY logMessagesChanged)
     Q_PROPERTY(bool isScanning READ isScanning NOTIFY isScanningChanged)
     Q_PROPERTY(Logger* logger READ logger NOTIFY loggerChanged)
+    Q_PROPERTY(QObject* fileTree READ fileTree WRITE setFileTree NOTIFY fileTreeChanged)
 
 public:
     explicit FileSystemManager(QObject *parent = nullptr);
     ~FileSystemManager();
     
     QString currentPath() const { return m_currentPath; }
-    void setCurrentPath(const QString &path) { 
-        if (m_currentPath != path) {
-            m_currentPath = path;
-            emit currentPathChanged(path);
-        }
-    }
+    void setCurrentPath(const QString &path);
     QStringList logMessages() const { return m_messages; }
     FileListModel* fileModel() const { return m_fileModel; }
     bool isScanning() const { return m_isScanning; }
     Logger* logger() const { return m_logger; }
+    QObject* fileTree() const { return m_fileTree; }
+    void setFileTree(QObject* fileTree) {
+        if (m_fileTree != fileTree) {
+            m_fileTree = fileTree;
+            emit fileTreeChanged();
+        }
+    }
     
     Q_INVOKABLE void setWatchPath(const QString &path);
     Q_INVOKABLE QVector<QSharedPointer<FileData>> scanDirectory(const QString &path, const QStringList &filters = QStringList());
@@ -69,6 +72,7 @@ signals:
     void spriteProgress(int current, int total);
     void fileRenamed(const QString &oldPath, const QString &newPath);
     void loggerChanged();
+    void fileTreeChanged();
 
 private:
     void addLogMessage(const QString &message);
@@ -84,6 +88,9 @@ private:
     QString m_ffmpegPath;
     PreviewGenerator *m_previewGenerator;
     bool m_isScanning = false;
+    bool m_isUpdatingTree = false;
+    QObject* m_fileTree = nullptr;
+    void updateFileTree(const QString &path);
 
 private slots:
     void onFileChanged(const QString &path);

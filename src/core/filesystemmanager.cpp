@@ -41,11 +41,31 @@ FileSystemManager::FileSystemManager(QObject *parent)
     m_logger->info("文件系统管理器初始化完成");
 }
 
+void FileSystemManager::setCurrentPath(const QString &path) { 
+    if (m_currentPath != path) {
+        m_currentPath = path;
+        if (!m_isScanning && !m_isUpdatingTree) {
+            QVector<QSharedPointer<FileData>> files = scanDirectory(path);
+            m_fileModel->setFiles(files);
+        }
+        emit currentPathChanged(path);
+    }
+}
+
 FileSystemManager::~FileSystemManager()
 {
-    delete m_fileWatcher;
-    delete m_logger;
-    delete m_previewGenerator;
+    if (m_fileWatcher) {
+        m_fileWatcher->deleteLater();
+    }
+    if (m_logger) {
+        m_logger->deleteLater();
+    }
+    if (m_fileModel) {
+        m_fileModel->deleteLater();
+    }
+    if (m_previewGenerator) {
+        m_previewGenerator->deleteLater();
+    }
 }
 
 void FileSystemManager::addLogMessage(const QString &message)
@@ -69,7 +89,7 @@ void FileSystemManager::clearLogs()
 
 void FileSystemManager::setWatchPath(const QString &path)
 {
-    m_logger->info(QString("设置监控路径: %1").arg(path));
+    m_logger->info(QString("置监控路径: %1").arg(path));
     
     if (m_currentPath != path) {
         m_currentPath = path;
@@ -138,9 +158,33 @@ QString FileSystemManager::getFileId(const QString &filePath)
     return fileId;
 }
 
+void FileSystemManager::updateFileTree(const QString &path)
+{
+    if (!m_fileTree || m_isUpdatingTree) return;
+    
+    m_isUpdatingTree = true;
+    QMetaObject::invokeMethod(m_fileTree, "loadDirectory",
+                             Q_ARG(QVariant, path),
+                             Q_ARG(QVariant, true));
+    m_logger->info(QString("已更新文件树视图: %1").arg(path));
+    m_isUpdatingTree = false;
+}
+
 QVector<QSharedPointer<FileData>> FileSystemManager::scanDirectory(const QString &path, const QStringList &filters)
 {
+    if (m_isScanning) return QVector<QSharedPointer<FileData>>();
+    
+    m_isScanning = true;
     m_logger->info(QString("开始扫描目录: %1").arg(path));
+    
+    // 设置监控路径
+    setWatchPath(path);
+    
+    // 更新文件树
+    if (!m_isUpdatingTree) {
+        updateFileTree(path);
+    }
+    
     m_logger->debug(QString("使用过滤器: %1").arg(filters.join(", ")));
     
     QStringList actualFilters = filters;
@@ -248,16 +292,11 @@ QVector<QSharedPointer<FileData>> FileSystemManager::scanDirectory(const QString
         m_fileList = files;
         
         if (m_fileModel) {
-            m_logger->debug("正在更新文件模型...");
-            m_fileModel->setFiles(files);
-            m_logger->debug("文件模型更新完成");
-        } else {
-            m_logger->error("文件模型为空,无法更新!");
+            m_fileModel->updateFiles(m_fileList);
         }
         
-        emit fileListChanged();
-    } else {
-        m_logger->info("文件列表无变化");
+        // 更新文件树
+        updateFileTree(path);
     }
     
     if (m_fileModel && m_fileModel->viewMode() == FileListModel::LargeIconView) {
@@ -269,6 +308,7 @@ QVector<QSharedPointer<FileData>> FileSystemManager::scanDirectory(const QString
         }
     }
     
+    m_isScanning = false;
     return files;
 }
 
@@ -331,7 +371,7 @@ void FileSystemManager::openFile(const QString &filePath, const QString &fileTyp
         m_logger->debug(QString("系统|配置|图片查看器|%1").arg(program));
     } else if (FileTypes::isVideoFile(fileType)) {
         program = settings.value("videoPlayer").toString();
-        m_logger->debug(QString("系统|配置|视频播放器|%1").arg(program));
+        m_logger->debug(QString("系统|配置|视频放器|%1").arg(program));
     }
     
     settings.endGroup();

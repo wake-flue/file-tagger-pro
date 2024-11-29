@@ -1,9 +1,10 @@
 module Components
+MainContainer 1.0 MainContainer.qml
 FileList 1.0 FileList.qml
-TopToolBar 1.0 TopToolBar.qml
-Splitter 1.0 Splitter.qml
 DetailPanel 1.0 DetailPanel.qml
+TopToolBar 1.0 TopToolBar.qml
+TagToolBar 1.0 TagToolBar.qml
 StatusBar 1.0 StatusBar.qml
 Settings 1.0 Settings.qml
-TagToolBar 1.0 TagToolBar.qml
-MainContainer 1.0 MainContainer.qml
+Splitter 1.0 Splitter.qml
+FileTree 1.0 FileTree.qml
