@@ -155,6 +155,7 @@ set(RESOURCE_FILES
         resources/images/type.svg
         resources/images/size.svg
         resources/images/time.svg
+        resources/images/sprite.svg
 )
 
 qt_add_executable(FileTaggingApp

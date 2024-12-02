@@ -557,7 +557,7 @@ Item {
                     MenuItem {
                         id: spriteMenuItem
                         text: qsTr("雪碧图")
-                        icon.source: "qrc:/resources/images/image.svg"
+                        icon.source: "qrc:/resources/images/sprite.svg"
                         icon.width: 14
                         icon.height: 14
                         

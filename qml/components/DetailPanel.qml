@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtMultimedia
 import FileManager 1.0
 import "../dialogs" as Dialogs
 import ".." 1.0
@@ -61,9 +62,19 @@ Rectangle {
                 currentFileId = ""
                 fileTags = []
             }
+
+            // 处理视频播放
+            if (selectedItem.fileType && root.settings.videoFilter.includes(selectedItem.fileType.toLowerCase())) {
+                mediaPlayer.stop()
+                mediaPlayer.source = "file:///" + selectedItem.filePath.replace(/\\/g, '/')
+                mediaPlayer.play()
+            } else {
+                mediaPlayer.stop()
+            }
         } else {
             currentFileId = ""
             fileTags = []
+            mediaPlayer.stop()
         }
     }
     
@@ -163,6 +174,240 @@ Rectangle {
                 radius: 12
                 clip: true
 
+                // 视频播放器
+                MediaPlayer {
+                    id: mediaPlayer
+                    videoOutput: videoOutput
+                    loops: MediaPlayer.Infinite
+                    
+                    onErrorOccurred: function(error, errorString) {
+                        console.log("视频播放错误:", errorString)
+                        // 如果发生错误，尝试重新加载视频
+                        if (source != "") {
+                            const currentSource = source
+                            source = ""
+                            Qt.callLater(function() {
+                                source = currentSource
+                            })
+                        }
+                    }
+
+                    onSourceChanged: {
+                        if (source != "") {
+                            stop()
+                            play()
+                        }
+                    }
+                }
+
+                // 视频输出区域
+                Item {
+                    id: videoContainer
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                        top: parent.top
+                        bottom: videoControls.top
+                        margins: 12
+                    }
+
+                    VideoOutput {
+                        id: videoOutput
+                        anchors.fill: parent
+                        visible: root.selectedItem && root.settings.videoFilter.includes(root.selectedItem.fileType.toLowerCase())
+                    }
+                }
+
+                // 视频控制面板
+                Rectangle {
+                    id: videoControls
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                        bottom: parent.bottom
+                        margins: 12
+                    }
+                    height: 40
+                    color: "#f0f2f5"
+                    visible: videoOutput.visible
+                    radius: 6
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: 8
+                        spacing: 8
+
+                        // 当前时间
+                        Label {
+                            text: {
+                                const position = Math.floor(mediaPlayer.position / 1000)
+                                const minutes = Math.floor(position / 60)
+                                const seconds = position % 60
+                                return `${minutes}:${seconds.toString().padStart(2, '0')}`
+                            }
+                            color: Style.textColor
+                            font {
+                                family: Style.fontFamily
+                                pixelSize: Style.fontSizeSmall
+                                weight: Font.Medium
+                            }
+                        }
+
+                        // 进度条
+                        Slider {
+                            id: progressSlider
+                            Layout.fillWidth: true
+                            from: 0
+                            to: mediaPlayer.duration
+                            value: mediaPlayer.position
+                            live: false
+
+                            background: Rectangle {
+                                x: progressSlider.leftPadding
+                                y: progressSlider.topPadding + progressSlider.availableHeight / 2 - height / 2
+                                width: progressSlider.availableWidth
+                                height: 3
+                                radius: 1.5
+                                color: Style.borderColor
+
+                                Rectangle {
+                                    width: progressSlider.visualPosition * parent.width
+                                    height: parent.height
+                                    color: Style.primaryColor
+                                    radius: 1.5
+                                }
+                            }
+
+                            handle: Rectangle {
+                                x: progressSlider.leftPadding + progressSlider.visualPosition * (progressSlider.availableWidth - width)
+                                y: progressSlider.topPadding + progressSlider.availableHeight / 2 - height / 2
+                                width: 12
+                                height: 12
+                                radius: 6
+                                color: Style.primaryColor
+                                border.color: "white"
+                                border.width: 2
+                                opacity: progressSlider.pressed ? 1.0 : 0.8
+
+                                Behavior on opacity {
+                                    NumberAnimation { duration: 100 }
+                                }
+                            }
+
+                            onMoved: {
+                                if (pressed) {
+                                    mediaPlayer.position = value
+                                }
+                            }
+                        }
+
+                        // 总时长
+                        Label {
+                            text: {
+                                const duration = Math.floor(mediaPlayer.duration / 1000)
+                                const minutes = Math.floor(duration / 60)
+                                const seconds = duration % 60
+                                return `${minutes}:${seconds.toString().padStart(2, '0')}`
+                            }
+                            color: Style.textColor
+                            font {
+                                family: Style.fontFamily
+                                pixelSize: Style.fontSizeSmall
+                                weight: Font.Medium
+                            }
+                        }
+
+                        // 倍速选择
+                        ComboBox {
+                            id: speedComboBox
+                            model: ["0.5x", "1.0x", "1.5x", "3.0x", "5.0x", "10.0x"]
+                            currentIndex: 1
+                            width: 64
+                            height: 24
+                            
+                            // 移除原生下拉图标
+                            indicator: null
+                            
+                            background: Rectangle {
+                                color: speedComboBox.pressed ? Style.hoverColor : Style.backgroundColor
+                                radius: 4
+                                border.color: Style.borderColor
+                                border.width: 1
+                                
+                                Behavior on color {
+                                    ColorAnimation { duration: 100 }
+                                }
+                            }
+
+                            contentItem: Item {
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: speedComboBox.displayText
+                                    color: Style.textColor
+                                    font {
+                                        family: Style.fontFamily
+                                        pixelSize: Style.fontSizeSmall
+                                        weight: Font.Medium
+                                    }
+                                }
+                            }
+
+                            onCurrentTextChanged: {
+                                const speed = parseFloat(currentText)
+                                mediaPlayer.playbackRate = speed
+                            }
+
+                            popup: Popup {
+                                y: speedComboBox.height + 4
+                                width: speedComboBox.width
+                                padding: 2
+
+                                background: Rectangle {
+                                    color: Style.backgroundColor
+                                    radius: 4
+                                    border.color: Style.borderColor
+                                    border.width: 1
+                                }
+
+                                contentItem: ListView {
+                                    implicitHeight: contentHeight
+                                    model: speedComboBox.popup.visible ? speedComboBox.delegateModel : null
+                                    currentIndex: speedComboBox.highlightedIndex
+                                    spacing: 2
+
+                                    delegate: ItemDelegate {
+                                        width: speedComboBox.width - 4
+                                        height: 24
+                                        padding: 0
+                                        x: 2
+
+                                        contentItem: Text {
+                                            text: modelData
+                                            color: Style.textColor
+                                            font {
+                                                family: Style.fontFamily
+                                                pixelSize: Style.fontSizeSmall
+                                                weight: Font.Medium
+                                            }
+                                            verticalAlignment: Text.AlignVCenter
+                                            horizontalAlignment: Text.AlignHCenter
+                                        }
+
+                                        background: Rectangle {
+                                            color: parent.hovered ? Style.hoverColor : "transparent"
+                                            radius: 2
+                                            
+                                            Behavior on color {
+                                                ColorAnimation { duration: 100 }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // 预览图片或默认图标
                 Image {
                     id: previewImage
@@ -178,6 +423,7 @@ Rectangle {
                     asynchronous: true
                     cache: true
                     smooth: true
+                    visible: !videoOutput.visible
 
                     source: {
                         if (!root.selectedItem) {
